@@ -1,0 +1,307 @@
+<!-- File: DjangoVerseHub/static/images/banners/features.svg -->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="featureGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="techGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="communityGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#43e97b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38f9d7;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Patterns -->
+    <pattern id="circlePattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+      <circle cx="30" cy="30" r="2" fill="rgba(255,255,255,0.1)"/>
+    </pattern>
+    
+    <!-- Filters -->
+    <filter id="featureGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#featureGradient)"/>
+  
+  <!-- Pattern Overlay -->
+  <rect width="800" height="400" fill="url(#circlePattern)" opacity="0.4"/>
+  
+  <!-- Feature Blocks Container -->
+  <g transform="translate(50, 50)">
+    
+    <!-- Authentication Feature -->
+    <g transform="translate(0, 0)">
+      <rect width="120" height="100" rx="12" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+      
+      <!-- User Icon -->
+      <g transform="translate(60, 30)" fill="rgba(255,255,255,0.9)">
+        <circle cx="0" cy="-5" r="8"/>
+        <path d="M-12 15 C-12 8 -6 5 0 5 C6 5 12 8 12 15 Z"/>
+      </g>
+      
+      <!-- Lock Icon -->
+      <g transform="translate(100, 15)" fill="url(#techGradient)" opacity="0.8">
+        <rect x="-4" y="0" width="8" height="8" rx="2"/>
+        <path d="M-2 0 C-2 -3 0 -5 2 -5 C4 -5 6 -3 6 0" stroke="url(#techGradient)" stroke-width="2" fill="none"/>
+      </g>
+      
+      <!-- Connection Lines -->
+      <g stroke="rgba(255,255,255,0.6)" stroke-width="2" fill="none">
+        <line x1="75" y1="35" x2="85" y2="25"/>
+      </g>
+      
+      <!-- Feature Label -->
+      <text x="60" y="80" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="10" font-weight="bold">AUTH</text>
+    </g>
+    
+    <!-- API Feature -->
+    <g transform="translate(150, 0)">
+      <rect width="120" height="100" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+      
+      <!-- API Endpoints -->
+      <g transform="translate(20, 20)" fill="rgba(255,255,255,0.8)">
+        <rect x="0" y="0" width="80" height="4" rx="2" fill="url(#techGradient)"/>
+        <rect x="0" y="8" width="60" height="3" rx="1.5" fill="rgba(255,255,255,0.6)"/>
+        <rect x="0" y="14" width="70" height="3" rx="1.5" fill="rgba(255,255,255,0.6)"/>
+        <rect x="0" y="20" width="55" height="3" rx="1.5" fill="rgba(255,255,255,0.6)"/>
+        <rect x="0" y="26" width="75" height="3" rx="1.5" fill="rgba(255,255,255,0.6)"/>
+      </g>
+      
+      <!-- API Symbol -->
+      <g transform="translate(85, 55)" stroke="url(#techGradient)" stroke-width="2" fill="none">
+        <circle cx="0" cy="0" r="8"/>
+        <circle cx="0" cy="0" r="4"/>
+        <line x1="-12" y1="-6" x2="-8" y2="-4"/>
+        <line x1="12" y1="-6" x2="8" y2="-4"/>
+        <line x1="0" y1="-12" x2="0" y2="-8"/>
+      </g>
+      
+      <text x="60" y="80" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="10" font-weight="bold">API</text>
+    </g>
+    
+    <!-- Real-time Feature -->
+    <g transform="translate(300, 0)">
+      <rect width="120" height="100" rx="12" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+      
+      <!-- WebSocket Waves -->
+      <g transform="translate(60, 40)" stroke="url(#communityGradient)" stroke-width="2" fill="none">
+        <path d="M-20 0 Q-10 -8 0 0 Q10 8 20 0">
+          <animate attributeName="d" values="M-20 0 Q-10 -8 0 0 Q10 8 20 0;M-20 0 Q-10 8 0 0 Q10 -8 20 0;M-20 0 Q-10 -8 0 0 Q10 8 20 0" dur="2s" repeatCount="indefinite"/>
+        </path>
+        <path d="M-20 8 Q-10 0 0 8 Q10 16 20 8" opacity="0.7">
+          <animate attributeName="d" values="M-20 8 Q-10 0 0 8 Q10 16 20 8;M-20 8 Q-10 16 0 8 Q10 0 20 8;M-20 8 Q-10 0 0 8 Q10 16 20 8" dur="2s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      
+      <!-- Notification Bell -->
+      <g transform="translate(90, 20)" fill="url(#communityGradient)">
+        <path d="M0 -8 C-4 -8 -6 -4 -6 0 C-6 4 -8 6 -8 8 L8 8 C8 6 6 4 6 0 C6 -4 4 -8 0 -8 Z"/>
+        <circle cx="0" cy="10" r="2" fill="rgba(255,255,255,0.9)"/>
+      </g>
+      
+      <text x="60" y="80" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="10" font-weight="bold">REAL-TIME</text>
+    </g>
+    
+    <!-- Community Feature -->
+    <g transform="translate(450, 0)">
+      <rect width="120" height="100" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+      
+      <!-- People Network -->
+      <g transform="translate(60, 40)">
+        <!-- Central person -->
+        <g fill="rgba(255,255,255,0.9)">
+          <circle cx="0" cy="-2" r="6"/>
+          <path d="M-8 10 C-8 5 -4 3 0 3 C4 3 8 5 8 10 Z"/>
+        </g>
+        
+        <!-- Connected people -->
+        <g fill="url(#communityGradient)" opacity="0.8">
+          <circle cx="-20" cy="-10" r="4"/>
+          <circle cx="20" cy="-10" r="4"/>
+          <circle cx="-15" cy="15" r="4"/>
+          <circle cx="15" cy="15" r="4"/>
+        </g>
+        
+        <!-- Connection lines -->
+        <g stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none">
+          <line x1="-16" y1="-8" x2="-6" y2="-2"/>
+          <line x1="16" y1="-8" x2="6" y2="-2"/>
+          <line x1="-12" y1="13" x2="-4" y2="8"/>
+          <line x1="12" y1="13" x2="4" y2="8"/>
+        </g>
+      </g>
+      
+      <text x="60" y="80" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="10" font-weight="bold">COMMUNITY</text>
+    </g>
+    
+    <!-- Articles Feature -->
+    <g transform="translate(600, 0)">
+      <rect width="120" height="100" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+      
+      <!-- Document Icon -->
+      <g transform="translate(40, 20)" fill="rgba(255,255,255,0.8)">
+        <rect x="0" y="0" width="40" height="50" rx="4" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        <rect x="5" y="8" width="30" height="3" rx="1.5" fill="url(#featureGradient)"/>
+        <rect x="5" y="15" width="25" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+        <rect x="5" y="20" width="28" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+        <rect x="5" y="25" width="22" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+        <rect x="5" y="30" width="30" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+        <rect x="5" y="35" width="26" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+      </g>
+      
+      <!-- Edit Icon -->
+      <g transform="translate(85, 30)" stroke="url(#featureGradient)" stroke-width="2" fill="none">
+        <path d="M0 8 L8 0 L10 2 L2 10 Z"/>
+        <line x1="6" y1="2" x2="8" y2="4"/>
+      </g>
+      
+      <text x="60" y="80" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="10" font-weight="bold">ARTICLES</text>
+    </g>
+  </g>
+  
+  <!-- Bottom Feature Highlights -->
+  <g transform="translate(50, 180)">
+    
+    <!-- Modern UI Feature -->
+    <g transform="translate(100, 0)">
+      <rect width="150" height="80" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      
+      <!-- UI Elements -->
+      <g transform="translate(20, 15)" fill="rgba(255,255,255,0.7)">
+        <rect x="0" y="0" width="110" height="12" rx="6" fill="url(#techGradient)" opacity="0.8"/>
+        <rect x="5" y="20" width="80" height="8" rx="4" fill="rgba(255,255,255,0.5)"/>
+        <rect x="5" y="32" width="90" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
+        <rect x="5" y="42" width="70" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
+        
+        <!-- Buttons -->
+        <rect x="85" y="20" width="20" height="8" rx="4" fill="url(#communityGradient)" opacity="0.8"/>
+        <rect x="85" y="32" width="15" height="6" rx="3" fill="url(#featureGradient)" opacity="0.6"/>
+      </g>
+      
+      <text x="75" y="70" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9">MODERN UI</text>
+    </g>
+    
+    <!-- Performance Feature -->
+    <g transform="translate(300, 0)">
+      <rect width="150" height="80" rx="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+      
+      <!-- Performance Chart -->
+      <g transform="translate(30, 20)" stroke="url(#communityGradient)" stroke-width="2" fill="none">
+        <polyline points="0,40 20,35 40,25 60,15 80,20 100,10" opacity="0.8"/>
+        <polyline points="0,45 20,40 40,35 60,30 80,32 100,25" opacity="0.6" stroke="url(#techGradient)"/>
+        
+        <!-- Data points -->
+        <g fill="url(#communityGradient)">
+          <circle cx="20" cy="35" r="2"/>
+          <circle cx="60" cy="15" r="2"/>
+          <circle cx="100" cy="10" r="2"/>
+        </g>
+      </g>
+      
+      <text x="75" y="70" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9">PERFORMANCE</text>
+    </g>
+    
+    <!-- Security Feature -->
+    <g transform="translate(500, 0)">
+      <!-- Security Shield -->
+      <g transform="translate(75, 25)" fill="url(#featureGradient)" opacity="0.9">
+        <path d="M0 -15 C-8 -12 -12 -8 -12 0 C-12 8 -8 12 0 15 C8 12 12 8 12 0 C12 -8 8 -12 0 -15 Z"/>
+        <path d="M0 -10 C-5 -8 -8 -5 -8 0 C-8 5 -5 8 0 10 C5 8 8 5 8 0 C8 -5 5 -8 0 -10 Z" fill="rgba(255,255,255,0.3)"/>
+        
+        <!-- Checkmark -->
+        <g transform="translate(0, -2)" stroke="white" stroke-width="2" fill="none">
+          <path d="M-4 0 L-1 3 L4 -3"/>
+        </g>
+      </g>
+      
+      <!-- Security Keys -->
+      <g transform="translate(40, 50)" fill="rgba(255,255,255,0.6)">
+        <rect x="0" y="0" width="3" height="8" rx="1.5"/>
+        <circle cx="1.5" cy="2" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+      </g>
+      
+      <g transform="translate(110, 45)" fill="rgba(255,255,255,0.6)">
+        <rect x="0" y="0" width="3" height="8" rx="1.5"/>
+        <circle cx="1.5" cy="2" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+      </g>
+      
+      <text x="75" y="70" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9">SECURITY</text>
+    </g>
+  </g>
+  
+  <!-- Floating Tech Elements -->
+  <g opacity="0.4">
+    <!-- Code Symbols -->
+    <g transform="translate(700, 50)" fill="rgba(255,255,255,0.6)">
+      <text font-size="12" font-family="monospace">&lt;/&gt;</text>
+    </g>
+    
+    <g transform="translate(750, 100)" fill="rgba(255,255,255,0.5)">
+      <text font-size="10" font-family="monospace">{}</text>
+    </g>
+    
+    <g transform="translate(50, 320)" fill="rgba(255,255,255,0.4)">
+      <text font-size="14" font-family="monospace">def</text>
+    </g>
+    
+    <!-- Geometric Shapes -->
+    <circle cx="150" cy="320" r="4" fill="rgba(255,255,255,0.3)"/>
+    <rect x="680" y="300" width="8" height="8" rx="2" fill="rgba(255,255,255,0.3)"/>
+    <polygon points="720,280 728,290 720,300 712,290" fill="rgba(255,255,255,0.3)"/>
+  </g>
+  
+  <!-- Connection Network -->
+  <g stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none" opacity="0.6">
+    <!-- Connecting feature blocks -->
+    <line x1="170" y1="100" x2="200" y2="100"/>
+    <line x1="320" y1="100" x2="350" y2="100"/>
+    <line x1="470" y1="100" x2="500" y2="100"/>
+    <line x1="620" y1="100" x2="650" y2="100"/>
+    
+    <!-- Vertical connections to bottom features -->
+    <line x1="175" y1="150" x2="175" y2="180"/>
+    <line x1="375" y1="150" x2="375" y2="180"/>
+    <line x1="575" y1="150" x2="575" y2="180"/>
+  </g>
+  
+  <!-- Animated Particles -->
+  <g fill="rgba(255,255,255,0.7)">
+    <circle cx="100" cy="300" r="1.5">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 50,-20; 0,0" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.3;0.7" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="300" cy="280" r="1">
+      <animateTransform attributeName="transform" type="translate" values="0,0; -30,30; 0,0" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.2;0.5" dur="5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="600" cy="320" r="1.5">
+      <animateTransform attributeName="transform" type="translate" values="0,0; -40,-30; 0,0" dur="7s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0.2;0.6" dur="7s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Bottom Gradient Overlay -->
+  <defs>
+    <linearGradient id="bottomFade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.1);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect x="0" y="300" width="800" height="100" fill="url(#bottomFade)"/>
+</svg>

@@ -1,0 +1,268 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000">
+  <defs>
+    <style>
+      .entity-box { fill: #f8f9fa; stroke: #343a40; stroke-width: 2; }
+      .entity-title { fill: #495057; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .entity-attr { fill: #6c757d; font-family: Arial, sans-serif; font-size: 11px; }
+      .pk { fill: #dc3545; font-weight: bold; }
+      .fk { fill: #007bff; font-weight: bold; }
+      .relationship { stroke: #6c757d; stroke-width: 1.5; fill: none; }
+      .relationship-label { fill: #495057; font-family: Arial, sans-serif; font-size: 10px; }
+      .one-mark { stroke: #6c757d; stroke-width: 2; }
+      .many-mark { fill: #6c757d; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" class="entity-title" style="font-size: 18px;">DjangoVerseHub - Entity Relationship Diagram</text>
+
+  <!-- User Entity -->
+  <rect x="50" y="60" width="180" height="160" class="entity-box"/>
+  <text x="140" y="80" text-anchor="middle" class="entity-title">User</text>
+  <line x1="60" y1="85" x2="220" y2="85" stroke="#343a40"/>
+  <text x="60" y="100" class="entity-attr pk">id (PK)</text>
+  <text x="60" y="115" class="entity-attr">username</text>
+  <text x="60" y="130" class="entity-attr">email</text>
+  <text x="60" y="145" class="entity-attr">password</text>
+  <text x="60" y="160" class="entity-attr">first_name</text>
+  <text x="60" y="175" class="entity-attr">last_name</text>
+  <text x="60" y="190" class="entity-attr">date_joined</text>
+  <text x="60" y="205" class="entity-attr">is_active</text>
+
+  <!-- Profile Entity -->
+  <rect x="300" y="60" width="180" height="140" class="entity-box"/>
+  <text x="390" y="80" text-anchor="middle" class="entity-title">Profile</text>
+  <line x1="310" y1="85" x2="470" y2="85" stroke="#343a40"/>
+  <text x="310" y="100" class="entity-attr pk">id (PK)</text>
+  <text x="310" y="115" class="entity-attr fk">user_id (FK)</text>
+  <text x="310" y="130" class="entity-attr">display_name</text>
+  <text x="310" y="145" class="entity-attr">bio</text>
+  <text x="310" y="160" class="entity-attr">avatar</text>
+  <text x="310" y="175" class="entity-attr">location</text>
+  <text x="310" y="190" class="entity-attr">website</text>
+
+  <!-- Article Entity -->
+  <rect x="550" y="60" width="180" height="180" class="entity-box"/>
+  <text x="640" y="80" text-anchor="middle" class="entity-title">Article</text>
+  <line x1="560" y1="85" x2="720" y2="85" stroke="#343a40"/>
+  <text x="560" y="100" class="entity-attr pk">id (PK)</text>
+  <text x="560" y="115" class="entity-attr fk">author_id (FK)</text>
+  <text x="560" y="130" class="entity-attr fk">category_id (FK)</text>
+  <text x="560" y="145" class="entity-attr">title</text>
+  <text x="560" y="160" class="entity-attr">slug</text>
+  <text x="560" y="175" class="entity-attr">excerpt</text>
+  <text x="560" y="190" class="entity-attr">content</text>
+  <text x="560" y="205" class="entity-attr">status</text>
+  <text x="560" y="220" class="entity-attr">created_at</text>
+  <text x="560" y="235" class="entity-attr">published_at</text>
+
+  <!-- Category Entity -->
+  <rect x="800" y="60" width="180" height="120" class="entity-box"/>
+  <text x="890" y="80" text-anchor="middle" class="entity-title">Category</text>
+  <line x1="810" y1="85" x2="970" y2="85" stroke="#343a40"/>
+  <text x="810" y="100" class="entity-attr pk">id (PK)</text>
+  <text x="810" y="115" class="entity-attr">name</text>
+  <text x="810" y="130" class="entity-attr">slug</text>
+  <text x="810" y="145" class="entity-attr">description</text>
+  <text x="810" y="160" class="entity-attr">color</text>
+  <text x="810" y="175" class="entity-attr">icon</text>
+
+  <!-- Tag Entity -->
+  <rect x="550" y="300" width="180" height="120" class="entity-box"/>
+  <text x="640" y="320" text-anchor="middle" class="entity-title">Tag</text>
+  <line x1="560" y1="325" x2="720" y2="325" stroke="#343a40"/>
+  <text x="560" y="340" class="entity-attr pk">id (PK)</text>
+  <text x="560" y="355" class="entity-attr">name</text>
+  <text x="560" y="370" class="entity-attr">slug</text>
+  <text x="560" y="385" class="entity-attr">description</text>
+  <text x="560" y="400" class="entity-attr">color</text>
+
+  <!-- ArticleTag (Many-to-Many) Entity -->
+  <rect x="800" y="300" width="180" height="100" class="entity-box"/>
+  <text x="890" y="320" text-anchor="middle" class="entity-title">ArticleTag</text>
+  <line x1="810" y1="325" x2="970" y2="325" stroke="#343a40"/>
+  <text x="810" y="340" class="entity-attr pk">id (PK)</text>
+  <text x="810" y="355" class="entity-attr fk">article_id (FK)</text>
+  <text x="810" y="370" class="entity-attr fk">tag_id (FK)</text>
+  <text x="810" y="385" class="entity-attr">created_at</text>
+
+  <!-- Comment Entity -->
+  <rect x="50" y="300" width="180" height="160" class="entity-box"/>
+  <text x="140" y="320" text-anchor="middle" class="entity-title">Comment</text>
+  <line x1="60" y1="325" x2="220" y2="325" stroke="#343a40"/>
+  <text x="60" y="340" class="entity-attr pk">id (PK)</text>
+  <text x="60" y="355" class="entity-attr fk">article_id (FK)</text>
+  <text x="60" y="370" class="entity-attr fk">author_id (FK)</text>
+  <text x="60" y="385" class="entity-attr fk">parent_id (FK)</text>
+  <text x="60" y="400" class="entity-attr">content</text>
+  <text x="60" y="415" class="entity-attr">created_at</text>
+  <text x="60" y="430" class="entity-attr">updated_at</text>
+  <text x="60" y="445" class="entity-attr">is_active</text>
+
+  <!-- Like Entity -->
+  <rect x="300" y="300" width="180" height="120" class="entity-box"/>
+  <text x="390" y="320" text-anchor="middle" class="entity-title">Like</text>
+  <line x1="310" y1="325" x2="470" y2="325" stroke="#343a40"/>
+  <text x="310" y="340" class="entity-attr pk">id (PK)</text>
+  <text x="310" y="355" class="entity-attr fk">user_id (FK)</text>
+  <text x="310" y="370" class="entity-attr fk">article_id (FK)</text>
+  <text x="310" y="385" class="entity-attr">created_at</text>
+  <text x="310" y="400" class="entity-attr">content_type</text>
+
+  <!-- Follow Entity -->
+  <rect x="50" y="520" width="180" height="100" class="entity-box"/>
+  <text x="140" y="540" text-anchor="middle" class="entity-title">Follow</text>
+  <line x1="60" y1="545" x2="220" y2="545" stroke="#343a40"/>
+  <text x="60" y="560" class="entity-attr pk">id (PK)</text>
+  <text x="60" y="575" class="entity-attr fk">follower_id (FK)</text>
+  <text x="60" y="590" class="entity-attr fk">following_id (FK)</text>
+  <text x="60" y="605" class="entity-attr">created_at</text>
+
+  <!-- Notification Entity -->
+  <rect x="300" y="520" width="180" height="140" class="entity-box"/>
+  <text x="390" y="540" text-anchor="middle" class="entity-title">Notification</text>
+  <line x1="310" y1="545" x2="470" y2="545" stroke="#343a40"/>
+  <text x="310" y="560" class="entity-attr pk">id (PK)</text>
+  <text x="310" y="575" class="entity-attr fk">user_id (FK)</text>
+  <text x="310" y="590" class="entity-attr">type</text>
+  <text x="310" y="605" class="entity-attr">title</text>
+  <text x="310" y="620" class="entity-attr">message</text>
+  <text x="310" y="635" class="entity-attr">read</text>
+  <text x="310" y="650" class="entity-attr">created_at</text>
+
+  <!-- Bookmark Entity -->
+  <rect x="550" y="520" width="180" height="100" class="entity-box"/>
+  <text x="640" y="540" text-anchor="middle" class="entity-title">Bookmark</text>
+  <line x1="560" y1="545" x2="720" y2="545" stroke="#343a40"/>
+  <text x="560" y="560" class="entity-attr pk">id (PK)</text>
+  <text x="560" y="575" class="entity-attr fk">user_id (FK)</text>
+  <text x="560" y="590" class="entity-attr fk">article_id (FK)</text>
+  <text x="560" y="605" class="entity-attr">created_at</text>
+
+  <!-- ActivityLog Entity -->
+  <rect x="800" y="520" width="180" height="140" class="entity-box"/>
+  <text x="890" y="540" text-anchor="middle" class="entity-title">ActivityLog</text>
+  <line x1="810" y1="545" x2="970" y2="545" stroke="#343a40"/>
+  <text x="810" y="560" class="entity-attr pk">id (PK)</text>
+  <text x="810" y="575" class="entity-attr fk">user_id (FK)</text>
+  <text x="810" y="590" class="entity-attr">action_type</text>
+  <text x="810" y="605" class="entity-attr">object_type</text>
+  <text x="810" y="620" class="entity-attr">object_id</text>
+  <text x="810" y="635" class="entity-attr">description</text>
+  <text x="810" y="650" class="entity-attr">created_at</text>
+
+  <!-- Relationships -->
+  
+  <!-- User to Profile (1:1) -->
+  <line x1="230" y1="140" x2="300" y2="130" class="relationship"/>
+  <circle cx="230" cy="140" r="3" class="one-mark" fill="#6c757d"/>
+  <circle cx="300" cy="130" r="3" class="one-mark" fill="#6c757d"/>
+  <text x="265" y="125" class="relationship-label">1:1</text>
+
+  <!-- User to Article (1:M) -->
+  <line x1="230" y1="120" x2="550" y2="125" class="relationship"/>
+  <circle cx="230" cy="120" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="540,120 550,125 540,130" class="many-mark"/>
+  <text x="390" y="115" class="relationship-label">1:M (author)</text>
+
+  <!-- Category to Article (1:M) -->
+  <line x1="800" y1="120" x2="730" y2="130" class="relationship"/>
+  <circle cx="800" cy="120" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="740,125 730,130 740,135" class="many-mark"/>
+  <text x="750" y="115" class="relationship-label">1:M</text>
+
+  <!-- Article to Tag (M:M via ArticleTag) -->
+  <line x1="640" y1="240" x2="640" y2="300" class="relationship"/>
+  <line x1="640" y1="300" x2="800" y2="340" class="relationship"/>
+  <line x1="730" y1="340" x2="640" y2="340" class="relationship"/>
+  <polygon points="635,295 640,300 645,295" class="many-mark"/>
+  <polygon points="795,345 800,340 795,335" class="many-mark"/>
+  <text x="645" y="270" class="relationship-label">M:M</text>
+
+  <!-- User to Comment (1:M) -->
+  <line x1="140" y1="220" x2="140" y2="300" class="relationship"/>
+  <circle cx="140" cy="220" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="135,295 140,300 145,295" class="many-mark"/>
+  <text x="150" y="260" class="relationship-label">1:M (author)</text>
+
+  <!-- Article to Comment (1:M) -->
+  <line x1="550" y1="200" x2="230" y2="360" class="relationship"/>
+  <circle cx="550" cy="200" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="235,355 230,360 235,365" class="many-mark"/>
+  <text x="390" y="280" class="relationship-label">1:M</text>
+
+  <!-- Comment to Comment (1:M - Self Reference) -->
+  <path d="M 60 385 Q 30 385 30 415 Q 30 445 60 445" class="relationship"/>
+  <circle cx="60" cy="385" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="55,440 60,445 65,440" class="many-mark"/>
+  <text x="10" y="415" class="relationship-label">1:M (parent)</text>
+
+  <!-- User to Like (1:M) -->
+  <line x1="140" y1="220" x2="310" y2="340" class="relationship"/>
+  <circle cx="140" cy="220" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="305,345 310,340 305,335" class="many-mark"/>
+  <text x="200" y="290" class="relationship-label">1:M</text>
+
+  <!-- Article to Like (1:M) -->
+  <line x1="550" y1="220" x2="470" y2="360" class="relationship"/>
+  <circle cx="550" cy="220" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="465,355 470,360 475,355" class="many-mark"/>
+  <text x="495" y="290" class="relationship-label">1:M</text>
+
+  <!-- User to Follow (M:M - Self Reference) -->
+  <line x1="140" y1="220" x2="140" y2="520" class="relationship"/>
+  <polygon points="135,215 140,220 145,215" class="many-mark"/>
+  <polygon points="135,515 140,520 145,515" class="many-mark"/>
+  <text x="150" y="370" class="relationship-label">M:M (followers)</text>
+
+  <!-- User to Notification (1:M) -->
+  <line x1="230" y1="180" x2="300" y2="580" class="relationship"/>
+  <circle cx="230" cy="180" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="295,575 300,580 305,575" class="many-mark"/>
+  <text x="250" y="380" class="relationship-label">1:M</text>
+
+  <!-- User to Bookmark (1:M) -->
+  <line x1="230" y1="200" x2="550" y2="570" class="relationship"/>
+  <circle cx="230" cy="200" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="545,565 550,570 545,575" class="many-mark"/>
+  <text x="390" y="385" class="relationship-label">1:M</text>
+
+  <!-- Article to Bookmark (1:M) -->
+  <line x1="640" y1="240" x2="640" y2="520" class="relationship"/>
+  <circle cx="640" cy="240" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="635,515 640,520 645,515" class="many-mark"/>
+  <text x="650" y="380" class="relationship-label">1:M</text>
+
+  <!-- User to ActivityLog (1:M) -->
+  <line x1="230" y1="160" x2="800" y2="580" class="relationship"/>
+  <circle cx="230" cy="160" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="795,575 800,580 795,585" class="many-mark"/>
+  <text x="515" y="370" class="relationship-label">1:M</text>
+
+  <!-- Legend -->
+  <rect x="1050" y="60" width="300" height="200" fill="#f8f9fa" stroke="#343a40" stroke-width="1"/>
+  <text x="1200" y="80" text-anchor="middle" class="entity-title">Legend</text>
+  
+  <text x="1060" y="105" class="pk">PK - Primary Key</text>
+  <text x="1060" y="125" class="fk">FK - Foreign Key</text>
+  
+  <line x1="1060" y1="140" x2="1100" y2="140" class="relationship"/>
+  <circle cx="1060" cy="140" r="3" class="one-mark" fill="#6c757d"/>
+  <polygon points="1095,135 1100,140 1095,145" class="many-mark"/>
+  <text x="1110" y="145" class="relationship-label">One-to-Many</text>
+  
+  <line x1="1060" y1="160" x2="1100" y2="160" class="relationship"/>
+  <polygon points="1055,155 1060,160 1055,165" class="many-mark"/>
+  <polygon points="1095,155 1100,160 1095,165" class="many-mark"/>
+  <text x="1110" y="165" class="relationship-label">Many-to-Many</text>
+  
+  <line x1="1060" y1="180" x2="1100" y2="180" class="relationship"/>
+  <circle cx="1060" cy="180" r="3" class="one-mark" fill="#6c757d"/>
+  <circle cx="1100" cy="180" r="3" class="one-mark" fill="#6c757d"/>
+  <text x="1110" y="185" class="relationship-label">One-to-One</text>
+  
+  <text x="1060" y="210" class="entity-attr" style="font-size: 10px;">Self-referencing relationships shown with curved lines</text>
+  <text x="1060" y="225" class="entity-attr" style="font-size: 10px;">Junction tables (ArticleTag) handle M:M relationships</text>
+  <text x="1060" y="240" class="entity-attr" style="font-size: 10px;">Polymorphic relations via content_type fields</text>
+
+</svg>

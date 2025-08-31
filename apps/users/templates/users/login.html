@@ -1,0 +1,126 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/login.html -->
+
+{% extends 'base.html' %} {% load static %} {% block title %}Login - {{
+block.super }}{% endblock %} {% block extra_css %}
+<link href="{% static 'css/auth.css' %}" rel="stylesheet" />
+{% endblock %} {% block content %}
+<div class="container-fluid vh-100">
+  <div class="row h-100">
+    <!-- Left side - Form -->
+    <div class="col-md-6 d-flex align-items-center justify-content-center">
+      <div class="auth-form-container">
+        <div class="text-center mb-4">
+          <h2 class="h3 mb-3 fw-normal">Welcome back</h2>
+          <p class="text-muted">Sign in to your account</p>
+        </div>
+
+        {% if messages %} {% for message in messages %}
+        <div
+          class="alert alert-{{ message.tags }} alert-dismissible fade show"
+          role="alert"
+        >
+          {{ message }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+          ></button>
+        </div>
+        {% endfor %} {% endif %}
+
+        <form method="post" class="auth-form">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="{{ form.username.id_for_label }}" class="form-label">
+              Email or Username
+            </label>
+            {{ form.username }} {% if form.username.errors %}
+            <div class="invalid-feedback d-block">
+              {{ form.username.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.password.id_for_label }}" class="form-label">
+              Password
+            </label>
+            {{ form.password }} {% if form.password.errors %}
+            <div class="invalid-feedback d-block">
+              {{ form.password.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3 form-check">
+            {{ form.remember_me }}
+            <label
+              class="form-check-label"
+              for="{{ form.remember_me.id_for_label }}"
+            >
+              Remember me
+            </label>
+          </div>
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary w-100 mb-3">
+            Sign In
+          </button>
+
+          <div class="text-center">
+            <p class="mb-2">
+              <a href="#" class="text-decoration-none">Forgot your password?</a>
+            </p>
+            <p class="mb-0">
+              Don't have an account?
+              <a
+                href="{% url 'users:signup' %}"
+                class="text-decoration-none fw-medium"
+              >
+                Sign up
+              </a>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right side - Image/Branding -->
+    <div class="col-md-6 d-none d-md-flex auth-hero-section">
+      <div
+        class="d-flex align-items-center justify-content-center w-100 text-white text-center"
+      >
+        <div>
+          <h1 class="display-4 fw-bold mb-4">DjangoVerseHub</h1>
+          <p class="lead mb-0">Your gateway to the Django universe</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Auto-focus first input
+    const firstInput = document.querySelector(
+      'input[type="text"], input[type="email"]'
+    );
+    if (firstInput) {
+      firstInput.focus();
+    }
+
+    // Form validation feedback
+    const form = document.querySelector(".auth-form");
+    form.addEventListener("submit", function (e) {
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+      submitBtn.disabled = true;
+    });
+  });
+</script>
+{% endblock %}

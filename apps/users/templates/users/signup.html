@@ -1,0 +1,264 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/signup.html -->
+
+{% extends 'base.html' %} {% load static %} {% block title %}Sign Up - {{
+block.super }}{% endblock %} {% block extra_css %}
+<link href="{% static 'css/auth.css' %}" rel="stylesheet" />
+{% endblock %} {% block content %}
+<div class="container-fluid vh-100">
+  <div class="row h-100">
+    <!-- Left side - Form -->
+    <div class="col-md-6 d-flex align-items-center justify-content-center">
+      <div class="auth-form-container">
+        <div class="text-center mb-4">
+          <h2 class="h3 mb-3 fw-normal">Create your account</h2>
+          <p class="text-muted">Join the DjangoVerseHub community</p>
+        </div>
+
+        {% if messages %} {% for message in messages %}
+        <div
+          class="alert alert-{{ message.tags }} alert-dismissible fade show"
+          role="alert"
+        >
+          {{ message }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+          ></button>
+        </div>
+        {% endfor %} {% endif %}
+
+        <form method="post" class="auth-form">
+          {% csrf_token %}
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label
+                for="{{ form.first_name.id_for_label }}"
+                class="form-label"
+              >
+                First Name
+              </label>
+              {{ form.first_name }} {% if form.first_name.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.first_name.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                Last Name
+              </label>
+              {{ form.last_name }} {% if form.last_name.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.last_name.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.email.id_for_label }}" class="form-label">
+              Email Address *
+            </label>
+            {{ form.email }} {% if form.email.errors %}
+            <div class="invalid-feedback d-block">
+              {{ form.email.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.username.id_for_label }}" class="form-label">
+              Username *
+            </label>
+            {{ form.username }}
+            <div class="form-text">
+              Choose a unique username (3-30 characters, letters, numbers, _, -)
+            </div>
+            {% if form.username.errors %}
+            <div class="invalid-feedback d-block">
+              {{ form.username.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.password1.id_for_label }}" class="form-label">
+              Password *
+            </label>
+            {{ form.password1 }} {% if form.password1.errors %}
+            <div class="invalid-feedback d-block">
+              {{ form.password1.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.password2.id_for_label }}" class="form-label">
+              Confirm Password *
+            </label>
+            {{ form.password2 }} {% if form.password2.errors %}
+            <div class="invalid-feedback d-block">
+              {{ form.password2.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3 form-check">
+            {{ form.terms_accepted }}
+            <label
+              class="form-check-label"
+              for="{{ form.terms_accepted.id_for_label }}"
+            >
+              I agree to the
+              <a href="#" class="text-decoration-none">Terms of Service</a> and
+              <a href="#" class="text-decoration-none">Privacy Policy</a> *
+            </label>
+            {% if form.terms_accepted.errors %}
+            <div class="invalid-feedback d-block">
+              {{ form.terms_accepted.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary w-100 mb-3">
+            Create Account
+          </button>
+
+          <div class="text-center">
+            <p class="mb-0">
+              Already have an account?
+              <a
+                href="{% url 'users:login' %}"
+                class="text-decoration-none fw-medium"
+              >
+                Sign in
+              </a>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right side - Image/Branding -->
+    <div class="col-md-6 d-none d-md-flex auth-hero-section">
+      <div
+        class="d-flex align-items-center justify-content-center w-100 text-white text-center"
+      >
+        <div>
+          <h1 class="display-4 fw-bold mb-4">Join Us Today</h1>
+          <p class="lead mb-4">Become part of the growing Django community</p>
+          <div class="row text-center">
+            <div class="col">
+              <h4>1000+</h4>
+              <small>Active Users</small>
+            </div>
+            <div class="col">
+              <h4>500+</h4>
+              <small>Articles</small>
+            </div>
+            <div class="col">
+              <h4>24/7</h4>
+              <small>Support</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Auto-focus first input
+    const firstInput = document.querySelector(
+      'input[type="text"], input[type="email"]'
+    );
+    if (firstInput) {
+      firstInput.focus();
+    }
+
+    // Real-time username validation
+    const usernameInput = document.getElementById(
+      "{{ form.username.id_for_label }}"
+    );
+    if (usernameInput) {
+      usernameInput.addEventListener("input", function () {
+        const username = this.value;
+        const feedback = this.parentNode.querySelector(".form-text");
+
+        if (username.length < 3) {
+          feedback.textContent = "Username must be at least 3 characters long";
+          feedback.className = "form-text text-warning";
+        } else if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+          feedback.textContent =
+            "Username can only contain letters, numbers, _ and -";
+          feedback.className = "form-text text-danger";
+        } else {
+          feedback.textContent = "Username looks good!";
+          feedback.className = "form-text text-success";
+        }
+      });
+    }
+
+    // Form submission handling
+    const form = document.querySelector(".auth-form");
+    form.addEventListener("submit", function (e) {
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
+      submitBtn.disabled = true;
+    });
+
+    // Password strength indicator
+    const password1 = document.getElementById(
+      "{{ form.password1.id_for_label }}"
+    );
+    if (password1) {
+      password1.addEventListener("input", function () {
+        const password = this.value;
+        let strength = 0;
+
+        if (password.length >= 8) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        const strengthText = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
+        const strengthColors = [
+          "text-danger",
+          "text-warning",
+          "text-info",
+          "text-primary",
+          "text-success",
+        ];
+
+        let strengthElement =
+          this.parentNode.querySelector(".password-strength");
+        if (!strengthElement) {
+          strengthElement = document.createElement("div");
+          strengthElement.className = "password-strength form-text";
+          this.parentNode.appendChild(strengthElement);
+        }
+
+        if (password.length > 0) {
+          strengthElement.textContent = `Password strength: ${
+            strengthText[strength] || "Very Weak"
+          }`;
+          strengthElement.className = `password-strength form-text ${
+            strengthColors[strength] || "text-danger"
+          }`;
+        } else {
+          strengthElement.textContent = "";
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,413 @@
+<!-- File: DjangoVerseHub/templates/includes/cache/popular_articles.html -->
+
+{% load static cache %} {% cache 600 popular_articles %}
+<div class="popular-articles-widget">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-fire text-danger me-2"></i>Trending Articles
+      </h5>
+      <span class="badge bg-danger">Hot</span>
+    </div>
+
+    <div class="card-body p-0">
+      {% if popular_articles %}
+      <div class="list-group list-group-flush">
+        {% for article in popular_articles|slice:":5" %}
+        <a
+          href="{% url 'articles:detail' pk=article.pk %}"
+          class="list-group-item list-group-item-action border-0"
+        >
+          <div class="d-flex align-items-start">
+            <!-- Ranking Number -->
+            <div class="ranking-number me-3">
+              <span class="badge bg-primary rounded-pill"
+                >{{ forloop.counter }}</span
+              >
+            </div>
+
+            <!-- Article Content -->
+            <div class="flex-grow-1 min-w-0">
+              <h6 class="mb-2 fw-semibold text-truncate">
+                {{ article.title }}
+              </h6>
+
+              <!-- Author Info -->
+              <div class="d-flex align-items-center mb-2">
+                <img
+                  src="{{ article.author.profile.avatar_url }}"
+                  alt="{{ article.author.username }}"
+                  class="rounded-circle me-2"
+                  width="24"
+                  height="24"
+                />
+                <span class="text-muted small">
+                  by {{ article.author.profile.display_name }}
+                </span>
+              </div>
+
+              <!-- Article Stats -->
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center text-muted small">
+                  <span class="me-3">
+                    <i class="bi bi-eye me-1"></i>
+                    {{ article.view_count|default:0 }}
+                  </span>
+                  <span class="me-3">
+                    <i class="bi bi-heart me-1"></i>
+                    {{ article.likes_count|default:0 }}
+                  </span>
+                  <span>
+                    <i class="bi bi-chat me-1"></i>
+                    {{ article.comments_count|default:0 }}
+                  </span>
+                </div>
+                <small class="text-muted">
+                  {{ article.published_at|timesince }} ago
+                </small>
+              </div>
+
+              <!-- Tags -->
+              {% if article.tags.all %}
+              <div class="mt-2">
+                {% for tag in article.tags.all|slice:":3" %}
+                <span class="badge bg-light text-dark me-1 small">
+                  {{ tag.name }}
+                </span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Trending Indicator -->
+            {% if article.is_trending %}
+            <div class="trending-indicator">
+              <i class="bi bi-graph-up-arrow text-success"></i>
+            </div>
+            {% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- View All Button -->
+      <div class="card-footer bg-transparent text-center">
+        <a
+          href="{% url 'articles:trending' %}"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="bi bi-arrow-right me-1"></i>View All Trending
+        </a>
+      </div>
+      {% else %}
+      <!-- Empty State -->
+      <div class="text-center py-4">
+        <i class="bi bi-file-text fs-1 text-muted mb-3 opacity-50"></i>
+        <p class="text-muted mb-0">No trending articles yet</p>
+        <small class="text-muted">Check back later for popular content</small>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Articles Widget -->
+  <div class="card mt-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="bi bi-clock text-primary me-2"></i>Latest Articles
+      </h5>
+    </div>
+
+    <div class="card-body p-0">
+      {% if recent_articles %}
+      <div class="list-group list-group-flush">
+        {% for article in recent_articles|slice:":4" %}
+        <a
+          href="{% url 'articles:detail' pk=article.pk %}"
+          class="list-group-item list-group-item-action border-0"
+        >
+          <div class="d-flex align-items-center">
+            <!-- Article Thumbnail -->
+            {% if article.featured_image %}
+            <img
+              src="{{ article.featured_image.url }}"
+              alt="{{ article.title }}"
+              class="rounded me-3"
+              width="60"
+              height="45"
+              style="object-fit: cover"
+            />
+            {% else %}
+            <div
+              class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+              style="width: 60px; height: 45px"
+            >
+              <i class="bi bi-file-text text-muted"></i>
+            </div>
+            {% endif %}
+
+            <!-- Article Info -->
+            <div class="flex-grow-1 min-w-0">
+              <h6 class="mb-1 fw-semibold text-truncate">
+                {{ article.title }}
+              </h6>
+              <p class="mb-1 text-muted small text-truncate">
+                {{ article.summary|default:article.content|truncatechars:60 }}
+              </p>
+              <div class="d-flex align-items-center justify-content-between">
+                <small class="text-muted">
+                  {{ article.author.profile.display_name }}
+                </small>
+                <small class="text-muted">
+                  {{ article.published_at|timesince }} ago
+                </small>
+              </div>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <div class="card-footer bg-transparent text-center">
+        <a
+          href="{% url 'articles:list' %}"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="bi bi-arrow-right me-1"></i>View All Articles
+        </a>
+      </div>
+      {% else %}
+      <div class="text-center py-4">
+        <i class="bi bi-plus-circle fs-1 text-muted mb-3 opacity-50"></i>
+        <p class="text-muted mb-2">No articles published yet</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'articles:create' %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-plus me-1"></i>Write First Article
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Top Contributors Widget -->
+  <div class="card mt-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="bi bi-trophy text-warning me-2"></i>Top Contributors
+      </h5>
+    </div>
+
+    <div class="card-body p-0">
+      {% if top_contributors %}
+      <div class="list-group list-group-flush">
+        {% for contributor in top_contributors|slice:":5" %}
+        <a
+          href="{% url 'users:profile' pk=contributor.pk %}"
+          class="list-group-item list-group-item-action border-0"
+        >
+          <div class="d-flex align-items-center">
+            <!-- Rank Badge -->
+            <div class="rank-badge me-3">
+              {% if forloop.counter == 1 %}
+              <i class="bi bi-trophy-fill text-warning fs-5"></i>
+              {% elif forloop.counter == 2 %}
+              <i class="bi bi-award-fill text-secondary fs-5"></i>
+              {% elif forloop.counter == 3 %}
+              <i class="bi bi-award text-warning fs-5"></i>
+              {% else %}
+              <span class="badge bg-light text-dark"
+                >{{ forloop.counter }}</span
+              >
+              {% endif %}
+            </div>
+
+            <!-- User Avatar -->
+            <img
+              src="{{ contributor.profile.avatar_url }}"
+              alt="{{ contributor.username }}"
+              class="rounded-circle me-3"
+              width="40"
+              height="40"
+            />
+
+            <!-- User Info -->
+            <div class="flex-grow-1">
+              <h6 class="mb-1 fw-semibold">
+                {{ contributor.profile.display_name }}
+              </h6>
+              <div class="d-flex align-items-center text-muted small">
+                <span class="me-3">
+                  <i class="bi bi-file-text me-1"></i>
+                  {{ contributor.articles_count|default:0 }} articles
+                </span>
+                <span>
+                  <i class="bi bi-heart me-1"></i>
+                  {{ contributor.total_likes|default:0 }} likes
+                </span>
+              </div>
+            </div>
+
+            <!-- Contribution Score -->
+            <div class="text-end">
+              <div class="fw-bold text-primary">
+                {{ contributor.contribution_score|default:0 }}
+              </div>
+              <small class="text-muted">points</small>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <div class="card-footer bg-transparent text-center">
+        <a
+          href="{% url 'users:leaderboard' %}"
+          class="btn btn-outline-warning btn-sm"
+        >
+          <i class="bi bi-list-ol me-1"></i>View Leaderboard
+        </a>
+      </div>
+      {% else %}
+      <div class="text-center py-4">
+        <i class="bi bi-people fs-1 text-muted mb-3 opacity-50"></i>
+        <p class="text-muted mb-0">No contributors yet</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+  .popular-articles-widget .card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .popular-articles-widget .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .ranking-number .badge {
+    font-size: 0.75rem;
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .trending-indicator {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .list-group-item:hover {
+    background-color: var(--bs-light);
+    transform: translateX(2px);
+    transition: all 0.2s ease-in-out;
+  }
+
+  [data-bs-theme="dark"] .list-group-item:hover {
+    background-color: var(--bs-gray-800);
+  }
+
+  .rank-badge {
+    width: 30px;
+    text-align: center;
+  }
+
+  .contribution-score {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .popular-articles-widget {
+      margin-top: 1rem;
+    }
+
+    .ranking-number {
+      display: none;
+    }
+
+    .d-flex .me-3:first-child {
+      margin-right: 1rem !important;
+    }
+  }
+
+  /* Loading skeleton for cached content */
+  .loading-skeleton {
+    animation: skeleton-loading 1.5s infinite;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+  }
+
+  @keyframes skeleton-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  [data-bs-theme="dark"] .loading-skeleton {
+    background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
+    background-size: 200% 100%;
+  }
+</style>
+
+<script>
+  // Track popular article clicks for analytics
+  document.addEventListener("DOMContentLoaded", function () {
+    const popularLinks = document.querySelectorAll(
+      '.popular-articles-widget a[href*="articles"]'
+    );
+
+    popularLinks.forEach((link, index) => {
+      link.addEventListener("click", function () {
+        if (window.gtag) {
+          gtag("event", "click", {
+            event_category: "Popular Articles",
+            event_label: this.textContent.trim(),
+            value: index + 1,
+          });
+        }
+      });
+    });
+  });
+
+  // Lazy loading for images
+  if ("IntersectionObserver" in window) {
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src;
+          img.classList.remove("loading-skeleton");
+          observer.unobserve(img);
+        }
+      });
+    });
+
+    document.querySelectorAll("img[data-src]").forEach((img) => {
+      imageObserver.observe(img);
+    });
+  }
+</script>
+{% endcache %}

@@ -1,0 +1,180 @@
+<!-- File: DjangoVerseHub/static/images/banners/hero.svg -->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="1200" height="600">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="codeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d6efd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a58ca;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#198754;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#20c997;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Patterns -->
+    <pattern id="gridPattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+    </pattern>
+    
+    <pattern id="dotsPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="15" cy="15" r="2" fill="rgba(255,255,255,0.1)"/>
+    </pattern>
+    
+    <!-- Filters -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="600" fill="url(#heroGradient)"/>
+  
+  <!-- Grid Pattern Overlay -->
+  <rect width="1200" height="600" fill="url(#gridPattern)" opacity="0.3"/>
+  
+  <!-- Floating Code Blocks -->
+  <g opacity="0.8">
+    <!-- Large Code Block -->
+    <g transform="translate(100, 80)">
+      <rect width="200" height="140" rx="8" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      <rect x="10" y="10" width="180" height="20" rx="10" fill="url(#codeGradient)" opacity="0.8"/>
+      <rect x="10" y="40" width="120" height="8" rx="4" fill="rgba(255,255,255,0.6)"/>
+      <rect x="10" y="55" width="160" height="8" rx="4" fill="rgba(255,255,255,0.4)"/>
+      <rect x="10" y="70" width="80" height="8" rx="4" fill="rgba(255,255,255,0.6)"/>
+      <rect x="10" y="85" width="140" height="8" rx="4" fill="rgba(255,255,255,0.5)"/>
+      <rect x="10" y="100" width="100" height="8" rx="4" fill="rgba(255,255,255,0.6)"/>
+      <rect x="10" y="115" width="170" height="8" rx="4" fill="rgba(255,255,255,0.4)"/>
+    </g>
+    
+    <!-- Medium Code Block -->
+    <g transform="translate(350, 40)">
+      <rect width="150" height="100" rx="6" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+      <rect x="8" y="8" width="134" height="16" rx="8" fill="url(#accentGradient)" opacity="0.7"/>
+      <rect x="8" y="32" width="90" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+      <rect x="8" y="44" width="120" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
+      <rect x="8" y="56" width="70" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+      <rect x="8" y="68" width="110" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
+      <rect x="8" y="80" width="85" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+    </g>
+    
+    <!-- Small Code Blocks -->
+    <g transform="translate(550, 120)">
+      <rect width="80" height="60" rx="4" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <rect x="5" y="5" width="70" height="10" rx="5" fill="rgba(255,255,255,0.3)"/>
+      <rect x="5" y="20" width="50" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
+      <rect x="5" y="28" width="60" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
+      <rect x="5" y="36" width="40" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
+      <rect x="5" y="44" width="65" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
+    </g>
+  </g>
+  
+  <!-- Django Icons and Symbols -->
+  <g opacity="0.6" transform="translate(700, 100)">
+    <!-- Django Logo Inspired Shape -->
+    <g transform="scale(2)">
+      <path d="M10 10 L10 40 L18 40 C28 40 35 33 35 25 C35 17 28 10 18 10 Z" fill="rgba(255,255,255,0.8)"/>
+      <path d="M14 14 L18 14 C24 14 28 18 28 25 C28 32 24 36 18 36 L14 36 Z" fill="url(#codeGradient)"/>
+    </g>
+    
+    <!-- Code Brackets -->
+    <g transform="translate(80, 0)" stroke="rgba(255,255,255,0.7)" stroke-width="3" fill="none">
+      <path d="M0 15 L-8 25 L-8 35 L0 45"/>
+      <path d="M20 15 L28 25 L28 35 L20 45"/>
+    </g>
+    
+    <!-- Connecting Lines -->
+    <g stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none">
+      <line x1="50" y1="25" x2="70" y2="20"/>
+      <line x1="50" y1="35" x2="70" y2="40"/>
+      <line x1="100" y1="30" x2="120" y2="25"/>
+    </g>
+  </g>
+  
+  <!-- Floating Elements -->
+  <g opacity="0.4">
+    <!-- Circles -->
+    <circle cx="800" cy="80" r="6" fill="url(#accentGradient)" filter="url(#glow)"/>
+    <circle cx="950" cy="140" r="4" fill="rgba(255,255,255,0.8)"/>
+    <circle cx="1100" cy="90" r="8" fill="url(#codeGradient)" opacity="0.6"/>
+    
+    <!-- Dots -->
+    <circle cx="750" cy="200" r="3" fill="rgba(255,255,255,0.6)"/>
+    <circle cx="850" cy="180" r="2" fill="url(#accentGradient)"/>
+    <circle cx="920" cy="220" r="3" fill="rgba(255,255,255,0.5)"/>
+    
+    <!-- Small Squares -->
+    <rect x="780" y="250" width="8" height="8" rx="2" fill="url(#codeGradient)" opacity="0.7"/>
+    <rect x="880" y="280" width="6" height="6" rx="1" fill="rgba(255,255,255,0.6)"/>
+    <rect x="1020" y="240" width="10" height="10" rx="2" fill="url(#accentGradient)" opacity="0.5"/>
+  </g>
+  
+  <!-- Central Hub Symbol -->
+  <g transform="translate(600, 300)">
+    <circle cx="0" cy="0" r="40" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+    <circle cx="0" cy="0" r="25" fill="url(#codeGradient)" opacity="0.8"/>
+    
+    <!-- Hub connections -->
+    <g stroke="rgba(255,255,255,0.6)" stroke-width="2" fill="none">
+      <line x1="-60" y1="-30" x2="-42" y2="-17"/>
+      <line x1="60" y1="-30" x2="42" y2="-17"/>
+      <line x1="-60" y1="30" x2="-42" y2="17"/>
+      <line x1="60" y1="30" x2="42" y2="17"/>
+      <line x1="0" y1="-80" x2="0" y2="-42"/>
+      <line x1="0" y1="80" x2="0" y2="42"/>
+    </g>
+    
+    <!-- Hub nodes -->
+    <circle cx="-60" cy="-30" r="8" fill="url(#accentGradient)" opacity="0.8"/>
+    <circle cx="60" cy="-30" r="8" fill="url(#accentGradient)" opacity="0.8"/>
+    <circle cx="-60" cy="30" r="8" fill="url(#accentGradient)" opacity="0.8"/>
+    <circle cx="60" cy="30" r="8" fill="url(#accentGradient)" opacity="0.8"/>
+    <circle cx="0" cy="-80" r="8" fill="url(#accentGradient)" opacity="0.8"/>
+    <circle cx="0" cy="80" r="8" fill="url(#accentGradient)" opacity="0.8"/>
+    
+    <!-- Center icon -->
+    <g fill="white">
+      <rect x="-12" y="-12" width="24" height="24" rx="4"/>
+      <rect x="-8" y="-8" width="16" height="3" rx="1" fill="url(#codeGradient)"/>
+      <rect x="-8" y="-2" width="12" height="2" rx="1" fill="url(#codeGradient)" opacity="0.7"/>
+      <rect x="-8" y="2" width="14" height="2" rx="1" fill="url(#codeGradient)" opacity="0.7"/>
+      <rect x="-8" y="6" width="10" height="2" rx="1" fill="url(#codeGradient)" opacity="0.7"/>
+    </g>
+  </g>
+  
+  <!-- Bottom Wave Effect -->
+  <g opacity="0.3">
+    <path d="M0 450 Q300 400 600 450 T1200 450 L1200 600 L0 600 Z" fill="rgba(255,255,255,0.1)"/>
+    <path d="M0 480 Q400 430 800 480 T1200 480 L1200 600 L0 600 Z" fill="rgba(255,255,255,0.05)"/>
+  </g>
+  
+  <!-- Particle Effect -->
+  <g opacity="0.6" fill="rgba(255,255,255,0.8)">
+    <circle cx="200" cy="450" r="1.5">
+      <animate attributeName="cy" values="450;350;450" dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.3;0.8" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="400" cy="480" r="1">
+      <animate attributeName="cy" values="480;380;480" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0.2;0.6" dur="5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="800" cy="460" r="1.5">
+      <animate attributeName="cy" values="460;360;460" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.3;0.7" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1000" cy="470" r="1">
+      <animate attributeName="cy" values="470;370;470" dur="4.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.2;0.5" dur="4.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

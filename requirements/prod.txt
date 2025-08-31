@@ -1,0 +1,21 @@
+# File: DjangoVerseHub/requirements/prod.txt
+-r base.txt
+
+# Production Server
+gunicorn>=21.2.0
+
+# Monitoring and Error Tracking
+sentry-sdk>=1.32.0
+
+# Cloud Storage
+django-storages>=1.13.0
+boto3>=1.28.0
+
+# Security
+django-security>=0.17.0
+
+# Performance
+django-cachalot>=2.5.0
+
+# SSL and Security Headers
+django-sslserver>=0.22

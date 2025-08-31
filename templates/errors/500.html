@@ -1,0 +1,498 @@
+<!-- File: DjangoVerseHub/templates/errors/500.html -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Server Error (500) - DjangoVerseHub</title>
+
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'images/favicon.ico' %}"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="{% static 'css/main.css' %}" rel="stylesheet" />
+
+    <style>
+      .error-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .error-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='rgba(255,255,255,0.05)'%3E%3Cpath d='M20 20h60v60H20z' stroke='rgba(255,255,255,0.1)' stroke-width='1' fill='none'/%3E%3Cpath d='M30 30L70 70 M70 30L30 70'/%3E%3C/g%3E%3C/svg%3E")
+          repeat;
+      }
+
+      .error-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .error-number {
+        font-size: 8rem;
+        font-weight: 900;
+        color: #e74c3c;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        line-height: 1;
+        margin-bottom: 1rem;
+      }
+
+      .server-icon {
+        font-size: 4rem;
+        color: #e74c3c;
+        margin-bottom: 2rem;
+        animation: glitch 2s linear infinite;
+      }
+
+      @keyframes glitch {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-2px) translateY(2px);
+        }
+        40% {
+          transform: translateX(-2px) translateY(-2px);
+        }
+        60% {
+          transform: translateX(2px) translateY(2px);
+        }
+        80% {
+          transform: translateX(2px) translateY(-2px);
+        }
+      }
+
+      .btn-emergency {
+        background: #e74c3c;
+        border: 2px solid #c0392b;
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .btn-emergency:hover {
+        background: #c0392b;
+        border-color: #a93226;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+      }
+
+      .system-status {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(15px);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin: 2rem 0;
+      }
+
+      .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+      }
+
+      .status-critical {
+        background-color: #e74c3c;
+      }
+      .status-warning {
+        background-color: #f39c12;
+      }
+      .status-ok {
+        background-color: #27ae60;
+      }
+
+      .floating-errors {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .floating-error {
+        position: absolute;
+        opacity: 0.1;
+        animation: float-server-error 15s infinite linear;
+        color: #e74c3c;
+      }
+
+      @keyframes float-server-error {
+        0% {
+          transform: translateY(100vh) translateX(-20px) rotate(0deg);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.1;
+        }
+        90% {
+          opacity: 0.1;
+        }
+        100% {
+          transform: translateY(-100px) translateX(20px) rotate(180deg);
+          opacity: 0;
+        }
+      }
+
+      .error-code {
+        font-family: "Courier New", monospace;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        font-size: 0.875rem;
+        color: #e74c3c;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="error-container">
+      <!-- Floating Background Elements -->
+      <div class="floating-errors">
+        <div
+          class="floating-error"
+          style="left: 5%; animation-delay: -2s; font-size: 2rem"
+        >
+          <i class="bi bi-server"></i>
+        </div>
+        <div
+          class="floating-error"
+          style="left: 15%; animation-delay: -4s; font-size: 1.5rem"
+        >
+          <i class="bi bi-cpu"></i>
+        </div>
+        <div
+          class="floating-error"
+          style="left: 25%; animation-delay: -1s; font-size: 2.5rem"
+        >
+          <i class="bi bi-x-octagon"></i>
+        </div>
+        <div
+          class="floating-error"
+          style="left: 75%; animation-delay: -3s; font-size: 1.8rem"
+        >
+          <i class="bi bi-exclamation-diamond"></i>
+        </div>
+        <div
+          class="floating-error"
+          style="left: 85%; animation-delay: -5s; font-size: 2rem"
+        >
+          <i class="bi bi-lightning"></i>
+        </div>
+        <div
+          class="floating-error"
+          style="left: 95%; animation-delay: -1.5s; font-size: 1.5rem"
+        >
+          <i class="bi bi-fire"></i>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8 col-md-10">
+            <div class="text-center error-content">
+              <!-- Server Icon -->
+              <div class="server-icon">
+                <i class="bi bi-server"></i>
+              </div>
+
+              <!-- Error Number -->
+              <div class="error-number">500</div>
+
+              <!-- Error Message -->
+              <h1 class="display-6 text-white mb-4">Internal Server Error</h1>
+              <p class="lead text-white-50 mb-4">
+                Something went wrong on our servers. Our team has been
+                automatically notified and is working to fix the issue.
+              </p>
+
+              <!-- System Status -->
+              <div class="system-status">
+                <div class="row align-items-center">
+                  <div class="col-md-3 mb-3 mb-md-0">
+                    <i class="bi bi-activity fs-1 text-white-50"></i>
+                  </div>
+                  <div class="col-md-9 text-start">
+                    <h5 class="text-white mb-3">System Status</h5>
+                    <div class="row small text-white-50">
+                      <div class="col-md-6">
+                        <div class="mb-2">
+                          <span class="status-indicator status-critical"></span>
+                          Application Server: Critical
+                        </div>
+                        <div class="mb-2">
+                          <span class="status-indicator status-ok"></span>
+                          Database: Operational
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-2">
+                          <span class="status-indicator status-ok"></span>
+                          CDN: Operational
+                        </div>
+                        <div class="mb-2">
+                          <span class="status-indicator status-warning"></span>
+                          Cache: Degraded
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error Code Display -->
+              <div class="error-code text-start">
+                <div class="text-white-50 mb-2">Error Details:</div>
+                <div>
+                  ERROR_ID: <span id="error-id"></span><br />
+                  TIMESTAMP: <span id="error-timestamp"></span><br />
+                  SERVER: {{ request.get_host }}<br />
+                  REQUEST_ID: <span id="request-id"></span>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="row g-3 justify-content-center mb-5">
+                <div class="col-auto">
+                  <button
+                    onclick="window.location.reload()"
+                    class="btn btn-emergency btn-lg"
+                  >
+                    <i class="bi bi-arrow-clockwise me-2"></i>Try Again
+                  </button>
+                </div>
+                <div class="col-auto">
+                  <a
+                    href="{% url 'home' %}"
+                    class="btn btn-outline-light btn-lg"
+                  >
+                    <i class="bi bi-house me-2"></i>Go Home
+                  </a>
+                </div>
+                <div class="col-auto">
+                  <a
+                    href="javascript:history.back()"
+                    class="btn btn-outline-light btn-lg"
+                  >
+                    <i class="bi bi-arrow-left me-2"></i>Go Back
+                  </a>
+                </div>
+              </div>
+
+              <!-- Status Updates -->
+              <div class="mt-5 pt-4 border-top border-white-25">
+                <h5 class="text-white mb-4">What We're Doing</h5>
+                <div class="row g-4 justify-content-center">
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <i
+                        class="bi bi-tools fs-3 mb-3 d-block text-white-50"
+                      ></i>
+                      <h6 class="text-white">Investigating</h6>
+                      <p class="text-white-50 small mb-0">
+                        Our engineers are analyzing the issue
+                      </p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <i
+                        class="bi bi-graph-up fs-3 mb-3 d-block text-white-50"
+                      ></i>
+                      <h6 class="text-white">Monitoring</h6>
+                      <p class="text-white-50 small mb-0">
+                        Real-time system health monitoring
+                      </p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <i
+                        class="bi bi-arrow-repeat fs-3 mb-3 d-block text-white-50"
+                      ></i>
+                      <h6 class="text-white">Restoring</h6>
+                      <p class="text-white-50 small mb-0">
+                        Working to restore full functionality
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Information -->
+              <div class="mt-5">
+                <h6 class="text-white mb-3">Need Immediate Help?</h6>
+                <div class="row g-3 justify-content-center">
+                  <div class="col-auto">
+                    <a href="#" class="btn btn-outline-light btn-sm">
+                      <i class="bi bi-twitter me-1"></i>@DjangoVerseHub
+                    </a>
+                  </div>
+                  <div class="col-auto">
+                    <a href="#" class="btn btn-outline-light btn-sm">
+                      <i class="bi bi-envelope me-1"></i
+                      >support@djangoversehub.com
+                    </a>
+                  </div>
+                  <div class="col-auto">
+                    <a href="#" class="btn btn-outline-light btn-sm">
+                      <i class="bi bi-chat-dots me-1"></i>Live Chat
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Auto Refresh Notice -->
+              <div class="mt-4">
+                <p class="text-white-50 small">
+                  <i class="bi bi-arrow-clockwise me-1"></i>
+                  This page will automatically refresh in
+                  <span id="refresh-countdown">60</span> seconds
+                  <button
+                    onclick="toggleAutoRefresh()"
+                    class="btn btn-link btn-sm text-white-50 p-0 ms-2"
+                    id="refresh-toggle"
+                  >
+                    (disable)
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Generate error ID and set timestamps
+      const errorId = "ERR_" + Date.now().toString(36).toUpperCase();
+      const requestId =
+        "REQ_" + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+      document.getElementById("error-id").textContent = errorId;
+      document.getElementById("error-timestamp").textContent =
+        new Date().toISOString();
+      document.getElementById("request-id").textContent = requestId;
+
+      // Auto refresh functionality
+      let refreshCountdown = 60;
+      let autoRefreshEnabled = true;
+      let refreshInterval;
+
+      function updateCountdown() {
+        document.getElementById("refresh-countdown").textContent =
+          refreshCountdown;
+        refreshCountdown--;
+
+        if (refreshCountdown < 0 && autoRefreshEnabled) {
+          window.location.reload();
+        }
+      }
+
+      function toggleAutoRefresh() {
+        autoRefreshEnabled = !autoRefreshEnabled;
+        const toggle = document.getElementById("refresh-toggle");
+
+        if (autoRefreshEnabled) {
+          toggle.textContent = "(disable)";
+          refreshInterval = setInterval(updateCountdown, 1000);
+        } else {
+          toggle.textContent = "(enable)";
+          clearInterval(refreshInterval);
+        }
+      }
+
+      // Start countdown
+      refreshInterval = setInterval(updateCountdown, 1000);
+
+      // Enhanced floating animation
+      function createFloatingServerError() {
+        const icons = [
+          "bi-server",
+          "bi-cpu",
+          "bi-x-octagon",
+          "bi-exclamation-diamond",
+          "bi-lightning",
+          "bi-fire",
+          "bi-bug",
+          "bi-x-circle-fill",
+        ];
+        const container = document.querySelector(".floating-errors");
+
+        const element = document.createElement("div");
+        element.className = "floating-error";
+        element.innerHTML = `<i class="${
+          icons[Math.floor(Math.random() * icons.length)]
+        }"></i>`;
+        element.style.left = Math.random() * 100 + "%";
+        element.style.fontSize = Math.random() * 1.5 + 1 + "rem";
+        element.style.animationDelay = Math.random() * -15 + "s";
+        element.style.animationDuration = Math.random() * 5 + 15 + "s";
+
+        container.appendChild(element);
+
+        setTimeout(() => element.remove(), 20000);
+      }
+
+      setInterval(createFloatingServerError, 3000);
+
+      // Error reporting
+      const errorData = {
+        error_id: errorId,
+        request_id: requestId,
+        url: window.location.href,
+        user_agent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        referrer: document.referrer,
+      };
+
+      // Send error report to monitoring service
+      if (window.fetch) {
+        fetch("/api/errors/report/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(errorData),
+        }).catch(() => {
+          // Silent fail for error reporting
+        });
+      }
+
+      // Analytics tracking
+      if (window.gtag) {
+        gtag("event", "exception", {
+          description: "500 Internal Server Error",
+          fatal: false,
+          custom_map: {
+            error_id: errorId,
+            request_id: requestId,
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
