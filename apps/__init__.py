@@ -1,0 +1,1 @@
+# File: DjangoVerseHub/apps/__init__.py

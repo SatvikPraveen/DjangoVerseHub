@@ -1,0 +1,200 @@
+<!-- File: DjangoVerseHub/apps/comments/templates/comments/comment_thread.html -->
+{% load static %}
+
+<!-- Single Comment with Nested Replies -->
+<div class="comment mb-3" id="comment-{{ comment.id }}">
+  <div class="d-flex">
+    <img
+      src="{{ comment.author.profile.get_avatar_url }}"
+      class="avatar me-3"
+      alt="{{ comment.author.get_full_name }}"
+    />
+
+    <div class="comment-body flex-grow-1">
+      <div class="comment-header">
+        <strong>{{ comment.author.get_full_name }}</strong>
+        <small class="text-muted ms-2">
+          {{ comment.created_at|timesince }} ago {% if comment.is_edited %}
+          <span class="badge bg-info ms-1">edited</span>
+          {% endif %} {% if comment.is_flagged and user.is_staff %}
+          <span class="badge bg-warning ms-1">flagged</span>
+          {% endif %}
+        </small>
+      </div>
+
+      <div class="comment-content mt-2">{{ comment.content|linebreaks }}</div>
+
+      <div class="comment-actions mt-2">
+        <div class="d-flex align-items-center gap-3">
+          <!-- Like Button -->
+          {% if user.is_authenticated %}
+          <button
+            class="btn btn-sm btn-outline-primary like-btn"
+            data-comment-id="{{ comment.id }}"
+            data-liked="false"
+          >
+            <span class="like-icon">👍</span>
+            <span class="like-count">{{ comment.likes_count }}</span>
+          </button>
+          {% else %}
+          <span class="text-muted"> 👍 {{ comment.likes_count }} </span>
+          {% endif %}
+
+          <!-- Reply Button -->
+          {% if user.is_authenticated and comment.get_thread_depth < 3 %}
+          <button
+            class="btn btn-sm btn-outline-secondary reply-btn"
+            data-comment-id="{{ comment.id }}"
+          >
+            Reply
+          </button>
+          {% endif %}
+
+          <!-- Edit Button -->
+          {% if user.is_authenticated and comment.can_edit:user %}
+          <a
+            href="{% url 'comments:edit' pk=comment.pk %}"
+            class="btn btn-sm btn-outline-warning"
+          >
+            Edit
+          </a>
+          {% endif %}
+
+          <!-- Delete Button -->
+          {% if user.is_authenticated and comment.can_delete:user %}
+          <a
+            href="{% url 'comments:delete' pk=comment.pk %}"
+            class="btn btn-sm btn-outline-danger"
+          >
+            Delete
+          </a>
+          {% endif %}
+
+          <!-- Flag Button -->
+          {% if user.is_authenticated and user != comment.author %}
+          <a
+            href="{% url 'comments:flag' comment_id=comment.id %}"
+            class="btn btn-sm btn-outline-secondary"
+          >
+            Flag
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Reply Form (Hidden by default) -->
+      {% if user.is_authenticated and comment.get_thread_depth < 3 %}
+      <div
+        class="reply-form mt-3"
+        id="reply-form-{{ comment.id }}"
+        style="display: none"
+      >
+        <form
+          method="post"
+          action="{% url 'comments:reply' comment_id=comment.id %}"
+        >
+          {% csrf_token %}
+          <div class="mb-2">
+            <textarea
+              class="form-control"
+              name="content"
+              rows="3"
+              placeholder="Write your reply..."
+              required
+            ></textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">
+              Post Reply
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm cancel-reply">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Nested Replies -->
+      {% if comment.replies.all %}
+      <div class="comment-replies mt-3">
+        {% for reply in comment.replies.all %} {% if reply.is_active %} {%
+        include 'comments/comment_thread.html' with comment=reply %} {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Like button functionality
+    document.querySelectorAll(".like-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const commentId = this.dataset.commentId;
+
+        fetch(`/comments/${commentId}/like/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+              .value,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            const countSpan = this.querySelector(".like-count");
+            const icon = this.querySelector(".like-icon");
+
+            countSpan.textContent = data.likes_count;
+
+            if (data.liked) {
+              this.classList.remove("btn-outline-primary");
+              this.classList.add("btn-primary");
+              icon.textContent = "👍";
+            } else {
+              this.classList.remove("btn-primary");
+              this.classList.add("btn-outline-primary");
+              icon.textContent = "👍";
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      });
+    });
+
+    // Reply button functionality
+    document.querySelectorAll(".reply-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const commentId = this.dataset.commentId;
+        const replyForm = document.getElementById(`reply-form-${commentId}`);
+
+        if (replyForm.style.display === "none") {
+          replyForm.style.display = "block";
+          this.textContent = "Cancel Reply";
+        } else {
+          replyForm.style.display = "none";
+          this.textContent = "Reply";
+        }
+      });
+    });
+
+    // Cancel reply functionality
+    document.querySelectorAll(".cancel-reply").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const replyForm = this.closest(".reply-form");
+        const commentId = replyForm.id.replace("reply-form-", "");
+        const replyBtn = document.querySelector(
+          `[data-comment-id="${commentId}"].reply-btn`
+        );
+
+        replyForm.style.display = "none";
+        if (replyBtn) {
+          replyBtn.textContent = "Reply";
+        }
+      });
+    });
+  });
+</script>

@@ -1,0 +1,273 @@
+<!-- File: DjangoVerseHub/apps/notifications/templates/notifications/notifications_ws.html -->
+{% extends 'base.html' %} {% load static %} {% block title %}Live
+Notifications{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">
+        Live Notifications
+        <span id="connection-status" class="text-sm font-normal text-gray-500"
+          >Connecting...</span
+        >
+      </h1>
+      <div class="flex items-center gap-4">
+        <div class="bg-white px-3 py-1 rounded-full shadow">
+          Unread:
+          <span id="unread-count" class="font-bold text-red-500">0</span>
+        </div>
+        <a
+          href="{% url 'notifications:list' %}"
+          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          View All
+        </a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow min-h-96">
+      <div class="p-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-semibold">Real-time Notifications</h2>
+          <button
+            id="clear-all"
+            class="text-sm text-red-600 hover:text-red-800"
+          >
+            Clear All
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="notifications-container"
+        class="divide-y divide-gray-200 max-h-96 overflow-y-auto"
+      >
+        <div id="no-notifications" class="p-8 text-center text-gray-500">
+          <p class="text-lg">Waiting for notifications...</p>
+          <p class="mt-2 text-sm">
+            New notifications will appear here in real-time
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test notification button for development -->
+    <div class="mt-4 p-4 bg-gray-100 rounded-lg">
+      <p class="text-sm text-gray-600 mb-2">Development Tools:</p>
+      <button
+        id="test-connection"
+        class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 mr-2"
+      >
+        Test Connection
+      </button>
+      <button
+        id="mark-all-read"
+        class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+      >
+        Mark All Read
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws/notifications/`;
+
+    let socket;
+    let reconnectInterval = 1000;
+    const maxReconnectInterval = 30000;
+
+    function connect() {
+      socket = new WebSocket(wsUrl);
+
+      socket.onopen = function (e) {
+        console.log("WebSocket connected");
+        document.getElementById("connection-status").textContent = "Connected";
+        document.getElementById("connection-status").className =
+          "text-sm font-normal text-green-500";
+        reconnectInterval = 1000;
+        loadUnreadCount();
+      };
+
+      socket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === "notification") {
+          addNotificationToUI(data.notification);
+        } else if (data.type === "unread_count") {
+          updateUnreadCount(data.count);
+        }
+      };
+
+      socket.onclose = function (e) {
+        console.log("WebSocket disconnected");
+        document.getElementById("connection-status").textContent =
+          "Disconnected";
+        document.getElementById("connection-status").className =
+          "text-sm font-normal text-red-500";
+
+        // Reconnect with exponential backoff
+        setTimeout(() => {
+          connect();
+          reconnectInterval = Math.min(
+            reconnectInterval * 2,
+            maxReconnectInterval
+          );
+        }, reconnectInterval);
+      };
+
+      socket.onerror = function (error) {
+        console.error("WebSocket error:", error);
+      };
+    }
+
+    function addNotificationToUI(notification) {
+      const container = document.getElementById("notifications-container");
+      const noNotifications = document.getElementById("no-notifications");
+
+      if (noNotifications) {
+        noNotifications.remove();
+      }
+
+      const notificationEl = document.createElement("div");
+      notificationEl.className =
+        "p-4 bg-blue-50 border-l-4 border-blue-500 notification-item";
+      notificationEl.dataset.notificationId = notification.id;
+
+      notificationEl.innerHTML = `
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        ${
+                          notification.sender
+                            ? notification.sender.username
+                                .charAt(0)
+                                .toUpperCase()
+                            : "S"
+                        }
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-medium text-gray-900">
+                            ${
+                              notification.sender
+                                ? notification.sender.username
+                                : "System"
+                            }
+                        </p>
+                        <p class="text-xs text-gray-500">Just now</p>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-700">${
+                      notification.message
+                    }</p>
+                    <div class="mt-2">
+                        <button class="mark-read-btn text-xs text-blue-600 hover:text-blue-800" data-id="${
+                          notification.id
+                        }">
+                            Mark as Read
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+      container.insertBefore(notificationEl, container.firstChild);
+
+      // Add click handler for mark as read
+      notificationEl
+        .querySelector(".mark-read-btn")
+        .addEventListener("click", function () {
+          markAsRead(notification.id);
+        });
+
+      // Fade in animation
+      setTimeout(() => {
+        notificationEl.style.transition = "all 0.3s ease";
+        notificationEl.classList.remove("bg-blue-50");
+        notificationEl.classList.add("bg-white");
+      }, 2000);
+    }
+
+    function updateUnreadCount(count) {
+      document.getElementById("unread-count").textContent = count;
+    }
+
+    async function loadUnreadCount() {
+      try {
+        const response = await fetch("/notifications/api/unread-count/");
+        const data = await response.json();
+        updateUnreadCount(data.unread_count);
+      } catch (error) {
+        console.error("Error loading unread count:", error);
+      }
+    }
+
+    function markAsRead(notificationId) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            action: "mark_read",
+            notification_id: notificationId,
+          })
+        );
+
+        // Remove from UI
+        const notificationEl = document.querySelector(
+          `[data-notification-id="${notificationId}"]`
+        );
+        if (notificationEl) {
+          notificationEl.style.transition = "opacity 0.3s ease";
+          notificationEl.style.opacity = "0.5";
+        }
+      }
+    }
+
+    function markAllAsRead() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            action: "mark_all_read",
+          })
+        );
+
+        // Update UI
+        document.querySelectorAll(".notification-item").forEach((el) => {
+          el.style.transition = "opacity 0.3s ease";
+          el.style.opacity = "0.5";
+        });
+      }
+    }
+
+    // Event listeners
+    document
+      .getElementById("test-connection")
+      .addEventListener("click", function () {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          console.log("WebSocket is connected and ready");
+          alert("WebSocket connection is active!");
+        } else {
+          alert("WebSocket is not connected");
+        }
+      });
+
+    document
+      .getElementById("mark-all-read")
+      .addEventListener("click", markAllAsRead);
+
+    document.getElementById("clear-all").addEventListener("click", function () {
+      const container = document.getElementById("notifications-container");
+      container.innerHTML = `
+            <div id="no-notifications" class="p-8 text-center text-gray-500">
+                <p class="text-lg">Waiting for notifications...</p>
+                <p class="mt-2 text-sm">New notifications will appear here in real-time</p>
+            </div>
+        `;
+    });
+
+    // Initialize connection
+    connect();
+  });
+</script>
+{% endblock %}

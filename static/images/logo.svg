@@ -1,0 +1,69 @@
+<!-- File: DjangoVerseHub/static/images/logo.svg -->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d6efd;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0b5ed7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a58ca;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#198754;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#157347;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#logoGradient)" filter="url(#shadow)"/>
+  
+  <!-- Django "D" Shape -->
+  <path d="M60 50 L60 150 L85 150 C115 150 130 135 130 100 C130 65 115 50 85 50 Z" 
+        fill="white" opacity="0.9"/>
+  <path d="M75 65 L85 65 C105 65 115 75 115 100 C115 125 105 135 85 135 L75 135 Z" 
+        fill="url(#logoGradient)"/>
+  
+  <!-- Code Brackets -->
+  <path d="M35 80 L25 90 L25 110 L35 120" 
+        stroke="white" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <path d="M165 80 L175 90 L175 110 L165 120" 
+        stroke="white" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.8"/>
+  
+  <!-- Connecting Dots -->
+  <circle cx="45" cy="70" r="3" fill="url(#accentGradient)"/>
+  <circle cx="155" cy="70" r="3" fill="url(#accentGradient)"/>
+  <circle cx="45" cy="130" r="3" fill="url(#accentGradient)"/>
+  <circle cx="155" cy="130" r="3" fill="url(#accentGradient)"/>
+  
+  <!-- Version Hub Symbol -->
+  <g transform="translate(135, 45)">
+    <circle cx="0" cy="0" r="12" fill="url(#accentGradient)"/>
+    <path d="M-6 -6 L6 -6 L6 6 L-6 6 Z" fill="white" stroke="none"/>
+    <path d="M-3 -3 L3 -3 M-3 0 L3 0 M-3 3 L3 3" 
+          stroke="url(#accentGradient)" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Network Connections -->
+  <g opacity="0.6">
+    <line x1="60" y1="75" x2="75" y2="65" stroke="white" stroke-width="2"/>
+    <line x1="125" y1="65" x2="135" y2="57" stroke="white" stroke-width="2"/>
+    <line x1="60" y1="125" x2="45" y2="130" stroke="white" stroke-width="2"/>
+    <line x1="130" y1="135" x2="155" y2="130" stroke="white" stroke-width="2"/>
+  </g>
+  
+  <!-- Subtle Pattern Overlay -->
+  <defs>
+    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1" fill="white" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <circle cx="100" cy="100" r="85" fill="url(#dots)" mask="url(#circleMask)"/>
+  
+  <defs>
+    <mask id="circleMask">
+      <circle cx="100" cy="100" r="85" fill="white"/>
+    </mask>
+  </defs>
+</svg>

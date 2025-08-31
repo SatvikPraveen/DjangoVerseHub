@@ -1,0 +1,801 @@
+<!-- File: DjangoVerseHub/templates/base.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- SEO Meta Tags -->
+    <title>
+      {% block title %}DjangoVerseHub - Connect, Learn, Build{% endblock %}
+    </title>
+    <meta
+      name="description"
+      content="{% block description %}Join the Django community to share knowledge, learn best practices, and build amazing web applications together.{% endblock %}"
+    />
+    <meta
+      name="keywords"
+      content="{% block keywords %}Django, Python, Web Development, Community, Tutorials, Articles{% endblock %}"
+    />
+    <meta name="author" content="DjangoVerseHub" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta
+      property="og:title"
+      content="{% block og_title %}{% block title %}DjangoVerseHub{% endblock %}{% endblock %}"
+    />
+    <meta
+      property="og:description"
+      content="{% block og_description %}{% block description %}Join the Django community{% endblock %}{% endblock %}"
+    />
+    <meta
+      property="og:type"
+      content="{% block og_type %}website{% endblock %}"
+    />
+    <meta
+      property="og:url"
+      content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}"
+    />
+    <meta
+      property="og:image"
+      content="{% block og_image %}{% static 'images/djangoversehub-og.png' %}{% endblock %}"
+    />
+    <meta property="og:site_name" content="DjangoVerseHub" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="{% block twitter_title %}{% block title %}DjangoVerseHub{% endblock %}{% endblock %}"
+    />
+    <meta
+      name="twitter:description"
+      content="{% block twitter_description %}{% block description %}Join the Django community{% endblock %}{% endblock %}"
+    />
+    <meta
+      name="twitter:image"
+      content="{% block twitter_image %}{% block og_image %}{% static 'images/djangoversehub-og.png' %}{% endblock %}{% endblock %}"
+    />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'images/favicon.ico' %}"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{% static 'images/apple-touch-icon.png' %}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{% static 'images/favicon-32x32.png' %}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{% static 'images/favicon-16x16.png' %}"
+    />
+    <link rel="manifest" href="{% static 'manifest.json' %}" />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <!-- Highlight.js for Code Syntax -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link href="{% static 'css/main.css' %}" rel="stylesheet" />
+
+    {% block extra_css %}{% endblock %}
+
+    <!-- Theme Toggle Script (Early Load) -->
+    <script>
+      (function () {
+        "use strict";
+
+        const getStoredTheme = () => localStorage.getItem("theme");
+        const setStoredTheme = (theme) => localStorage.setItem("theme", theme);
+
+        const getPreferredTheme = () => {
+          const storedTheme = getStoredTheme();
+          if (storedTheme) {
+            return storedTheme;
+          }
+          return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        };
+
+        const setTheme = (theme) => {
+          if (
+            theme === "auto" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          ) {
+            document.documentElement.setAttribute("data-bs-theme", "dark");
+          } else {
+            document.documentElement.setAttribute("data-bs-theme", theme);
+          }
+        };
+
+        setTheme(getPreferredTheme());
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Skip to Main Content -->
+    <a
+      href="#main-content"
+      class="visually-hidden-focusable btn btn-primary position-absolute top-0 start-0 m-3"
+      style="z-index: 1100"
+    >
+      Skip to main content
+    </a>
+
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+      <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
+          <i class="bi bi-code-slash me-2"></i>
+          DjangoVerseHub
+        </a>
+
+        <!-- Mobile Toggle -->
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navigation Links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                href="{% url 'core:home' %}"
+              >
+                <i class="bi bi-house me-1"></i>Home
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if 'articles' in request.resolver_match.namespace %}active{% endif %}"
+                href="{% url 'articles:list' %}"
+              >
+                <i class="bi bi-file-earmark-text me-1"></i>Articles
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="categoriesDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+              >
+                <i class="bi bi-tags me-1"></i>Categories
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'articles:category' 'tutorials' %}"
+                    >Tutorials</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'articles:category' 'best-practices' %}"
+                    >Best Practices</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'articles:category' 'deployment' %}"
+                    >Deployment</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'articles:category' 'performance' %}"
+                    >Performance</a
+                  >
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'articles:categories' %}"
+                    >All Categories</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if 'community' in request.resolver_match.namespace %}active{% endif %}"
+                href="{% url 'community:discussions' %}"
+              >
+                <i class="bi bi-people me-1"></i>Community
+              </a>
+            </li>
+          </ul>
+
+          <!-- Search Form -->
+          <form
+            class="d-flex me-3"
+            method="get"
+            action="{% url 'core:search' %}"
+          >
+            <div class="input-group">
+              <input
+                class="form-control form-control-sm"
+                type="search"
+                name="q"
+                placeholder="Search articles..."
+                value="{{ request.GET.q }}"
+                aria-label="Search"
+              />
+              <button class="btn btn-outline-light btn-sm" type="submit">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+          </form>
+
+          <!-- User Menu -->
+          <ul class="navbar-nav">
+            <!-- Theme Toggle -->
+            <li class="nav-item dropdown">
+              <button
+                class="btn nav-link dropdown-toggle"
+                id="bd-theme"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i class="bi bi-circle-half"></i>
+                <span class="d-lg-none ms-2">Theme</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <button
+                    type="button"
+                    class="dropdown-item"
+                    data-bs-theme-value="light"
+                  >
+                    <i class="bi bi-sun me-2"></i>Light
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    class="dropdown-item"
+                    data-bs-theme-value="dark"
+                  >
+                    <i class="bi bi-moon me-2"></i>Dark
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    class="dropdown-item"
+                    data-bs-theme-value="auto"
+                  >
+                    <i class="bi bi-circle-half me-2"></i>Auto
+                  </button>
+                </li>
+              </ul>
+            </li>
+
+            {% if user.is_authenticated %}
+            <!-- Notifications -->
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link position-relative"
+                href="#"
+                id="notificationsDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+              >
+                <i class="bi bi-bell"></i>
+                {% if unread_notifications_count > 0 %}
+                <span
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                >
+                  {{ unread_notifications_count|slice:":99" }}{% if
+                  unread_notifications_count > 99 %}+{% endif %}
+                </span>
+                {% endif %}
+              </a>
+              <div class="dropdown-menu dropdown-menu-end" style="width: 320px">
+                <h6 class="dropdown-header">Notifications</h6>
+                {% if recent_notifications %} {% for notification in
+                recent_notifications|slice:":5" %}
+                <a
+                  href="{{ notification.url }}"
+                  class="dropdown-item {% if not notification.read %}bg-light{% endif %}"
+                >
+                  <div class="d-flex">
+                    <div class="flex-shrink-0 me-2">
+                      <i
+                        class="bi bi-{{ notification.icon|default:'bell' }} text-{{ notification.color|default:'primary' }}"
+                      ></i>
+                    </div>
+                    <div class="flex-grow-1">
+                      <p class="mb-1 small">
+                        {{ notification.message|truncatechars:80 }}
+                      </p>
+                      <small class="text-muted"
+                        >{{ notification.created_at|timesince }} ago</small
+                      >
+                    </div>
+                  </div>
+                </a>
+                {% endfor %}
+                <div class="dropdown-divider"></div>
+                <a
+                  class="dropdown-item text-center"
+                  href="{% url 'notifications:list' %}"
+                  >View All Notifications</a
+                >
+                {% else %}
+                <div class="dropdown-item-text text-center text-muted">
+                  <i class="bi bi-bell fs-3 d-block mb-2"></i>
+                  No notifications
+                </div>
+                {% endif %}
+              </div>
+            </li>
+
+            <!-- User Menu -->
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle d-flex align-items-center"
+                href="#"
+                id="userDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+              >
+                <img
+                  src="{{ user.profile.avatar_url }}"
+                  alt="{{ user.username }}"
+                  class="rounded-circle me-2"
+                  width="24"
+                  height="24"
+                />
+                <span class="d-none d-lg-inline"
+                  >{{ user.profile.display_name|default:user.username }}</span
+                >
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'users:profile' pk=user.pk %}"
+                  >
+                    <i class="bi bi-person me-2"></i>Profile
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'users:settings' %}">
+                    <i class="bi bi-gear me-2"></i>Settings
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'articles:my_articles' %}"
+                  >
+                    <i class="bi bi-file-earmark-text me-2"></i>My Articles
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'articles:drafts' %}">
+                    <i class="bi bi-file-earmark-minus me-2"></i>Drafts
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'articles:bookmarks' %}"
+                  >
+                    <i class="bi bi-bookmark me-2"></i>Bookmarks
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <form
+                    method="post"
+                    action="{% url 'users:logout' %}"
+                    class="d-inline"
+                  >
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item text-danger">
+                      <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </li>
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users:login' %}">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="btn btn-light btn-sm ms-2"
+                href="{% url 'users:signup' %}"
+              >
+                <i class="bi bi-person-plus me-1"></i>Sign Up
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+      <div
+        class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
+        role="alert"
+      >
+        {% if message.tags == 'error' %}
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {% elif message.tags == 'success' %}
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {% elif message.tags == 'warning' %}
+        <i class="bi bi-exclamation-circle-fill me-2"></i>
+        {% else %}
+        <i class="bi bi-info-circle-fill me-2"></i>
+        {% endif %} {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main id="main-content" class="{% block main_classes %}{% endblock %}">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 pt-5 pb-4">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-4 col-md-6 mb-4">
+            <h5 class="mb-3">
+              <i class="bi bi-code-slash me-2"></i>
+              DjangoVerseHub
+            </h5>
+            <p class="text-light-emphasis">
+              A vibrant community where Django developers connect, learn, and
+              share their knowledge to build amazing web applications.
+            </p>
+            <div class="d-flex gap-3">
+              <a href="#" class="text-light-emphasis">
+                <i class="bi bi-github fs-5"></i>
+              </a>
+              <a href="#" class="text-light-emphasis">
+                <i class="bi bi-twitter fs-5"></i>
+              </a>
+              <a href="#" class="text-light-emphasis">
+                <i class="bi bi-discord fs-5"></i>
+              </a>
+              <a href="#" class="text-light-emphasis">
+                <i class="bi bi-linkedin fs-5"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 mb-4">
+            <h6 class="mb-3">Community</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a
+                  href="{% url 'articles:list' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Articles</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'community:discussions' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Discussions</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'users:list' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Members</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'articles:tags' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Tags</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 mb-4">
+            <h6 class="mb-3">Resources</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:getting-started' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Getting Started</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:guidelines' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Guidelines</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:faq' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >FAQ</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:api' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >API</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 mb-4">
+            <h6 class="mb-3">Support</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:contact' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Contact</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:feedback' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Feedback</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:privacy' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Privacy Policy</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="{% url 'core:terms' %}"
+                  class="text-light-emphasis text-decoration-none"
+                  >Terms of Service</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 mb-4">
+            <h6 class="mb-3">Newsletter</h6>
+            <p class="text-light-emphasis small mb-3">
+              Get weekly Django tips and community updates.
+            </p>
+            <form method="post" action="{% url 'core:newsletter_signup' %}">
+              {% csrf_token %}
+              <div class="input-group input-group-sm">
+                <input
+                  type="email"
+                  name="email"
+                  class="form-control"
+                  placeholder="your@email.com"
+                  required
+                />
+                <button class="btn btn-primary" type="submit">
+                  <i class="bi bi-arrow-right"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-0 text-light-emphasis">
+              &copy; 2024 DjangoVerseHub. Made with
+              <i class="bi bi-heart-fill text-danger"></i> for the Django
+              community.
+            </p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <span class="text-light-emphasis small">
+              Built with Django {{ django_version|default:"5.0" }} & Bootstrap 5
+            </span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button
+      type="button"
+      class="btn btn-primary btn-floating position-fixed bottom-0 end-0 m-3 rounded-circle"
+      id="backToTop"
+      style="display: none; z-index: 1050"
+    >
+      <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Theme Toggle Script -->
+    <script>
+      (function () {
+        "use strict";
+
+        const getStoredTheme = () => localStorage.getItem("theme");
+        const setStoredTheme = (theme) => localStorage.setItem("theme", theme);
+
+        const getPreferredTheme = () => {
+          const storedTheme = getStoredTheme();
+          if (storedTheme) {
+            return storedTheme;
+          }
+          return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        };
+
+        const setTheme = (theme) => {
+          if (
+            theme === "auto" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          ) {
+            document.documentElement.setAttribute("data-bs-theme", "dark");
+          } else {
+            document.documentElement.setAttribute("data-bs-theme", theme);
+          }
+        };
+
+        const showActiveTheme = (theme, focus = false) => {
+          const themeSwitcher = document.querySelector("#bd-theme");
+          if (!themeSwitcher) {
+            return;
+          }
+
+          const themeSwitcherText = document.querySelector("#bd-theme-text");
+          const activeThemeIcon = document.querySelector(
+            ".theme-icon-active use"
+          );
+          const btnToActive = document.querySelector(
+            `[data-bs-theme-value="${theme}"]`
+          );
+
+          document
+            .querySelectorAll("[data-bs-theme-value]")
+            .forEach((element) => {
+              element.classList.remove("active");
+              element.setAttribute("aria-pressed", "false");
+            });
+
+          if (btnToActive) {
+            btnToActive.classList.add("active");
+            btnToActive.setAttribute("aria-pressed", "true");
+          }
+
+          if (focus) {
+            themeSwitcher.focus();
+          }
+        };
+
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", () => {
+            const storedTheme = getStoredTheme();
+            if (storedTheme !== "light" && storedTheme !== "dark") {
+              setTheme(getPreferredTheme());
+            }
+          });
+
+        window.addEventListener("DOMContentLoaded", () => {
+          showActiveTheme(getPreferredTheme());
+
+          document
+            .querySelectorAll("[data-bs-theme-value]")
+            .forEach((toggle) => {
+              toggle.addEventListener("click", () => {
+                const theme = toggle.getAttribute("data-bs-theme-value");
+                setStoredTheme(theme);
+                setTheme(theme);
+                showActiveTheme(theme, true);
+              });
+            });
+        });
+      })();
+    </script>
+
+    <!-- Back to Top Script -->
+    <script>
+      window.addEventListener("DOMContentLoaded", function () {
+        const backToTopButton = document.getElementById("backToTop");
+
+        window.addEventListener("scroll", function () {
+          if (window.scrollY > 300) {
+            backToTopButton.style.display = "block";
+          } else {
+            backToTopButton.style.display = "none";
+          }
+        });
+
+        backToTopButton.addEventListener("click", function () {
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        });
+      });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

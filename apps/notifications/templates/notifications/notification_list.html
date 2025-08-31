@@ -1,0 +1,199 @@
+<!-- File: DjangoVerseHub/apps/notifications/templates/notifications/notification_list.html -->
+{% extends 'base.html' %} {% load static %} {% block title %}Notifications{%
+endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">Notifications</h1>
+      <div class="flex gap-2">
+        <button
+          id="mark-all-read"
+          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Mark All Read
+        </button>
+        <a
+          href="{% url 'notifications:websocket' %}"
+          class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+        >
+          Live View
+        </a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow">
+      {% if notifications %}
+      <div class="divide-y divide-gray-200">
+        {% for notification in notifications %}
+        <div
+          class="p-4 {% if not notification.is_read %}bg-blue-50{% endif %}"
+          data-notification-id="{{ notification.id }}"
+        >
+          <div class="flex items-start space-x-3">
+            {% if notification.sender %}
+            <div class="flex-shrink-0">
+              <div
+                class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center"
+              >
+                {{ notification.sender.username|first|upper }}
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-gray-900">
+                  {% if notification.sender %}{{ notification.sender.username
+                  }}{% else %}System{% endif %}
+                </p>
+                <div class="flex items-center space-x-2">
+                  {% if not notification.is_read %}
+                  <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  {% endif %}
+                  <p class="text-xs text-gray-500">
+                    {{ notification.created_at|timesince }} ago
+                  </p>
+                </div>
+              </div>
+
+              <p class="mt-1 text-sm text-gray-700">
+                {{ notification.message }}
+              </p>
+
+              <div class="mt-2 flex space-x-2">
+                {% if not notification.is_read %}
+                <button
+                  class="mark-read-btn text-xs text-blue-600 hover:text-blue-800"
+                  data-id="{{ notification.id }}"
+                >
+                  Mark as Read
+                </button>
+                {% endif %}
+                <button
+                  class="delete-btn text-xs text-red-600 hover:text-red-800"
+                  data-id="{{ notification.id }}"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <div
+        class="px-4 py-3 border-t border-gray-200 flex justify-between items-center"
+      >
+        <div class="text-sm text-gray-700">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+        <div class="flex space-x-2">
+          {% if page_obj.has_previous %}
+          <a
+            href="?page={{ page_obj.previous_page_number }}"
+            class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+            >Previous</a
+          >
+          {% endif %} {% if page_obj.has_next %}
+          <a
+            href="?page={{ page_obj.next_page_number }}"
+            class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+            >Next</a
+          >
+          {% endif %}
+        </div>
+      </div>
+      {% endif %} {% else %}
+      <div class="p-8 text-center text-gray-500">
+        <p class="text-lg">No notifications yet</p>
+        <p class="mt-2 text-sm">
+          When you get notifications, they'll appear here
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Mark individual notification as read
+    document.querySelectorAll(".mark-read-btn").forEach((btn) => {
+      btn.addEventListener("click", async function () {
+        const notificationId = this.dataset.id;
+        try {
+          const response = await fetch(
+            `/notifications/api/${notificationId}/read/`,
+            {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": document.querySelector(
+                  "[name=csrfmiddlewaretoken]"
+                ).value,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (response.ok) {
+            location.reload();
+          }
+        } catch (error) {
+          console.error("Error marking notification as read:", error);
+        }
+      });
+    });
+
+    // Mark all as read
+    document
+      .getElementById("mark-all-read")
+      .addEventListener("click", async function () {
+        try {
+          const response = await fetch("/notifications/api/read-all/", {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": document.querySelector(
+                "[name=csrfmiddlewaretoken]"
+              ).value,
+              "Content-Type": "application/json",
+            },
+          });
+          if (response.ok) {
+            location.reload();
+          }
+        } catch (error) {
+          console.error("Error marking all notifications as read:", error);
+        }
+      });
+
+    // Delete notification
+    document.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async function () {
+        const notificationId = this.dataset.id;
+        if (confirm("Delete this notification?")) {
+          try {
+            const response = await fetch(
+              `/notifications/api/${notificationId}/delete/`,
+              {
+                method: "DELETE",
+                headers: {
+                  "X-CSRFToken": document.querySelector(
+                    "[name=csrfmiddlewaretoken]"
+                  ).value,
+                },
+              }
+            );
+            if (response.ok) {
+              location.reload();
+            }
+          } catch (error) {
+            console.error("Error deleting notification:", error);
+          }
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

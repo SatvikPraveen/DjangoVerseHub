@@ -1,0 +1,395 @@
+<!-- File: DjangoVerseHub/templates/includes/pagination.html -->
+
+{% if is_paginated %}
+<nav aria-label="Page navigation" class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- Results Info -->
+        <div class="pagination-info">
+            <span class="text-muted">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} 
+                of {{ page_obj.paginator.count }} results
+            </span>
+        </div>
+        
+        <!-- Per Page Selector -->
+        {% if show_per_page_selector|default:True %}
+        <div class="per-page-selector">
+            <form method="get" class="d-flex align-items-center">
+                {% for key, value in request.GET.items %}
+                    {% if key != 'per_page' and key != 'page' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                
+                <label for="per-page" class="form-label mb-0 me-2 text-muted small">Per page:</label>
+                <select name="per_page" id="per-page" class="form-select form-select-sm" 
+                        onchange="this.form.submit()" style="width: auto;">
+                    <option value="10" {% if request.GET.per_page == "10" %}selected{% endif %}>10</option>
+                    <option value="25" {% if request.GET.per_page == "25" or not request.GET.per_page %}selected{% endif %}>25</option>
+                    <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+                    <option value="100" {% if request.GET.per_page == "100" %}selected{% endif %}>100</option>
+                </select>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pagination Controls -->
+    <ul class="pagination justify-content-center mb-0">
+        <!-- First Page -->
+        {% if page_obj.has_previous and page_obj.number > 2 %}
+            <li class="page-item">
+                <a class="page-link" href="?{% query_string page=1 %}" 
+                   title="First page" data-page="1">
+                    <i class="bi bi-chevron-double-left"></i>
+                    <span class="visually-hidden">First</span>
+                </a>
+            </li>
+        {% endif %}
+        
+        <!-- Previous Page -->
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% query_string page=page_obj.previous_page_number %}" 
+                   title="Previous page" data-page="{{ page_obj.previous_page_number }}">
+                    <i class="bi bi-chevron-left"></i>
+                    <span class="visually-hidden">Previous</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="bi bi-chevron-left"></i>
+                    <span class="visually-hidden">Previous</span>
+                </span>
+            </li>
+        {% endif %}
+        
+        <!-- Page Numbers -->
+        {% for page_num in page_obj.paginator.page_range %}
+            {% if page_num == page_obj.number %}
+                <!-- Current Page -->
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">
+                        {{ page_num }}
+                        <span class="visually-hidden">(current)</span>
+                    </span>
+                </li>
+            {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                <!-- Pages within range -->
+                <li class="page-item">
+                    <a class="page-link" href="?{% query_string page=page_num %}" 
+                       data-page="{{ page_num }}">{{ page_num }}</a>
+                </li>
+            {% elif page_num == page_obj.number|add:'-4' or page_num == page_obj.number|add:'4' %}
+                <!-- Ellipsis for gaps -->
+                <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        <!-- Next Page -->
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% query_string page=page_obj.next_page_number %}" 
+                   title="Next page" data-page="{{ page_obj.next_page_number }}">
+                    <i class="bi bi-chevron-right"></i>
+                    <span class="visually-hidden">Next</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="bi bi-chevron-right"></i>
+                    <span class="visually-hidden">Next</span>
+                </span>
+            </li>
+        {% endif %}
+        
+        <!-- Last Page -->
+        {% if page_obj.has_next and page_obj.number < page_obj.paginator.num_pages|add:'-1' %}
+            <li class="page-item">
+                <a class="page-link" href="?{% query_string page=page_obj.paginator.num_pages %}" 
+                   title="Last page" data-page="{{ page_obj.paginator.num_pages }}">
+                    <i class="bi bi-chevron-double-right"></i>
+                    <span class="visually-hidden">Last</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+    
+    <!-- Mobile Pagination (Simplified) -->
+    <div class="d-md-none mt-3">
+        <div class="btn-group w-100" role="group">
+            {% if page_obj.has_previous %}
+                <a href="?{% query_string page=page_obj.previous_page_number %}" 
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-chevron-left me-1"></i>Previous
+                </a>
+            {% else %}
+                <button class="btn btn-outline-secondary" disabled>
+                    <i class="bi bi-chevron-left me-1"></i>Previous
+                </button>
+            {% endif %}
+            
+            <button class="btn btn-outline-secondary" disabled>
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </button>
+            
+            {% if page_obj.has_next %}
+                <a href="?{% query_string page=page_obj.next_page_number %}" 
+                   class="btn btn-outline-primary">
+                    Next<i class="bi bi-chevron-right ms-1"></i>
+                </a>
+            {% else %}
+                <button class="btn btn-outline-secondary" disabled>
+                    Next<i class="bi bi-chevron-right ms-1"></i>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Jump to Page (Advanced) -->
+    {% if show_jump_to_page|default:False and page_obj.paginator.num_pages > 10 %}
+    <div class="mt-3 text-center">
+        <form method="get" class="d-inline-flex align-items-center">
+            {% for key, value in request.GET.items %}
+                {% if key != 'page' %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+            {% endfor %}
+            
+            <label for="jump-page" class="form-label mb-0 me-2 small text-muted">Jump to page:</label>
+            <input type="number" name="page" id="jump-page" class="form-control form-control-sm me-2" 
+                   min="1" max="{{ page_obj.paginator.num_pages }}" 
+                   value="{{ page_obj.number }}" style="width: 80px;">
+            <button type="submit" class="btn btn-outline-primary btn-sm">Go</button>
+        </form>
+    </div>
+    {% endif %}
+</nav>
+
+<!-- Load More Button (Alternative to pagination) -->
+{% if show_load_more|default:False and page_obj.has_next %}
+<div class="text-center mt-4">
+    <button class="btn btn-outline-primary" onclick="loadMoreItems()" id="loadMoreBtn">
+        <span class="btn-text">Load More</span>
+        <span class="spinner-border spinner-border-sm d-none ms-2" role="status"></span>
+    </button>
+</div>
+{% endif %}
+
+<!-- Infinite Scroll Support -->
+{% if infinite_scroll|default:False and page_obj.has_next %}
+<div class="infinite-scroll-trigger text-center p-3" 
+     data-load-url="{{ request.path }}" 
+     data-current-page="{{ page_obj.number }}"
+     data-has-next="{% if page_obj.has_next %}true{% else %}false{% endif %}">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Pagination Styling */
+.pagination {
+    --bs-pagination-border-radius: 0.5rem;
+}
+
+.pagination .page-link {
+    transition: all 0.2s ease-in-out;
+    border-color: transparent;
+    color: var(--bs-secondary);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(45deg, var(--bs-primary), var(--bs-primary-dark, #0b5ed7));
+    border-color: var(--bs-primary);
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--bs-primary-bg-subtle);
+    border-color: var(--bs-primary-border-subtle);
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.disabled .page-link {
+    opacity: 0.5;
+}
+
+/* Per Page Selector */
+.per-page-selector .form-select {
+    min-width: 70px;
+}
+
+/* Results Info */
+.pagination-info {
+    font-size: 0.875rem;
+}
+
+/* Mobile Pagination */
+@media (max-width: 768px) {
+    .pagination {
+        display: none;
+    }
+    
+    .pagination-info {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .per-page-selector {
+        order: 2;
+        margin-top: 1rem;
+        justify-content: center;
+    }
+}
+
+@media (min-width: 769px) {
+    .d-md-none.mt-3 {
+        display: none !important;
+    }
+}
+
+/* Load More Button Animation */
+#loadMoreBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Infinite Scroll Trigger */
+.infinite-scroll-trigger {
+    opacity: 0.7;
+}
+
+/* Jump to Page Form */
+.jump-to-page-form input[type="number"] {
+    text-align: center;
+}
+
+/* Dark Mode Adjustments */
+[data-bs-theme="dark"] .pagination .page-link {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-700);
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .pagination .page-link:hover {
+    background-color: var(--bs-gray-700);
+    border-color: var(--bs-gray-600);
+}
+</style>
+
+<script>
+// Load More functionality
+function loadMoreItems() {
+    const btn = document.getElementById('loadMoreBtn');
+    const btnText = btn.querySelector('.btn-text');
+    const spinner = btn.querySelector('.spinner-border');
+    
+    // Show loading state
+    btnText.textContent = 'Loading...';
+    spinner.classList.remove('d-none');
+    btn.disabled = true;
+    
+    // Get next page
+    const nextPage = {{ page_obj.next_page_number|default:0 }};
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('page', nextPage);
+    
+    fetch(currentUrl, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.html) {
+            // Append new content
+            const contentContainer = document.querySelector('[data-infinite-scroll="true"] .infinite-scroll-content');
+            if (contentContainer) {
+                contentContainer.insertAdjacentHTML('beforeend', data.html);
+            }
+            
+            // Update button state
+            if (data.has_next) {
+                btnText.textContent = 'Load More';
+                btn.disabled = false;
+            } else {
+                btn.remove();
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading more items:', error);
+        btnText.textContent = 'Error - Try Again';
+        btn.disabled = false;
+    })
+    .finally(() => {
+        spinner.classList.add('d-none');
+    });
+}
+
+// Page preloading for faster navigation
+document.addEventListener('DOMContentLoaded', function() {
+    const pageLinks = document.querySelectorAll('.pagination .page-link[data-page]');
+    
+    pageLinks.forEach(link => {
+        link.addEventListener('mouseenter', function() {
+            const page = this.getAttribute('data-page');
+            const url = new URL(window.location);
+            url.searchParams.set('page', page);
+            
+            // Preload the page
+            const preloadLink = document.createElement('link');
+            preloadLink.rel = 'prefetch';
+            preloadLink.href = url.toString();
+            document.head.appendChild(preloadLink);
+        });
+    });
+});
+
+// Keyboard navigation for pagination
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        {% if page_obj.has_previous %}
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            window.location.href = '?{% query_string page=page_obj.previous_page_number %}';
+        }
+        {% endif %}
+        
+        {% if page_obj.has_next %}
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            window.location.href = '?{% query_string page=page_obj.next_page_number %}';
+        }
+        {% endif %}
+    }
+});
+
+// Analytics tracking for pagination
+function trackPaginationClick(page) {
+    if (window.gtag) {
+        gtag('event', 'page_view', {
+            'page_title': 'Page ' + page,
+            'page_location': window.location.href
+        });
+    }
+}
+
+// Add click tracking to pagination links
+document.querySelectorAll('.pagination .page-link[data-page]').forEach(link => {
+    link.addEventListener('click', function() {
+        const page = this.getAttribute('data-page');
+        trackPaginationClick(page);
+    });
+});
+</script>
+
+<!-- Template tag for query string handling -->
+{% load custom_tags %}
+<!-- Custom template tag to maintain GET parameters -->

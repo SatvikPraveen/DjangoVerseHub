@@ -1,0 +1,527 @@
+<!-- File: DjangoVerseHub/apps/notifications/templates/notifications/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Notifications{% endblock %} - DjangoVerseHub</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js for interactive components -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/notifications.css' %}" />
+
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/" class="flex-shrink-0">
+              <h1 class="text-xl font-bold text-gray-900">DjangoVerseHub</h1>
+            </a>
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a
+                href="/"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Home</a
+              >
+              <a
+                href="{% url 'notifications:list' %}"
+                class="bg-blue-100 text-blue-700 px-3 py-2 rounded-md text-sm font-medium"
+                >Notifications</a
+              >
+              <a
+                href="{% url 'notifications:websocket' %}"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Live View</a
+              >
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-4">
+            {% if user.is_authenticated %}
+            <!-- Notification Bell with Badge -->
+            <div class="relative" x-data="notifications" x-init="init()">
+              <button
+                @click="open = !open; if (open) loadQuickNotifications()"
+                class="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full"
+              >
+                <i class="fas fa-bell text-lg"></i>
+                <span
+                  x-show="unreadCount > 0"
+                  x-text="unreadCount"
+                  class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse"
+                ></span>
+              </button>
+
+              <!-- Dropdown Menu -->
+              <div
+                x-show="open"
+                @click.away="open = false"
+                x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="transform opacity-0 scale-95"
+                x-transition:enter-end="transform opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75"
+                x-transition:leave-start="transform opacity-100 scale-100"
+                x-transition:leave-end="transform opacity-0 scale-95"
+                class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200"
+              >
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-900">
+                      Notifications
+                    </p>
+                    <button
+                      @click="refreshNotifications()"
+                      class="text-xs text-blue-600 hover:text-blue-800 focus:outline-none"
+                    >
+                      <i class="fas fa-refresh"></i> Refresh
+                    </button>
+                  </div>
+                  <p
+                    class="text-sm text-gray-500"
+                    x-text="`${unreadCount} unread`"
+                  ></p>
+                </div>
+                <div class="max-h-64 overflow-y-auto">
+                  <div id="quick-notifications">
+                    <div
+                      class="px-4 py-3 text-sm text-gray-500 text-center"
+                      x-show="loading"
+                    >
+                      <i class="fas fa-spinner fa-spin mr-2"></i>Loading
+                      notifications...
+                    </div>
+                  </div>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-3 bg-gray-50">
+                  <div class="flex justify-between items-center">
+                    <a
+                      href="{% url 'notifications:list' %}"
+                      class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      >View all notifications</a
+                    >
+                    <a
+                      href="{% url 'notifications:websocket' %}"
+                      class="text-sm text-green-600 hover:text-green-800"
+                      >Live View</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Menu -->
+            <div class="relative" x-data="{ open: false }">
+              <button
+                @click="open = !open"
+                class="flex items-center text-sm text-gray-600 hover:text-gray-900 focus:outline-none"
+              >
+                <span class="mr-2">{{ user.username }}</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div
+                x-show="open"
+                @click.away="open = false"
+                x-transition
+                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+              >
+                <a
+                  href="/profile/"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >Profile</a
+                >
+                <a
+                  href="/settings/"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >Settings</a
+                >
+                <hr class="my-1" />
+                <form method="post" action="{% url 'accounts:logout' %}">
+                  {% csrf_token %}
+                  <button
+                    type="submit"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% else %}
+            <a
+              href="{% url 'accounts:login' %}"
+              class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >Login</a
+            >
+            <a
+              href="{% url 'accounts:register' %}"
+              class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+              >Sign Up</a
+            >
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-6">
+      {% if messages %}
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+        {% for message in messages %}
+        <div
+          class="alert alert-{{ message.tags }} bg-{{ message.tags }}-100 border border-{{ message.tags }}-400 text-{{ message.tags }}-700 px-4 py-3 rounded relative mb-2"
+          role="alert"
+        >
+          <span class="block sm:inline">{{ message }}</span>
+          <span
+            class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer"
+            onclick="this.parentElement.style.display='none';"
+          >
+            <i class="fas fa-times"></i>
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% block content %} {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+          <div class="text-sm text-gray-500">
+            © 2025 DjangoVerseHub. All rights reserved.
+          </div>
+          <div class="flex space-x-4">
+            <a href="/about/" class="text-sm text-gray-500 hover:text-gray-900"
+              >About</a
+            >
+            <a
+              href="/privacy/"
+              class="text-sm text-gray-500 hover:text-gray-900"
+              >Privacy</a
+            >
+            <a href="/terms/" class="text-sm text-gray-500 hover:text-gray-900"
+              >Terms</a
+            >
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+
+    <!-- Base JavaScript -->
+    <script>
+      // Global notification functions
+      window.NotificationHelper = {
+        async loadUnreadCount() {
+          try {
+            const response = await fetch("/notifications/api/unread-count/", {
+              headers: {
+                "X-CSRFToken": document.querySelector(
+                  "[name=csrfmiddlewaretoken]"
+                ).value,
+              },
+            });
+            const data = await response.json();
+            return data.unread_count;
+          } catch (error) {
+            console.error("Error loading unread count:", error);
+            return 0;
+          }
+        },
+
+        async loadQuickNotifications() {
+          try {
+            const response = await fetch("/notifications/api/?limit=5", {
+              headers: {
+                "X-CSRFToken": document.querySelector(
+                  "[name=csrfmiddlewaretoken]"
+                ).value,
+              },
+            });
+            const data = await response.json();
+            return data.results || [];
+          } catch (error) {
+            console.error("Error loading quick notifications:", error);
+            return [];
+          }
+        },
+
+        async markAsRead(notificationId) {
+          try {
+            const response = await fetch(
+              `/notifications/api/${notificationId}/read/`,
+              {
+                method: "POST",
+                headers: {
+                  "X-CSRFToken": document.querySelector(
+                    "[name=csrfmiddlewaretoken]"
+                  ).value,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            return response.ok;
+          } catch (error) {
+            console.error("Error marking notification as read:", error);
+            return false;
+          }
+        },
+
+        async handleNotificationClick(notificationId) {
+          // Mark as read when clicked
+          await this.markAsRead(notificationId);
+
+          // Refresh notification data
+          const notificationComponent =
+            document.querySelector("[x-data]").__x?.$data;
+          if (
+            notificationComponent &&
+            notificationComponent.refreshNotifications
+          ) {
+            await notificationComponent.refreshNotifications();
+          }
+
+          // Close dropdown
+          const dropdown = document.querySelector('[x-data] [x-show="open"]');
+          if (dropdown) {
+            dropdown.__x.$data.open = false;
+          }
+        },
+
+        formatTimeAgo(dateString) {
+          const date = new Date(dateString);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now - date) / 1000);
+
+          if (diffInSeconds < 60) return "Just now";
+          if (diffInSeconds < 3600)
+            return `${Math.floor(diffInSeconds / 60)}m ago`;
+          if (diffInSeconds < 86400)
+            return `${Math.floor(diffInSeconds / 3600)}h ago`;
+          return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        },
+
+        // Initialize WebSocket connection for real-time updates
+        initWebSocket() {
+          if (!window.location.pathname.includes("/notifications/websocket/")) {
+            const protocol =
+              window.location.protocol === "https:" ? "wss:" : "ws:";
+            const wsUrl = `${protocol}//${window.location.host}/ws/notifications/`;
+
+            try {
+              const socket = new WebSocket(wsUrl);
+
+              socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === "unread_count") {
+                  // Update unread count badge
+                  const badge = document.querySelector(
+                    '[x-text="unreadCount"]'
+                  );
+                  if (badge && badge.__x) {
+                    badge.__x.$data.unreadCount = data.count;
+                  }
+                } else if (data.type === "notification") {
+                  // Show toast notification for new notifications
+                  this.showToast(data.notification.message);
+
+                  // Refresh dropdown if open
+                  const dropdown = document.querySelector(
+                    '[x-data*="notifications"]'
+                  );
+                  if (dropdown && dropdown.__x && dropdown.__x.$data.open) {
+                    dropdown.__x.$data.loadQuickNotifications();
+                  }
+                }
+              };
+
+              socket.onerror = (error) => {
+                console.log("WebSocket error (non-critical):", error);
+              };
+            } catch (error) {
+              console.log("WebSocket not available (non-critical):", error);
+            }
+          }
+        },
+
+        showToast(message, type = "info") {
+          // Create toast notification
+          const toast = document.createElement("div");
+          toast.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 ${
+            type === "error"
+              ? "bg-red-500 text-white"
+              : type === "success"
+              ? "bg-green-500 text-white"
+              : "bg-blue-500 text-white"
+          }`;
+
+          toast.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-bell mr-2"></i>
+                        <span class="text-sm">${message}</span>
+                        <button class="ml-2 text-white hover:text-gray-200" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+
+          document.body.appendChild(toast);
+
+          // Animate in
+          setTimeout(() => {
+            toast.style.transform = "translateX(0)";
+          }, 100);
+
+          // Auto remove after 5 seconds
+          setTimeout(() => {
+            toast.style.transform = "translateX(100%)";
+            setTimeout(() => toast.remove(), 300);
+          }, 5000);
+        },
+      };
+
+      // Alpine.js global functions
+      document.addEventListener("alpine:init", () => {
+        Alpine.data("notifications", () => ({
+          open: false,
+          unreadCount: 0,
+          loading: false,
+
+          async init() {
+            await this.loadUnreadCount();
+            await this.loadQuickNotifications();
+          },
+
+          async loadUnreadCount() {
+            try {
+              const count = await window.NotificationHelper.loadUnreadCount();
+              this.unreadCount = count;
+            } catch (error) {
+              console.error("Error in loadUnreadCount:", error);
+              this.unreadCount = 0;
+            }
+          },
+
+          async loadQuickNotifications() {
+            const container = document.getElementById("quick-notifications");
+            if (!container) return;
+
+            this.loading = true;
+
+            try {
+              const notifications =
+                await window.NotificationHelper.loadQuickNotifications();
+
+              if (notifications.length === 0) {
+                container.innerHTML =
+                  '<div class="px-4 py-3 text-sm text-gray-500 text-center">No notifications</div>';
+                return;
+              }
+
+              container.innerHTML = notifications
+                .map(
+                  (notif) => `
+                            <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                              !notif.is_read ? "bg-blue-50" : ""
+                            }" 
+                                 onclick="window.NotificationHelper.handleNotificationClick(${
+                                   notif.id
+                                 })">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                            ${
+                                              notif.sender
+                                                ? notif.sender.username
+                                                    .charAt(0)
+                                                    .toUpperCase()
+                                                : "S"
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm text-gray-900 truncate">${
+                                          notif.message
+                                        }</p>
+                                        <p class="text-xs text-gray-500">${window.NotificationHelper.formatTimeAgo(
+                                          notif.created_at
+                                        )}</p>
+                                    </div>
+                                    ${
+                                      !notif.is_read
+                                        ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-blue-500 rounded-full"></div></div>'
+                                        : ""
+                                    }
+                                </div>
+                            </div>
+                        `
+                )
+                .join("");
+            } catch (error) {
+              console.error("Error loading quick notifications:", error);
+              container.innerHTML =
+                '<div class="px-4 py-3 text-sm text-red-500 text-center">Error loading notifications</div>';
+            } finally {
+              this.loading = false;
+            }
+          },
+
+          async refreshNotifications() {
+            await this.loadUnreadCount();
+            await this.loadQuickNotifications();
+          },
+        }));
+      });
+
+      // Auto-refresh unread count every 30 seconds
+      setInterval(async () => {
+        try {
+          const count = await window.NotificationHelper.loadUnreadCount();
+          const notificationComponent = document.querySelector(
+            '[x-data*="notifications"]'
+          );
+          if (
+            notificationComponent &&
+            notificationComponent.__x &&
+            notificationComponent.__x.$data
+          ) {
+            notificationComponent.__x.$data.unreadCount = count;
+          }
+        } catch (error) {
+          console.error("Error in auto-refresh:", error);
+        }
+      }, 30000);
+
+      // Initialize WebSocket when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        window.NotificationHelper.initWebSocket();
+      });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

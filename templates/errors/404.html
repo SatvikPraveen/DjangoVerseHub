@@ -1,0 +1,371 @@
+<!-- File: DjangoVerseHub/templates/errors/404.html -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page Not Found (404) - DjangoVerseHub</title>
+
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'images/favicon.ico' %}"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="{% static 'css/main.css' %}" rel="stylesheet" />
+
+    <style>
+      .error-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .error-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 1000'%3E%3Cdefs%3E%3Cpattern id='grid' width='50' height='50' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 50 0 L 0 0 0 50' fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)'/%3E%3C/svg%3E");
+        opacity: 0.3;
+      }
+
+      .error-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .error-number {
+        font-size: 8rem;
+        font-weight: 900;
+        color: white;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        line-height: 1;
+        margin-bottom: 1rem;
+      }
+
+      .error-icon {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 2rem;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      .search-box {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .search-box::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .search-box:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-glass {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      .floating-elements {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .floating-element {
+        position: absolute;
+        opacity: 0.1;
+        animation: float-random 10s infinite linear;
+      }
+
+      @keyframes float-random {
+        0% {
+          transform: translateY(100vh) rotate(0deg);
+        }
+        100% {
+          transform: translateY(-100px) rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="error-container">
+      <!-- Floating Background Elements -->
+      <div class="floating-elements">
+        <div class="floating-element" style="left: 10%; animation-delay: -2s">
+          <i class="bi bi-code-square fs-1"></i>
+        </div>
+        <div class="floating-element" style="left: 20%; animation-delay: -4s">
+          <i class="bi bi-file-code fs-2"></i>
+        </div>
+        <div class="floating-element" style="left: 30%; animation-delay: -1s">
+          <i class="bi bi-bug fs-3"></i>
+        </div>
+        <div class="floating-element" style="left: 70%; animation-delay: -3s">
+          <i class="bi bi-gear fs-2"></i>
+        </div>
+        <div class="floating-element" style="left: 80%; animation-delay: -5s">
+          <i class="bi bi-terminal fs-1"></i>
+        </div>
+        <div class="floating-element" style="left: 90%; animation-delay: -1.5s">
+          <i class="bi bi-server fs-3"></i>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8 col-md-10">
+            <div class="text-center error-content">
+              <!-- Error Icon -->
+              <div class="error-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+              </div>
+
+              <!-- Error Number -->
+              <div class="error-number">404</div>
+
+              <!-- Error Message -->
+              <h1 class="display-6 text-white mb-4">Page Not Found</h1>
+              <p class="lead text-white-50 mb-5">
+                Oops! The page you're looking for seems to have wandered off.
+                Don't worry, even the best developers encounter 404s sometimes.
+              </p>
+
+              <!-- Search Box -->
+              <form action="{% url 'search' %}" method="get" class="mb-5">
+                <div class="input-group justify-content-center">
+                  <input
+                    type="search"
+                    name="q"
+                    class="search-box"
+                    placeholder="Search for articles, users, or topics..."
+                    value="{{ request.GET.q|default:'' }}"
+                  />
+                </div>
+              </form>
+
+              <!-- Action Buttons -->
+              <div class="row g-3 justify-content-center">
+                <div class="col-auto">
+                  <a href="{% url 'home' %}" class="btn btn-glass btn-lg">
+                    <i class="bi bi-house me-2"></i>Go Home
+                  </a>
+                </div>
+                <div class="col-auto">
+                  <a
+                    href="{% url 'articles:list' %}"
+                    class="btn btn-glass btn-lg"
+                  >
+                    <i class="bi bi-newspaper me-2"></i>Browse Articles
+                  </a>
+                </div>
+                <div class="col-auto">
+                  <a
+                    href="javascript:history.back()"
+                    class="btn btn-glass btn-lg"
+                  >
+                    <i class="bi bi-arrow-left me-2"></i>Go Back
+                  </a>
+                </div>
+              </div>
+
+              <!-- Help Section -->
+              <div class="mt-5 pt-4 border-top border-white-25">
+                <h5 class="text-white mb-3">Need Help?</h5>
+                <div class="row g-3 justify-content-center text-white-50">
+                  <div class="col-md-4">
+                    <i class="bi bi-question-circle fs-4 mb-2 d-block"></i>
+                    <h6 class="text-white">Visit Help Center</h6>
+                    <p class="small mb-0">Find answers to common questions</p>
+                    <a href="#" class="btn btn-outline-light btn-sm mt-2"
+                      >Help Center</a
+                    >
+                  </div>
+                  <div class="col-md-4">
+                    <i class="bi bi-envelope fs-4 mb-2 d-block"></i>
+                    <h6 class="text-white">Contact Support</h6>
+                    <p class="small mb-0">Get personalized assistance</p>
+                    <a href="#" class="btn btn-outline-light btn-sm mt-2"
+                      >Contact Us</a
+                    >
+                  </div>
+                  <div class="col-md-4">
+                    <i class="bi bi-chat-dots fs-4 mb-2 d-block"></i>
+                    <h6 class="text-white">Community Forum</h6>
+                    <p class="small mb-0">Ask the Django community</p>
+                    <a href="#" class="btn btn-outline-light btn-sm mt-2"
+                      >Join Discussion</a
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Popular Suggestions -->
+              <div class="mt-5">
+                <h6 class="text-white mb-3">Popular Pages</h6>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                  <a
+                    href="{% url 'articles:trending' %}"
+                    class="badge bg-light text-dark text-decoration-none p-2"
+                  >
+                    <i class="bi bi-fire me-1"></i>Trending Articles
+                  </a>
+                  <a
+                    href="{% url 'users:list' %}"
+                    class="badge bg-light text-dark text-decoration-none p-2"
+                  >
+                    <i class="bi bi-people me-1"></i>Community
+                  </a>
+                  <a
+                    href="#"
+                    class="badge bg-light text-dark text-decoration-none p-2"
+                  >
+                    <i class="bi bi-book me-1"></i>Documentation
+                  </a>
+                  <a
+                    href="#"
+                    class="badge bg-light text-dark text-decoration-none p-2"
+                  >
+                    <i class="bi bi-play-circle me-1"></i>Tutorials
+                  </a>
+                </div>
+              </div>
+
+              <!-- Footer Info -->
+              <div class="mt-5 pt-4">
+                <p class="text-white-50 small mb-0">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Error Code: 404 | Time: <span id="error-time"></span> |
+                  <a href="#" class="text-white-50" onclick="reportError()"
+                    >Report Issue</a
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Display current time
+      document.getElementById("error-time").textContent =
+        new Date().toLocaleTimeString();
+
+      // Report error function
+      function reportError() {
+        const errorData = {
+          url: window.location.href,
+          referrer: document.referrer,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Send error report (implement your error reporting logic)
+        console.log("Error reported:", errorData);
+        alert(
+          "Thank you for reporting this issue. Our team will look into it."
+        );
+      }
+
+      // Auto-focus search box
+      document.addEventListener("DOMContentLoaded", function () {
+        const searchBox = document.querySelector(".search-box");
+        if (searchBox) {
+          searchBox.focus();
+        }
+      });
+
+      // Enhanced floating animation
+      function createFloatingElement() {
+        const icons = [
+          "bi-code-slash",
+          "bi-braces",
+          "bi-terminal",
+          "bi-gear",
+          "bi-bug",
+          "bi-server",
+        ];
+        const container = document.querySelector(".floating-elements");
+
+        const element = document.createElement("div");
+        element.className = "floating-element";
+        element.innerHTML = `<i class="${
+          icons[Math.floor(Math.random() * icons.length)]
+        } fs-${Math.floor(Math.random() * 3) + 1}"></i>`;
+        element.style.left = Math.random() * 100 + "%";
+        element.style.animationDelay = Math.random() * -10 + "s";
+        element.style.animationDuration = Math.random() * 5 + 10 + "s";
+
+        container.appendChild(element);
+
+        // Remove element after animation
+        setTimeout(() => {
+          element.remove();
+        }, 15000);
+      }
+
+      // Create new floating elements periodically
+      setInterval(createFloatingElement, 3000);
+
+      // Analytics tracking
+      if (window.gtag) {
+        gtag("event", "page_view", {
+          page_title: "404 Error",
+          page_location: window.location.href,
+          custom_map: {
+            custom_parameter_1: "error_404",
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

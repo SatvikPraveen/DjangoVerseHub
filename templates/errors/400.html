@@ -1,0 +1,379 @@
+<!-- File: DjangoVerseHub/templates/errors/400.html -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bad Request (400) - DjangoVerseHub</title>
+
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'images/favicon.ico' %}"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="{% static 'css/main.css' %}" rel="stylesheet" />
+
+    <style>
+      .error-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .error-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1'%3E%3Ccircle cx='30' cy='30' r='25'/%3E%3Cpath d='M20 20 L40 40 M40 20 L20 40'/%3E%3C/g%3E%3C/svg%3E")
+          repeat;
+        opacity: 0.3;
+      }
+
+      .error-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .error-number {
+        font-size: 8rem;
+        font-weight: 900;
+        color: #2d3436;
+        text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.5);
+        line-height: 1;
+        margin-bottom: 1rem;
+      }
+
+      .warning-icon {
+        font-size: 4rem;
+        color: #e17055;
+        margin-bottom: 2rem;
+        animation: wobble 2s ease-in-out infinite;
+      }
+
+      @keyframes wobble {
+        0%,
+        100% {
+          transform: rotate(0deg);
+        }
+        15% {
+          transform: rotate(-5deg);
+        }
+        30% {
+          transform: rotate(5deg);
+        }
+        45% {
+          transform: rotate(-3deg);
+        }
+        60% {
+          transform: rotate(3deg);
+        }
+        75% {
+          transform: rotate(-1deg);
+        }
+      }
+
+      .btn-action {
+        background: rgba(45, 52, 54, 0.8);
+        border: 2px solid rgba(45, 52, 54, 0.9);
+        color: white;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      }
+
+      .btn-action:hover {
+        background: rgba(45, 52, 54, 1);
+        border-color: rgba(45, 52, 54, 1);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      .request-info {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(15px);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin: 2rem 0;
+      }
+
+      .floating-errors {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .floating-error {
+        position: absolute;
+        opacity: 0.1;
+        animation: float-error 8s infinite linear;
+        font-size: 1.5rem;
+        color: #e17055;
+      }
+
+      @keyframes float-error {
+        0% {
+          transform: translateY(100vh) rotate(0deg);
+          opacity: 0;
+        }
+        20% {
+          opacity: 0.1;
+        }
+        80% {
+          opacity: 0.1;
+        }
+        100% {
+          transform: translateY(-100px) rotate(360deg);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="error-container">
+      <!-- Floating Background Elements -->
+      <div class="floating-errors">
+        <div class="floating-error" style="left: 10%; animation-delay: -1s">
+          <i class="bi bi-x-circle"></i>
+        </div>
+        <div class="floating-error" style="left: 30%; animation-delay: -3s">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="floating-error" style="left: 50%; animation-delay: -2s">
+          <i class="bi bi-bug"></i>
+        </div>
+        <div class="floating-error" style="left: 70%; animation-delay: -4s">
+          <i class="bi bi-slash-circle"></i>
+        </div>
+        <div class="floating-error" style="left: 90%; animation-delay: -1.5s">
+          <i class="bi bi-question-circle"></i>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8 col-md-10">
+            <div class="text-center error-content">
+              <!-- Warning Icon -->
+              <div class="warning-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+              </div>
+
+              <!-- Error Number -->
+              <div class="error-number">400</div>
+
+              <!-- Error Message -->
+              <h1 class="display-6 text-dark mb-4">Bad Request</h1>
+              <p class="lead text-dark-emphasis mb-4">
+                The server couldn't understand your request. This usually
+                happens when the request format is incorrect or contains invalid
+                data.
+              </p>
+
+              <!-- Request Information -->
+              <div class="request-info">
+                <div class="row align-items-center">
+                  <div class="col-md-2 mb-3 mb-md-0">
+                    <i class="bi bi-info-square fs-1 text-dark-emphasis"></i>
+                  </div>
+                  <div class="col-md-10 text-start">
+                    <h5 class="text-dark mb-3">Common Causes</h5>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <ul class="text-dark-emphasis mb-0">
+                          <li>Invalid form data</li>
+                          <li>Missing required fields</li>
+                          <li>Malformed URLs</li>
+                        </ul>
+                      </div>
+                      <div class="col-md-6">
+                        <ul class="text-dark-emphasis mb-0">
+                          <li>Invalid file uploads</li>
+                          <li>Corrupted request data</li>
+                          <li>Security restrictions</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="row g-3 justify-content-center mb-5">
+                <div class="col-auto">
+                  <button
+                    onclick="window.location.reload()"
+                    class="btn btn-action btn-lg"
+                  >
+                    <i class="bi bi-arrow-clockwise me-2"></i>Try Again
+                  </button>
+                </div>
+                <div class="col-auto">
+                  <a href="{% url 'home' %}" class="btn btn-action btn-lg">
+                    <i class="bi bi-house me-2"></i>Go Home
+                  </a>
+                </div>
+                <div class="col-auto">
+                  <a
+                    href="javascript:history.back()"
+                    class="btn btn-action btn-lg"
+                  >
+                    <i class="bi bi-arrow-left me-2"></i>Go Back
+                  </a>
+                </div>
+              </div>
+
+              <!-- Help Section -->
+              <div class="mt-5 pt-4 border-top border-dark-25">
+                <h5 class="text-dark mb-4">Need Help?</h5>
+                <div class="row g-4 justify-content-center">
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <i
+                        class="bi bi-chat-dots fs-3 mb-3 d-block text-dark-emphasis"
+                      ></i>
+                      <h6 class="text-dark">Report Issue</h6>
+                      <p class="text-dark-emphasis small mb-3">
+                        Help us fix this problem
+                      </p>
+                      <button
+                        onclick="reportIssue()"
+                        class="btn btn-outline-dark btn-sm"
+                      >
+                        <i class="bi bi-flag me-1"></i>Report
+                      </button>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <i
+                        class="bi bi-envelope fs-3 mb-3 d-block text-dark-emphasis"
+                      ></i>
+                      <h6 class="text-dark">Contact Support</h6>
+                      <p class="text-dark-emphasis small mb-3">
+                        Get technical assistance
+                      </p>
+                      <a href="#" class="btn btn-outline-dark btn-sm">
+                        <i class="bi bi-envelope me-1"></i>Contact
+                      </a>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <i
+                        class="bi bi-book fs-3 mb-3 d-block text-dark-emphasis"
+                      ></i>
+                      <h6 class="text-dark">Documentation</h6>
+                      <p class="text-dark-emphasis small mb-3">
+                        Learn about request formats
+                      </p>
+                      <a href="#" class="btn btn-outline-dark btn-sm">
+                        <i class="bi bi-book me-1"></i>Docs
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Technical Details -->
+              <div class="mt-5">
+                <details class="text-dark-emphasis">
+                  <summary class="mb-3 cursor-pointer">
+                    Technical Details
+                  </summary>
+                  <div class="text-start small">
+                    <p><strong>Error Code:</strong> 400 Bad Request</p>
+                    <p>
+                      <strong>Timestamp:</strong> <span id="error-time"></span>
+                    </p>
+                    <p><strong>Request Method:</strong> {{ request.method }}</p>
+                    <p>
+                      <strong>Request URL:</strong> {{ request.get_full_path }}
+                    </p>
+                    <p>
+                      <strong>User Agent:</strong> <span id="user-agent"></span>
+                    </p>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.getElementById("error-time").textContent =
+        new Date().toLocaleString();
+      document.getElementById("user-agent").textContent = navigator.userAgent;
+
+      function reportIssue() {
+        const issueData = {
+          error: "400 Bad Request",
+          url: window.location.href,
+          method: "{{ request.method }}",
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          description: prompt("Please describe what you were trying to do:"),
+        };
+
+        if (issueData.description) {
+          console.log("Issue reported:", issueData);
+          alert(
+            "Thank you for reporting this issue. Our team will investigate."
+          );
+        }
+      }
+
+      function createFloatingError() {
+        const icons = [
+          "bi-x-circle",
+          "bi-exclamation-triangle",
+          "bi-bug",
+          "bi-slash-circle",
+          "bi-question-circle",
+        ];
+        const container = document.querySelector(".floating-errors");
+
+        const element = document.createElement("div");
+        element.className = "floating-error";
+        element.innerHTML = `<i class="${
+          icons[Math.floor(Math.random() * icons.length)]
+        }"></i>`;
+        element.style.left = Math.random() * 100 + "%";
+        element.style.animationDelay = Math.random() * -8 + "s";
+
+        container.appendChild(element);
+
+        setTimeout(() => element.remove(), 8000);
+      }
+
+      setInterval(createFloatingError, 2000);
+
+      if (window.gtag) {
+        gtag("event", "page_view", {
+          page_title: "400 Error",
+          page_location: window.location.href,
+        });
+      }
+    </script>
+  </body>
+</html>

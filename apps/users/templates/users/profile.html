@@ -1,0 +1,314 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/profile.html -->
+
+{% extends 'base.html' %} {% load static %} {% block title %}{{
+profile_user.profile.display_name }} - Profile{% endblock %} {% block extra_css
+%}
+<link href="{% static 'css/profile.css' %}" rel="stylesheet" />
+{% endblock %} {% block content %}
+<div class="profile-container">
+  <!-- Cover Image Section -->
+  <div class="profile-cover">
+    {% if profile_user.profile.cover_image %}
+    <img
+      src="{{ profile_user.profile.cover_image.url }}"
+      alt="Cover Image"
+      class="cover-image"
+    />
+    {% else %}
+    <div class="cover-placeholder"></div>
+    {% endif %}
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="container">
+        <div class="row align-items-end">
+          <div class="col-auto">
+            <div class="profile-avatar">
+              <img
+                src="{{ profile_user.profile.avatar_url }}"
+                alt="{{ profile_user.profile.display_name }}"
+                class="avatar-img"
+              />
+            </div>
+          </div>
+          <div class="col">
+            <div class="profile-info text-white">
+              <h1 class="profile-name mb-1">
+                {{ profile_user.profile.display_name }}
+              </h1>
+              <p class="profile-username mb-2">@{{ profile_user.username }}</p>
+              {% if profile_user.profile.bio %}
+              <p class="profile-bio mb-2">{{ profile_user.profile.bio }}</p>
+              {% endif %}
+              <div class="profile-meta">
+                <span class="me-3">
+                  <i class="bi bi-calendar"></i>
+                  Joined {{ profile_user.date_joined|date:"M Y" }}
+                </span>
+                {% if profile_user.profile.location %}
+                <span class="me-3">
+                  <i class="bi bi-geo-alt"></i>
+                  {{ profile_user.profile.location }}
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="col-auto">
+            {% if is_own_profile %}
+            <div class="profile-actions">
+              <a
+                href="{% url 'users:profile_edit' %}"
+                class="btn btn-outline-light"
+              >
+                <i class="bi bi-pencil"></i> Edit Profile
+              </a>
+              <a
+                href="{% url 'users:settings' %}"
+                class="btn btn-outline-light"
+              >
+                <i class="bi bi-gear"></i> Settings
+              </a>
+            </div>
+            {% else %}
+            <div class="profile-actions">
+              <button class="btn btn-primary" onclick="followUser()">
+                <i class="bi bi-person-plus"></i> Follow
+              </button>
+              <button class="btn btn-outline-light" onclick="sendMessage()">
+                <i class="bi bi-envelope"></i> Message
+              </button>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Content -->
+  <div class="container mt-4">
+    <div class="row">
+      <!-- Left Sidebar -->
+      <div class="col-lg-4">
+        <div class="profile-sidebar">
+          <!-- Stats Card -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">Statistics</h5>
+              <div class="row text-center">
+                <div class="col-4">
+                  <div class="stat-item">
+                    <h4 class="stat-number">
+                      {{ profile_data.login_count|default:0 }}
+                    </h4>
+                    <small class="text-muted">Visits</small>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="stat-item">
+                    <h4 class="stat-number">0</h4>
+                    <small class="text-muted">Articles</small>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="stat-item">
+                    <h4 class="stat-number">0</h4>
+                    <small class="text-muted">Comments</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- About Card -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">About</h5>
+              {% if profile_user.profile.bio %}
+              <p class="card-text">{{ profile_user.profile.bio }}</p>
+              {% else %}
+              <p class="text-muted">No bio available.</p>
+              {% endif %}
+
+              <div class="profile-details mt-3">
+                {% if profile_user.profile.location %}
+                <div class="detail-item">
+                  <i class="bi bi-geo-alt text-muted me-2"></i>
+                  {{ profile_user.profile.location }}
+                </div>
+                {% endif %} {% if profile_user.profile.website %}
+                <div class="detail-item">
+                  <i class="bi bi-link-45deg text-muted me-2"></i>
+                  <a
+                    href="{{ profile_user.profile.website }}"
+                    target="_blank"
+                    class="text-decoration-none"
+                  >
+                    {{ profile_user.profile.website }}
+                  </a>
+                </div>
+                {% endif %}
+
+                <div class="detail-item">
+                  <i class="bi bi-calendar text-muted me-2"></i>
+                  Joined {{ profile_user.date_joined|date:"F j, Y" }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Links -->
+          {% if profile_user.profile.twitter or profile_user.profile.linkedin or
+          profile_user.profile.github %}
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">Social Links</h5>
+              <div class="social-links">
+                {% if profile_user.profile.twitter %}
+                <a
+                  href="{{ profile_user.profile.twitter }}"
+                  target="_blank"
+                  class="btn btn-outline-primary btn-sm me-2 mb-2"
+                >
+                  <i class="bi bi-twitter"></i> Twitter
+                </a>
+                {% endif %} {% if profile_user.profile.linkedin %}
+                <a
+                  href="{{ profile_user.profile.linkedin }}"
+                  target="_blank"
+                  class="btn btn-outline-primary btn-sm me-2 mb-2"
+                >
+                  <i class="bi bi-linkedin"></i> LinkedIn
+                </a>
+                {% endif %} {% if profile_user.profile.github %}
+                <a
+                  href="{{ profile_user.profile.github }}"
+                  target="_blank"
+                  class="btn btn-outline-dark btn-sm me-2 mb-2"
+                >
+                  <i class="bi bi-github"></i> GitHub
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-lg-8">
+        <!-- Activity Tabs -->
+        <div class="card">
+          <div class="card-header">
+            <ul
+              class="nav nav-tabs card-header-tabs"
+              id="profileTabs"
+              role="tablist"
+            >
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link active"
+                  id="activity-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#activity"
+                  type="button"
+                  role="tab"
+                >
+                  Activity
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="articles-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#articles"
+                  type="button"
+                  role="tab"
+                >
+                  Articles
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="comments-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#comments"
+                  type="button"
+                  role="tab"
+                >
+                  Comments
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-body">
+            <div class="tab-content" id="profileTabsContent">
+              <!-- Activity Tab -->
+              <div
+                class="tab-pane fade show active"
+                id="activity"
+                role="tabpanel"
+              >
+                <div class="activity-feed">
+                  <div class="text-center py-5">
+                    <i class="bi bi-activity display-1 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No recent activity</h5>
+                    <p class="text-muted">User activity will appear here</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Articles Tab -->
+              <div class="tab-pane fade" id="articles" role="tabpanel">
+                <div class="articles-list">
+                  <div class="text-center py-5">
+                    <i class="bi bi-file-text display-1 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No articles yet</h5>
+                    <p class="text-muted">
+                      Published articles will appear here
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Comments Tab -->
+              <div class="tab-pane fade" id="comments" role="tabpanel">
+                <div class="comments-list">
+                  <div class="text-center py-5">
+                    <i class="bi bi-chat display-1 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No comments yet</h5>
+                    <p class="text-muted">User comments will appear here</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  function followUser() {
+    // Implement follow functionality
+    alert("Follow functionality not implemented yet");
+  }
+
+  function sendMessage() {
+    // Implement messaging functionality
+    alert("Messaging functionality not implemented yet");
+  }
+
+  // Load user activity data
+  document.addEventListener("DOMContentLoaded", function () {
+    // This would load actual activity data via AJAX
+    console.log("Profile loaded for user:", "{{ profile_user.username }}");
+  });
+</script>
+{% endblock %}

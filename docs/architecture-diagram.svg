@@ -1,0 +1,256 @@
+<!-- File: docs/architecture-diagram.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900">
+  <defs>
+    <style>
+      .layer-box { fill: #e9ecef; stroke: #495057; stroke-width: 2; rx: 8; }
+      .component-box { fill: #fff; stroke: #6c757d; stroke-width: 1.5; rx: 6; }
+      .database-box { fill: #d1ecf1; stroke: #0c5460; stroke-width: 2; rx: 6; }
+      .external-box { fill: #f8d7da; stroke: #721c24; stroke-width: 2; rx: 6; }
+      .cache-box { fill: #d4edda; stroke: #155724; stroke-width: 2; rx: 6; }
+      .title-text { fill: #212529; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+      .layer-text { fill: #495057; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .component-text { fill: #343a40; font-family: Arial, sans-serif; font-size: 11px; }
+      .small-text { fill: #6c757d; font-family: Arial, sans-serif; font-size: 10px; }
+      .flow-arrow { stroke: #6c757d; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .data-flow { stroke: #007bff; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6c757d"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" class="title-text" style="font-size: 20px;">DjangoVerseHub - System Architecture</text>
+
+  <!-- Frontend Layer -->
+  <rect x="50" y="60" width="1300" height="120" class="layer-box"/>
+  <text x="70" y="85" class="layer-text">Frontend Layer</text>
+  
+  <!-- User Interfaces -->
+  <rect x="80" y="100" width="120" height="60" class="component-box"/>
+  <text x="140" y="120" text-anchor="middle" class="component-text">Web Browser</text>
+  <text x="140" y="135" text-anchor="middle" class="small-text">React/HTML5</text>
+  <text x="140" y="148" text-anchor="middle" class="small-text">Bootstrap 5</text>
+  
+  <rect x="220" y="100" width="120" height="60" class="component-box"/>
+  <text x="280" y="120" text-anchor="middle" class="component-text">Mobile App</text>
+  <text x="280" y="135" text-anchor="middle" class="small-text">React Native</text>
+  <text x="280" y="148" text-anchor="middle" class="small-text">iOS/Android</text>
+  
+  <rect x="360" y="100" width="120" height="60" class="component-box"/>
+  <text x="420" y="120" text-anchor="middle" class="component-text">Progressive</text>
+  <text x="420" y="135" text-anchor="middle" class="component-text">Web App</text>
+  <text x="420" y="148" text-anchor="middle" class="small-text">Service Worker</text>
+
+  <!-- CDN -->
+  <rect x="1100" y="100" width="120" height="60" class="external-box"/>
+  <text x="1160" y="120" text-anchor="middle" class="component-text">CDN</text>
+  <text x="1160" y="135" text-anchor="middle" class="small-text">CloudFlare</text>
+  <text x="1160" y="148" text-anchor="middle" class="small-text">Static Assets</text>
+
+  <!-- Load Balancer Layer -->
+  <rect x="50" y="200" width="1300" height="80" class="layer-box"/>
+  <text x="70" y="225" class="layer-text">Load Balancer & Reverse Proxy</text>
+  
+  <rect x="500" y="240" width="150" height="30" class="component-box"/>
+  <text x="575" y="258" text-anchor="middle" class="component-text">Nginx Load Balancer</text>
+  
+  <rect x="680" y="240" width="120" height="30" class="component-box"/>
+  <text x="740" y="258" text-anchor="middle" class="component-text">SSL Termination</text>
+
+  <!-- Application Layer -->
+  <rect x="50" y="300" width="1300" height="150" class="layer-box"/>
+  <text x="70" y="325" class="layer-text">Application Layer</text>
+  
+  <!-- Django Apps -->
+  <rect x="80" y="340" width="100" height="90" class="component-box"/>
+  <text x="130" y="360" text-anchor="middle" class="component-text">Core App</text>
+  <text x="130" y="375" text-anchor="middle" class="small-text">• Homepage</text>
+  <text x="130" y="388" text-anchor="middle" class="small-text">• Search</text>
+  <text x="130" y="401" text-anchor="middle" class="small-text">• Utils</text>
+  <text x="130" y="414" text-anchor="middle" class="small-text">• Middleware</text>
+
+  <rect x="200" y="340" width="100" height="90" class="component-box"/>
+  <text x="250" y="360" text-anchor="middle" class="component-text">Users App</text>
+  <text x="250" y="375" text-anchor="middle" class="small-text">• Authentication</text>
+  <text x="250" y="388" text-anchor="middle" class="small-text">• Profiles</text>
+  <text x="250" y="401" text-anchor="middle" class="small-text">• Social Auth</text>
+  <text x="250" y="414" text-anchor="middle" class="small-text">• Following</text>
+
+  <rect x="320" y="340" width="100" height="90" class="component-box"/>
+  <text x="370" y="360" text-anchor="middle" class="component-text">Articles App</text>
+  <text x="370" y="375" text-anchor="middle" class="small-text">• CRUD</text>
+  <text x="370" y="388" text-anchor="middle" class="small-text">• Categories</text>
+  <text x="370" y="401" text-anchor="middle" class="small-text">• Tags</text>
+  <text x="370" y="414" text-anchor="middle" class="small-text">• Publishing</text>
+
+  <rect x="440" y="340" width="100" height="90" class="component-box"/>
+  <text x="490" y="360" text-anchor="middle" class="component-text">Comments</text>
+  <text x="490" y="375" text-anchor="middle" class="small-text">• Threading</text>
+  <text x="490" y="388" text-anchor="middle" class="small-text">• Moderation</text>
+  <text x="490" y="401" text-anchor="middle" class="small-text">• Reactions</text>
+
+  <rect x="560" y="340" width="100" height="90" class="component-box"/>
+  <text x="610" y="360" text-anchor="middle" class="component-text">Notifications</text>
+  <text x="610" y="375" text-anchor="middle" class="small-text">• Real-time</text>
+  <text x="610" y="388" text-anchor="middle" class="small-text">• Email</text>
+  <text x="610" y="401" text-anchor="middle" class="small-text">• Push</text>
+
+  <rect x="680" y="340" width="100" height="90" class="component-box"/>
+  <text x="730" y="360" text-anchor="middle" class="component-text">API App</text>
+  <text x="730" y="375" text-anchor="middle" class="small-text">• REST API</text>
+  <text x="730" y="388" text-anchor="middle" class="small-text">• GraphQL</text>
+  <text x="730" y="401" text-anchor="middle" class="small-text">• Swagger</text>
+  <text x="730" y="414" text-anchor="middle" class="small-text">• Webhooks</text>
+
+  <!-- Infrastructure Components -->
+  <rect x="820" y="340" width="120" height="50" class="component-box"/>
+  <text x="880" y="360" text-anchor="middle" class="component-text">WSGI Server</text>
+  <text x="880" y="375" text-anchor="middle" class="small-text">Gunicorn/uWSGI</text>
+
+  <rect x="960" y="340" width="120" height="50" class="component-box"/>
+  <text x="1020" y="360" text-anchor="middle" class="component-text">ASGI Server</text>
+  <text x="1020" y="375" text-anchor="middle" class="small-text">Daphne/Uvicorn</text>
+
+  <rect x="1100" y="340" width="120" height="50" class="component-box"/>
+  <text x="1160" y="360" text-anchor="middle" class="component-text">Task Queue</text>
+  <text x="1160" y="375" text-anchor="middle" class="small-text">Celery Workers</text>
+
+  <!-- Middleware Services -->
+  <rect x="50" y="470" width="1300" height="100" class="layer-box"/>
+  <text x="70" y="495" class="layer-text">Middleware & Services</text>
+
+  <rect x="80" y="510" width="120" height="50" class="cache-box"/>
+  <text x="140" y="530" text-anchor="middle" class="component-text">Redis Cache</text>
+  <text x="140" y="545" text-anchor="middle" class="small-text">Session Store</text>
+  <text x="140" y="555" text-anchor="middle" class="small-text">Cache Layer</text>
+
+  <rect x="220" y="510" width="120" height="50" class="cache-box"/>
+  <text x="280" y="530" text-anchor="middle" class="component-text">Message Broker</text>
+  <text x="280" y="545" text-anchor="middle" class="small-text">Redis/RabbitMQ</text>
+
+  <rect x="360" y="510" width="120" height="50" class="external-box"/>
+  <text x="420" y="530" text-anchor="middle" class="component-text">Search Engine</text>
+  <text x="420" y="545" text-anchor="middle" class="small-text">Elasticsearch</text>
+
+  <rect x="500" y="510" width="120" height="50" class="external-box"/>
+  <text x="560" y="530" text-anchor="middle" class="component-text">File Storage</text>
+  <text x="560" y="545" text-anchor="middle" class="small-text">AWS S3</text>
+
+  <rect x="640" y="510" width="120" height="50" class="external-box"/>
+  <text x="700" y="530" text-anchor="middle" class="component-text">Email Service</text>
+  <text x="700" y="545" text-anchor="middle" class="small-text">SendGrid/SES</text>
+
+  <rect x="780" y="510" width="120" height="50" class="external-box"/>
+  <text x="840" y="530" text-anchor="middle" class="component-text">Monitoring</text>
+  <text x="840" y="545" text-anchor="middle" class="small-text">Sentry/DataDog</text>
+
+  <rect x="920" y="510" width="120" height="50" class="external-box"/>
+  <text x="980" y="530" text-anchor="middle" class="component-text">Analytics</text>
+  <text x="980" y="545" text-anchor="middle" class="small-text">Google Analytics</text>
+
+  <rect x="1060" y="510" width="120" height="50" class="external-box"/>
+  <text x="1120" y="530" text-anchor="middle" class="component-text">Social Auth</text>
+  <text x="1120" y="545" text-anchor="middle" class="small-text">OAuth Providers</text>
+
+  <!-- Database Layer -->
+  <rect x="50" y="590" width="1300" height="120" class="layer-box"/>
+  <text x="70" y="615" class="layer-text">Data Layer</text>
+
+  <rect x="200" y="630" width="150" height="60" class="database-box"/>
+  <text x="275" y="650" text-anchor="middle" class="component-text">PostgreSQL</text>
+  <text x="275" y="665" text-anchor="middle" class="small-text">Primary Database</text>
+  <text x="275" y="678" text-anchor="middle" class="small-text">Master/Replica</text>
+
+  <rect x="370" y="630" width="150" height="60" class="database-box"/>
+  <text x="445" y="650" text-anchor="middle" class="component-text">Read Replicas</text>
+  <text x="445" y="665" text-anchor="middle" class="small-text">Read-only queries</text>
+  <text x="445" y="678" text-anchor="middle" class="small-text">Load distribution</text>
+
+  <rect x="540" y="630" width="150" height="60" class="cache-box"/>
+  <text x="615" y="650" text-anchor="middle" class="component-text">Redis</text>
+  <text x="615" y="665" text-anchor="middle" class="small-text">Cache & Sessions</text>
+  <text x="615" y="678" text-anchor="middle" class="small-text">Real-time data</text>
+
+  <rect x="710" y="630" width="150" height="60" class="database-box"/>
+  <text x="785" y="650" text-anchor="middle" class="component-text">File System</text>
+  <text x="785" y="665" text-anchor="middle" class="small-text">Media Files</text>
+  <text x="785" y="678" text-anchor="middle" class="small-text">Static Assets</text>
+
+  <rect x="880" y="630" width="150" height="60" class="external-box"/>
+  <text x="955" y="650" text-anchor="middle" class="component-text">Backup Storage</text>
+  <text x="955" y="665" text-anchor="middle" class="small-text">AWS S3</text>
+  <text x="955" y="678" text-anchor="middle" class="small-text">Automated backups</text>
+
+  <!-- Infrastructure Layer -->
+  <rect x="50" y="730" width="1300" height="120" class="layer-box"/>
+  <text x="70" y="755" class="layer-text">Infrastructure & DevOps</text>
+
+  <rect x="100" y="770" width="120" height="60" class="component-box"/>
+  <text x="160" y="790" text-anchor="middle" class="component-text">Docker</text>
+  <text x="160" y="805" text-anchor="middle" class="small-text">Containerization</text>
+  <text x="160" y="818" text-anchor="middle" class="small-text">Multi-stage builds</text>
+
+  <rect x="240" y="770" width="120" height="60" class="component-box"/>
+  <text x="300" y="790" text-anchor="middle" class="component-text">Kubernetes</text>
+  <text x="300" y="805" text-anchor="middle" class="small-text">Orchestration</text>
+  <text x="300" y="818" text-anchor="middle" class="small-text">Auto-scaling</text>
+
+  <rect x="380" y="770" width="120" height="60" class="component-box"/>
+  <text x="440" y="790" text-anchor="middle" class="component-text">CI/CD</text>
+  <text x="440" y="805" text-anchor="middle" class="small-text">GitHub Actions</text>
+  <text x="440" y="818" text-anchor="middle" class="small-text">Automated deploy</text>
+
+  <rect x="520" y="770" width="120" height="60" class="external-box"/>
+  <text x="580" y="790" text-anchor="middle" class="component-text">Cloud Provider</text>
+  <text x="580" y="805" text-anchor="middle" class="small-text">AWS/GCP/Azure</text>
+  <text x="580" y="818" text-anchor="middle" class="small-text">Managed services</text>
+
+  <rect x="660" y="770" width="120" height="60" class="component-box"/>
+  <text x="720" y="790" text-anchor="middle" class="component-text">Logging</text>
+  <text x="720" y="805" text-anchor="middle" class="small-text">ELK Stack</text>
+  <text x="720" y="818" text-anchor="middle" class="small-text">Centralized logs</text>
+
+  <rect x="800" y="770" width="120" height="60" class="component-box"/>
+  <text x="860" y="790" text-anchor="middle" class="component-text">Security</text>
+  <text x="860" y="805" text-anchor="middle" class="small-text">WAF</text>
+  <text x="860" y="818" text-anchor="middle" class="small-text">SSL/TLS</text>
+
+  <rect x="940" y="770" width="120" height="60" class="component-box"/>
+  <text x="1000" y="790" text-anchor="middle" class="component-text">Backup &</text>
+  <text x="1000" y="805" text-anchor="middle" class="component-text">Disaster Recovery</text>
+  <text x="1000" y="818" text-anchor="middle" class="small-text">Automated</text>
+
+  <rect x="1080" y="770" width="120" height="60" class="external-box"/>
+  <text x="1140" y="790" text-anchor="middle" class="component-text">DNS & CDN</text>
+  <text x="1140" y="805" text-anchor="middle" class="small-text">CloudFlare</text>
+  <text x="1140" y="818" text-anchor="middle" class="small-text">Global edge</text>
+
+  <!-- Data Flow Arrows -->
+  <path d="M 280 180 Q 400 190 575 200" class="data-flow"/>
+  <path d="M 575 280 Q 400 290 280 300" class="data-flow"/>
+  <path d="M 370 450 L 370 510" class="flow-arrow"/>
+  <path d="M 275 450 Q 275 480 275 510" class="flow-arrow"/>
+  <path d="M 730 450 Q 730 480 700 510" class="flow-arrow"/>
+  <path d="M 275 570 L 275 630" class="flow-arrow"/>
+  <path d="M 615 570 L 615 630" class="flow-arrow"/>
+
+  <!-- Architecture Notes -->
+  <rect x="1050" y="300" width="280" height="240" fill="#f8f9fa" stroke="#6c757d" stroke-width="1"/>
+  <text x="1190" y="320" text-anchor="middle" class="layer-text">Architecture Patterns</text>
+  
+  <text x="1060" y="340" class="small-text">• Microservices with Django apps</text>
+  <text x="1060" y="355" class="small-text">• RESTful API design</text>
+  <text x="1060" y="370" class="small-text">• Event-driven architecture</text>
+  <text x="1060" y="385" class="small-text">• Caching at multiple layers</text>
+  <text x="1060" y="400" class="small-text">• Database read replicas</text>
+  <text x="1060" y="415" class="small-text">• Asynchronous task processing</text>
+  <text x="1060" y="430" class="small-text">• Real-time notifications</text>
+  <text x="1060" y="445" class="small-text">• Content delivery network</text>
+  <text x="1060" y="460" class="small-text">• Horizontal scaling</text>
+  <text x="1060" y="475" class="small-text">• Load balancing</text>
+  <text x="1060" y="490" class="small-text">• Security best practices</text>
+  <text x="1060" y="505" class="small-text">• Monitoring & observability</text>
+  <text x="1060" y="520" class="small-text">• Automated CI/CD pipeline</text>
+
+</svg>

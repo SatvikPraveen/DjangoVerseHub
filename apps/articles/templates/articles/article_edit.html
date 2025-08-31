@@ -1,0 +1,294 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/article_edit.html -->
+{% extends 'base.html' %} {% load static %} {% block title %}Edit: {{
+article.title }} - DjangoVerseHub{% endblock %} {% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <h1>Edit Article</h1>
+      <p class="text-muted">Editing: <strong>{{ article.title }}</strong></p>
+
+      <form
+        method="post"
+        enctype="multipart/form-data"
+        class="needs-validation"
+        novalidate
+      >
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label for="{{ form.title.id_for_label }}" class="form-label"
+            >Title *</label
+          >
+          {{ form.title }} {% if form.title.errors %}
+          <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.category.id_for_label }}" class="form-label"
+              >Category</label
+            >
+            {{ form.category }}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.status.id_for_label }}" class="form-label"
+              >Status</label
+            >
+            {{ form.status }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="{{ form.summary.id_for_label }}" class="form-label"
+            >Summary</label
+          >
+          {{ form.summary }}
+          <div class="form-text">
+            Brief description of your article (optional)
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="{{ form.content.id_for_label }}" class="form-label"
+            >Content *</label
+          >
+          {{ form.content }} {% if form.content.errors %}
+          <div class="invalid-feedback d-block">{{ form.content.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label for="{{ form.featured_image.id_for_label }}" class="form-label"
+            >Featured Image</label
+          >
+
+          {% if article.featured_image %}
+          <div class="current-image mb-2">
+            <img
+              src="{{ article.featured_image.url }}"
+              alt="Current image"
+              style="max-height: 200px"
+              class="img-thumbnail"
+            />
+            <p class="text-muted">Current image</p>
+          </div>
+          {% endif %} {{ form.featured_image }}
+          <div class="form-text">
+            Upload a new image to replace the current one (max 5MB)
+          </div>
+          {% if form.featured_image.errors %}
+          <div class="invalid-feedback d-block">
+            {{ form.featured_image.errors }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Tags</label>
+          <div class="tags-container">
+            {% for tag in form.tags %}
+            <div class="form-check form-check-inline">
+              {{ tag.tag }}
+              <label class="form-check-label" for="{{ tag.id_for_label }}">
+                {{ tag.choice_label }}
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check">
+            {{ form.allow_comments }}
+            <label
+              class="form-check-label"
+              for="{{ form.allow_comments.id_for_label }}"
+            >
+              Allow Comments
+            </label>
+          </div>
+        </div>
+
+        {% if user.is_staff %}
+        <div class="mb-3">
+          <div class="form-check">
+            {{ form.is_featured }}
+            <label
+              class="form-check-label"
+              for="{{ form.is_featured.id_for_label }}"
+            >
+              Featured Article
+            </label>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- SEO Section -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5>SEO Settings (Optional)</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label
+                for="{{ form.meta_description.id_for_label }}"
+                class="form-label"
+                >Meta Description</label
+              >
+              {{ form.meta_description }}
+              <div class="form-text">
+                Description for search engines (160 characters max)
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label
+                for="{{ form.meta_keywords.id_for_label }}"
+                class="form-label"
+                >Meta Keywords</label
+              >
+              {{ form.meta_keywords }}
+              <div class="form-text">Comma-separated keywords for SEO</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Article Stats -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5>Article Statistics</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <strong>Views:</strong> {{ article.views_count }}
+              </div>
+              <div class="col-md-3">
+                <strong>Likes:</strong> {{ article.likes_count }}
+              </div>
+              <div class="col-md-3">
+                <strong>Comments:</strong> {{ article.comment_count }}
+              </div>
+              <div class="col-md-3">
+                <strong>Reading Time:</strong> {{ article.reading_time }} min
+              </div>
+            </div>
+            <hr />
+            <div class="row">
+              <div class="col-md-6">
+                <strong>Created:</strong> {{ article.created_at|date:"M d, Y
+                H:i" }}
+              </div>
+              <div class="col-md-6">
+                <strong>Last Updated:</strong> {{ article.updated_at|date:"M d,
+                Y H:i" }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <div>
+            <a
+              href="{% url 'articles:detail' slug=article.slug %}"
+              class="btn btn-secondary"
+              >View Article</a
+            >
+            <a
+              href="{% url 'articles:list' %}"
+              class="btn btn-outline-secondary"
+              >Back to List</a
+            >
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">
+              Update Article
+            </button>
+            <a
+              href="{% url 'articles:delete' slug=article.slug %}"
+              class="btn btn-outline-danger"
+              >Delete</a
+            >
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Form validation
+  (function () {
+    "use strict";
+    window.addEventListener(
+      "load",
+      function () {
+        var forms = document.getElementsByClassName("needs-validation");
+        var validation = Array.prototype.filter.call(forms, function (form) {
+          form.addEventListener(
+            "submit",
+            function (event) {
+              if (form.checkValidity() === false) {
+                event.preventDefault();
+                event.stopPropagation();
+              }
+              form.classList.add("was-validated");
+            },
+            false
+          );
+        });
+      },
+      false
+    );
+  })();
+
+  // Auto-save functionality
+  let autoSaveTimer;
+  let lastSavedData = "";
+
+  function autoSave() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      const formData = new FormData(document.querySelector("form"));
+      const currentData = JSON.stringify({
+        title: formData.get("title"),
+        content: formData.get("content"),
+        summary: formData.get("summary"),
+      });
+
+      if (currentData !== lastSavedData) {
+        // Save to localStorage as backup
+        localStorage.setItem("article_edit_backup", currentData);
+        lastSavedData = currentData;
+
+        // Show auto-save indicator
+        showAutoSaveIndicator();
+      }
+    }, 3000);
+  }
+
+  function showAutoSaveIndicator() {
+    const indicator = document.createElement("div");
+    indicator.className = "alert alert-success position-fixed top-0 end-0 m-3";
+    indicator.style.zIndex = "9999";
+    indicator.innerHTML = "Changes saved locally";
+    document.body.appendChild(indicator);
+
+    setTimeout(() => {
+      indicator.remove();
+    }, 2000);
+  }
+
+  document
+    .querySelector('input[name="title"]')
+    .addEventListener("input", autoSave);
+  document
+    .querySelector('textarea[name="content"]')
+    .addEventListener("input", autoSave);
+  document
+    .querySelector('textarea[name="summary"]')
+    .addEventListener("input", autoSave);
+</script>
+{% endblock %}
