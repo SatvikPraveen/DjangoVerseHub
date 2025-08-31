@@ -425,8 +425,6 @@ Special thanks to:
 
 - 🐛 **Issues**: [GitHub Issues](https://github.com/SatvikPraveen/DjangoVerseHub/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/SatvikPraveen/DjangoVerseHub/discussions)
-- 📧 **Email**: [satvikpraveen@example.com](mailto:satvikpraveen@example.com)
-- 🐦 **Twitter**: [@SatvikPraveen](https://twitter.com/SatvikPraveen)
 
 ---
 
