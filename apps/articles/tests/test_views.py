@@ -153,7 +153,7 @@ class ArticleCreateViewTest(TestCase):
         response = self.client.post(self.url, data)
         
         self.assertEqual(response.status_code, 200)  # Stay on form with errors
-        self.assertFormError(response, 'form', 'title', 'This field is required.')
+        self.assertFormError(response, 'form', 'title', 'This field is required.')  # type: ignore[arg-type]
 
 
 class ArticleUpdateViewTest(TestCase):

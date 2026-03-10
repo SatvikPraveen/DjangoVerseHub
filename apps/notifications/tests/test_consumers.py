@@ -19,14 +19,15 @@ class NotificationConsumerTest(TestCase):
             email='test@test.com',
             password='testpass123'
         )
+        self.application = AuthMiddlewareStack(
+            URLRouter(  # type: ignore[arg-type]
+                [re_path(r'ws/notifications/$', NotificationConsumer.as_asgi())]  # type: ignore[arg-type]
+            )
+        )
 
     async def test_websocket_connect_authenticated(self):
         """Test WebSocket connection for authenticated user"""
-        application = AuthMiddlewareStack(
-            URLRouter([
-                re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
-            ])
-        )
+        application = self.application
         
         communicator = WebsocketCommunicator(
             application, 
@@ -43,11 +44,7 @@ class NotificationConsumerTest(TestCase):
         """Test WebSocket connection rejection for anonymous user"""
         from django.contrib.auth.models import AnonymousUser
         
-        application = AuthMiddlewareStack(
-            URLRouter([
-                re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
-            ])
-        )
+        application = self.application
         
         communicator = WebsocketCommunicator(
             application, 
@@ -63,11 +60,7 @@ class NotificationConsumerTest(TestCase):
         # Create a notification
         notification = await self.acreate_notification()
         
-        application = AuthMiddlewareStack(
-            URLRouter([
-                re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
-            ])
-        )
+        application = self.application
         
         communicator = WebsocketCommunicator(
             application, 
@@ -96,11 +89,7 @@ class NotificationConsumerTest(TestCase):
         notification1 = await self.acreate_notification()
         notification2 = await self.acreate_notification()
         
-        application = AuthMiddlewareStack(
-            URLRouter([
-                re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
-            ])
-        )
+        application = self.application
         
         communicator = WebsocketCommunicator(
             application, 
@@ -126,11 +115,7 @@ class NotificationConsumerTest(TestCase):
 
     async def test_invalid_json_message(self):
         """Test handling of invalid JSON messages"""
-        application = AuthMiddlewareStack(
-            URLRouter([
-                re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
-            ])
-        )
+        application = self.application
         
         communicator = WebsocketCommunicator(
             application, 
@@ -180,11 +165,7 @@ class NotificationConsumerTest(TestCase):
         if not channel_layer:
             self.skipTest("Channel layer not configured")
         
-        application = AuthMiddlewareStack(
-            URLRouter([
-                re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
-            ])
-        )
+        application = self.application
         
         communicator = WebsocketCommunicator(
             application, 

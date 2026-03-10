@@ -222,7 +222,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """API ViewSet for Comment operations"""
     queryset = Comment.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]  # type: ignore[assignment]
     filterset_fields = ['content_type', 'object_id', 'parent', 'is_active', 'is_flagged']
     search_fields = ['content', 'author__first_name', 'author__last_name']
     ordering_fields = ['created_at', 'likes_count']

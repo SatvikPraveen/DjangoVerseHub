@@ -1,0 +1,17 @@
+Someone Liked Your Comment — DjangoVerseHub
+============================================
+
+Hi {{ recipient.first_name|default:recipient.username }},
+
+{{ liker.get_full_name|default:liker.username }} liked your comment on "{{ article.title }}":
+
+  {{ comment.body }}
+
+View the comment here:
+{{ article_url }}
+
+Thanks,
+The DjangoVerseHub Team
+
+--
+© {{ site_name }}. All rights reserved.

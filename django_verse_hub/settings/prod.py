@@ -105,7 +105,7 @@ CORS_ALLOW_CREDENTIALS = True
 ADMIN_URL = config('ADMIN_URL', default='admin/')
 
 # Sentry configuration
-SENTRY_DSN = config('SENTRY_DSN', default='')
+SENTRY_DSN = config('SENTRY_DSN', default='', cast=str)
 
 if SENTRY_DSN:
     sentry_sdk.init(

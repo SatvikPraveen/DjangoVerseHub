@@ -4,7 +4,7 @@ Test-specific Django settings configuration.
 Optimized for fast test execution and isolated testing environment.
 """
 
-from config.settings.base import *
+from django_verse_hub.settings.base import *
 import tempfile
 import os
 

@@ -1,6 +1,7 @@
 # File: DjangoVerseHub/apps/users/models.py
 
 import uuid
+from typing import ClassVar
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
@@ -33,7 +34,7 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-    objects = CustomUserManager()
+    objects: ClassVar[CustomUserManager] = CustomUserManager()  # type: ignore[assignment]
 
     class Meta:
         db_table = 'users_customuser'
@@ -147,6 +148,10 @@ class Profile(models.Model):
         if self.avatar and hasattr(self.avatar, 'url'):
             return self.avatar.url
         return '/static/images/default-avatar.png'
+
+    def get_avatar_url(self):
+        """Return avatar URL as a callable method (used by serializers and templates)"""
+        return self.avatar_url
     
     def save(self, *args, **kwargs):
         """Override save to process images"""

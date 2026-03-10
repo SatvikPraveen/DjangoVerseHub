@@ -4,7 +4,7 @@ import os
 from decouple import config
 
 # Base directory for logs
-LOGS_DIR = config('LOGS_DIR', default='/var/log/djangoversehub/')
+LOGS_DIR = config('LOGS_DIR', default='/var/log/djangoversehub/', cast=str)
 
 # Create logs directory if it doesn't exist
 os.makedirs(LOGS_DIR, exist_ok=True)

@@ -9,12 +9,14 @@ from django.utils import timezone
 class CustomUserManager(BaseUserManager):
     """Custom user manager for email-based authentication"""
     
-    def create_user(self, email, password, **extra_fields):
+    def create_user(self, email, password=None, **extra_fields):
         """Create and save a user with the given email and password"""
         if not email:
             raise ValueError(_('The Email must be set'))
-        
+
         email = self.normalize_email(email)
+        if 'username' not in extra_fields:
+            extra_fields['username'] = email.split('@')[0][:150]
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)

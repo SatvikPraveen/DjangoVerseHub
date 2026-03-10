@@ -1,0 +1,13 @@
+Daily Comment Digest — {{ site_name }}
+=======================================
+
+Date: {{ date }}
+
+Summary:
+  New comments:      {{ new_comments }}
+  Flagged for review: {{ flagged_comments }}
+
+{% if flagged_comments > 0 %}Action needed: {{ flagged_comments }} comment(s) are awaiting moderation.
+{% endif %}
+Thanks,
+The {{ site_name }} Team

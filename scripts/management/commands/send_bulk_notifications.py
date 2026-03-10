@@ -5,7 +5,7 @@ Processes notification queues and manages batch email operations.
 """
 
 from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 from django.core.mail import send_mass_mail
@@ -16,9 +16,12 @@ import csv
 import json
 from pathlib import Path
 
-from notifications.models import Notification
-from notifications.tasks import send_notification_email
-from core.tasks import send_welcome_email
+from apps.notifications.models import Notification
+from apps.users.tasks import send_welcome_email
+from apps.notifications.tasks import send_notification
+from django.contrib.auth.models import Group
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -347,7 +350,7 @@ class Command(BaseCommand):
             try:
                 if not self.dry_run:
                     # Use Celery task to send email
-                    send_notification_email.delay(notification.id)
+                    send_notification.delay(notification.id)
                     notification.email_sent = True
                     notification.save(update_fields=['email_sent'])
 

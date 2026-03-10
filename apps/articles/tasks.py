@@ -141,7 +141,7 @@ def notify_followers(author_id, article_id):
 def update_article_stats():
     """Update article statistics"""
     from .models import Article
-    from django.db.models import Count
+    from django.db.models import Count, Q
     
     try:
         # Update comment counts

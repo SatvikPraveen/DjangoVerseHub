@@ -1,0 +1,17 @@
+New Comment on Your Article — DjangoVerseHub
+=============================================
+
+Hi {{ recipient.first_name|default:recipient.username }},
+
+{{ commenter.get_full_name|default:commenter.username }} left a comment on your article "{{ article.title }}":
+
+  {{ comment.body }}
+
+View the article here:
+{{ article_url }}
+
+Thanks,
+The DjangoVerseHub Team
+
+--
+© {{ site_name }}. All rights reserved.

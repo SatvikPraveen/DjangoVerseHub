@@ -1,0 +1,33 @@
+{
+    "pythonVersion": "3.9",
+    "venvPath": ".",
+    "venv": ".venv",
+    "include": [
+        "apps",
+        "django_verse_hub",
+        "tests",
+        "scripts"
+    ],
+    "exclude": [
+        ".venv",
+        "**/migrations/**",
+        "**/node_modules/**",
+        "**/.*/**",
+        "**/__pycache__/**",
+        "**/*.pyc",
+        "staticfiles/**",
+        "media/**"
+    ],
+    "ignore": [],
+    "defineConstant": {
+        "DEBUG": true
+    },
+    "typeCheckingMode": "basic",
+    "reportMissingModuleSource": "none",
+    "reportMissingImports": "warning",
+    "reportOptionalMemberAccess": "none",
+    "reportGeneralTypeIssues": "none",
+    "reportAttributeAccessIssue": "none",
+    "useLibraryCodeForTypes": true,
+    "stubPath": "typestubs"
+}
