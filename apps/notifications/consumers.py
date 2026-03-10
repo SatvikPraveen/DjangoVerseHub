@@ -11,7 +11,7 @@ User = get_user_model()
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope["user"]
+        self.user = self.scope["user"]  # type: ignore[literal-required]
         
         if self.user.is_anonymous:
             await self.close()

@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -22,9 +23,9 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
     message = models.TextField()
     
-    # Generic foreign key for related object
+    # Generic foreign key for related object (CharField supports both int and UUID PKs)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.PositiveIntegerField(null=True, blank=True)
+    object_id = models.CharField(max_length=50, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
     
     is_read = models.BooleanField(default=False)
@@ -44,5 +45,5 @@ class Notification(models.Model):
     def mark_as_read(self):
         if not self.is_read:
             self.is_read = True
-            self.read_at = models.timezone.now()
+            self.read_at = timezone.now()
             self.save(update_fields=['is_read', 'read_at'])

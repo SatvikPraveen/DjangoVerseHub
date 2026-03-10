@@ -8,7 +8,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django_verse_hub.utils import upload_to_path, generate_unique_slug
-from .managers import ArticleManager, PublishedManager
+from .managers import ArticleManager, PublishedManager, CategoryManager, TagManager
 
 User = get_user_model()
 
@@ -28,6 +28,8 @@ class Category(models.Model):
     is_active = models.BooleanField(_('active'), default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = CategoryManager()
+
     class Meta:
         verbose_name = _('Category')
         verbose_name_plural = _('Categories')
@@ -43,7 +45,7 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('articles:category', kwargs={'slug': self.slug})
+        return reverse('articles:category_detail', kwargs={'slug': self.slug})
 
     @property
     def article_count(self):
@@ -56,6 +58,8 @@ class Tag(models.Model):
     name = models.CharField(_('name'), max_length=50, unique=True)
     slug = models.SlugField(_('slug'), max_length=50, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TagManager()
 
     class Meta:
         verbose_name = _('Tag')
@@ -72,7 +76,7 @@ class Tag(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('articles:tag', kwargs={'slug': self.slug})
+        return reverse('articles:tag_detail', kwargs={'slug': self.slug})
 
     @property
     def article_count(self):

@@ -73,7 +73,7 @@ def api_stats(request):
         stats = {
             'total_users': CustomUser.objects.count(),
             'active_users': CustomUser.objects.filter(is_active=True).count(),
-            'verified_users': CustomUser.objects.filter(is_verified=True).count(),
+            'verified_users': CustomUser.objects.filter(email_verified=True).count(),
             'total_articles': Article.objects.count(),
             'published_articles': Article.objects.filter(status='published').count(),
             'total_comments': Comment.objects.count(),

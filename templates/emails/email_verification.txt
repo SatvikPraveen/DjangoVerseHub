@@ -1,0 +1,19 @@
+Verify Your Email — DjangoVerseHub
+====================================
+
+Hi {{ user.first_name|default:user.username }},
+
+Please verify your email address to finish setting up your DjangoVerseHub account.
+
+Verification link:
+{{ verification_url }}
+
+This link expires in 24 hours.
+
+If you didn't create an account, you can safely ignore this email.
+
+Thanks,
+The DjangoVerseHub Team
+
+--
+© {{ site_name }}. All rights reserved.

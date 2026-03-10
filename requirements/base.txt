@@ -29,6 +29,12 @@ python-decouple>=3.8
 # Web Server
 gunicorn>=21.2.0
 
+# Caching (Redis client)
+django-redis>=5.3.0
+
+# API Documentation
+drf-yasg>=1.21.0
+
 # Utilities
 python-slugify>=8.0.0
 django-extensions>=3.2.0

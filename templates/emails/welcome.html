@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to DjangoVerseHub</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; }
+    .header { background: #0d6efd; color: #fff; padding: 32px 24px; text-align: center; }
+    .body { padding: 32px 24px; color: #333; line-height: 1.6; }
+    .btn { display: inline-block; margin: 24px 0; padding: 12px 28px; background: #0d6efd; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold; }
+    .footer { background: #f4f4f4; padding: 16px 24px; text-align: center; font-size: 12px; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Welcome to DjangoVerseHub!</h1>
+    </div>
+    <div class="body">
+      <p>Hi {{ user.first_name|default:user.username }},</p>
+      <p>We're thrilled to have you as part of the DjangoVerseHub community — your go-to reference platform for Django development.</p>
+      <p>Here's what you can do right away:</p>
+      <ul>
+        <li>Browse and bookmark articles</li>
+        <li>Comment and engage with the community</li>
+        <li>Get real-time notifications</li>
+      </ul>
+      <a href="{{ site_url }}" class="btn">Get Started</a>
+      <p>If you have any questions, just reply to this email — we're always happy to help.</p>
+      <p>Happy coding,<br><strong>The DjangoVerseHub Team</strong></p>
+    </div>
+    <div class="footer">
+      &copy; {% now "Y" %} {{ site_name }}. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

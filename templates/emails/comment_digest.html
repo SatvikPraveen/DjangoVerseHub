@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Comment Digest — DjangoVerseHub</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; }
+    .header { background: #6f42c1; color: #fff; padding: 24px; text-align: center; }
+    .body { padding: 32px 24px; color: #333; line-height: 1.6; }
+    .stat-row { display: flex; gap: 16px; margin: 20px 0; }
+    .stat-box { flex: 1; background: #f8f9fa; border-radius: 6px; padding: 16px; text-align: center; }
+    .stat-box .num { font-size: 32px; font-weight: bold; color: #6f42c1; }
+    .stat-box .label { font-size: 13px; color: #666; margin-top: 4px; }
+    .footer { background: #f4f4f4; padding: 16px 24px; text-align: center; font-size: 12px; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Daily Comment Digest</h1>
+      <p>{{ date }}</p>
+    </div>
+    <div class="body">
+      <p>Here is a summary of comment activity on <strong>{{ site_name }}</strong> for {{ date }}:</p>
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="num">{{ new_comments }}</div>
+          <div class="label">New Comments</div>
+        </div>
+        <div class="stat-box">
+          <div class="num">{{ flagged_comments }}</div>
+          <div class="label">Flagged for Review</div>
+        </div>
+      </div>
+      {% if flagged_comments > 0 %}
+      <p><strong>Action needed:</strong> There are {{ flagged_comments }} comment(s) awaiting moderation review.</p>
+      {% endif %}
+      <p>Thanks,<br><strong>The {{ site_name }} Team</strong></p>
+    </div>
+    <div class="footer">
+      &copy; {{ site_name }}. All rights reserved. This email was sent to site staff.
+    </div>
+  </div>
+</body>
+</html>

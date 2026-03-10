@@ -18,6 +18,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import Article, Category, Tag
+from apps.comments.models import Comment
 from .forms import ArticleForm, ArticleSearchForm, CategoryForm, TagForm
 from .serializers import (
     ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer,
@@ -78,7 +79,7 @@ class ArticleDetailView(DetailView):
     context_object_name = 'article'
 
     def get_queryset(self):
-        return Article.published.select_related('author', 'category').prefetch_related('tags', 'comments__author')
+        return Article.published.select_related('author', 'category').prefetch_related('tags')
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
@@ -89,7 +90,12 @@ class ArticleDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         article = self.object
         context['related_articles'] = article.get_related_articles()
-        context['comments'] = article.comments.filter(is_active=True, parent=None).select_related('author')[:10]
+        context['comments'] = (
+            Comment.objects.for_object(article)
+            .filter(parent=None)
+            .select_related('author')
+            .order_by('created_at')[:10]
+        )
         return context
 
 
@@ -134,7 +140,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
     """API ViewSet for Article operations"""
     queryset = Article.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]  # type: ignore[assignment]
     filterset_fields = ['status', 'category', 'tags', 'is_featured']
     search_fields = ['title', 'content', 'summary']
     ordering_fields = ['created_at', 'published_at', 'views_count', 'likes_count']
@@ -272,3 +278,82 @@ def autocomplete_view(request):
     
     suggestions = ArticleSearchManager.search_autocomplete(query)
     return JsonResponse({'suggestions': suggestions})
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Category / Tag web views (Class-Based)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class CategoryListView(ListView):
+    """List all active categories"""
+    model = Category
+    template_name = 'articles/category_list.html'
+    context_object_name = 'categories'
+
+    def get_queryset(self):
+        return Category.objects.active().order_by('name')
+
+
+class CategoryDetailView(DetailView):
+    """Articles grouped under one category"""
+    model = Category
+    template_name = 'articles/category_detail.html'
+    context_object_name = 'category'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        return Category.objects.active()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['articles'] = (
+            Article.published
+            .filter(category=self.object)
+            .select_related('author')
+            .prefetch_related('tags')
+        )
+        return context
+
+
+class TagListView(ListView):
+    """List all tags ordered by popularity"""
+    model = Tag
+    template_name = 'articles/tag_list.html'
+    context_object_name = 'tags'
+
+    def get_queryset(self):
+        return Tag.objects.popular()
+
+
+class TagDetailView(DetailView):
+    """Articles grouped under one tag"""
+    model = Tag
+    template_name = 'articles/tag_detail.html'
+    context_object_name = 'tag'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['articles'] = (
+            Article.published
+            .filter(tags=self.object)
+            .select_related('author', 'category')
+            .prefetch_related('tags')
+        )
+        return context
+
+
+class ArticleDeleteView(LoginRequiredMixin, DeleteView):
+    """Delete an article (owner only)"""
+    model = Article
+    template_name = 'articles/article_confirm_delete.html'
+    success_url = reverse_lazy('articles:list')
+
+    def get_queryset(self):
+        return Article.objects.filter(author=self.request.user)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Article deleted successfully!')
+        return super().form_valid(form)

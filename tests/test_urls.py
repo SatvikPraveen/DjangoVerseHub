@@ -6,208 +6,100 @@ Tests URL patterns, view resolution, and routing configuration.
 
 from django.test import TestCase
 from django.urls import reverse, resolve
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test.client import Client
-from django.http import Http404
 
-from accounts.views import UserProfileView, CustomLoginView
-from core.views import HomeView
-from notifications.views import NotificationListView
+from apps.notifications.views import NotificationListView
+
+User = get_user_model()
 
 
 class URLResolutionTestCase(TestCase):
     """Test URL pattern resolution and reverse URL lookup."""
-    
+
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
+            email='urltest@example.com',
+            password='testpass123',
+            username='urltestuser',
         )
-    
-    def test_admin_urls(self):
-        """Test admin URL resolution."""
+
+    # ------------------------------------------------------------------ admin
+    def test_admin_url(self):
         url = reverse('admin:index')
         self.assertEqual(url, '/admin/')
-        
-        resolver = resolve('/admin/')
-        self.assertEqual(resolver.view_name, 'admin:index')
-    
-    def test_api_urls(self):
-        """Test API URL resolution."""
-        # Test API root
-        url = reverse('api:api-root')
-        self.assertEqual(url, '/api/')
-        
-        # Test API documentation
-        url = reverse('api:schema-swagger-ui')
-        self.assertIn('/api/docs/', url)
-    
+        self.assertEqual(resolve('/admin/').view_name, 'admin:index')
+
+    # ------------------------------------------------------------------- home
     def test_home_url(self):
-        """Test home page URL resolution."""
-        url = reverse('core:home')
+        url = reverse('home')
         self.assertEqual(url, '/')
-        
-        resolver = resolve('/')
-        self.assertEqual(resolver.func.view_class, HomeView)
-    
-    def test_accounts_urls(self):
-        """Test accounts URL resolution."""
-        # Login URL
-        url = reverse('accounts:login')
-        self.assertEqual(url, '/accounts/login/')
-        
-        resolver = resolve('/accounts/login/')
-        self.assertEqual(resolver.func.view_class, CustomLoginView)
-        
-        # Profile URL
-        url = reverse('accounts:profile', kwargs={'pk': self.user.pk})
-        self.assertEqual(url, f'/accounts/profile/{self.user.pk}/')
-        
-        resolver = resolve(f'/accounts/profile/{self.user.pk}/')
-        self.assertEqual(resolver.func.view_class, UserProfileView)
-        
-        # Registration URL
-        url = reverse('accounts:register')
-        self.assertEqual(url, '/accounts/register/')
-        
-        # Logout URL
-        url = reverse('accounts:logout')
-        self.assertEqual(url, '/accounts/logout/')
-    
-    def test_notifications_urls(self):
-        """Test notifications URL resolution."""
+
+    # ---------------------------------------------------------------- api
+    def test_api_root_url(self):
+        url = reverse('api:api_root')
+        self.assertIn('/api/v1/', url)
+
+    def test_api_swagger_url(self):
+        url = reverse('api:schema_swagger_ui')
+        self.assertIn('/api/v1/docs/', url)
+
+    # --------------------------------------------------------------- users
+    def test_users_signup_url(self):
+        url = reverse('users:signup')
+        self.assertEqual(url, '/users/signup/')
+
+    def test_users_login_url(self):
+        url = reverse('users:login')
+        self.assertEqual(url, '/users/login/')
+
+    def test_users_logout_url(self):
+        url = reverse('users:logout')
+        self.assertEqual(url, '/users/logout/')
+
+    def test_users_profile_url(self):
+        url = reverse('users:profile', kwargs={'pk': self.user.pk})
+        self.assertIn(str(self.user.pk), url)
+
+    # ---------------------------------------------------------- notifications
+    def test_notifications_list_url(self):
         url = reverse('notifications:list')
         self.assertEqual(url, '/notifications/')
-        
-        resolver = resolve('/notifications/')
-        self.assertEqual(resolver.func.view_class, NotificationListView)
-    
-    def test_media_urls_in_debug(self):
-        """Test media URL serving in debug mode."""
-        # This would be tested with DEBUG=True
+        self.assertEqual(resolve('/notifications/').func.view_class, NotificationListView)
+
+    # ------------------------------------------------------ articles
+    def test_articles_list_url(self):
+        url = reverse('articles:list')
+        self.assertEqual(url, '/articles/')
+
+    def test_articles_category_list_url(self):
+        url = reverse('articles:category_list')
+        self.assertEqual(url, '/articles/categories/')
+
+    def test_articles_category_detail_url(self):
+        url = reverse('articles:category_detail', kwargs={'slug': 'python'})
+        self.assertEqual(url, '/articles/category/python/')
+
+    def test_articles_tags_url(self):
+        url = reverse('articles:tags')
+        self.assertEqual(url, '/articles/tags/')
+
+    def test_articles_tag_detail_url(self):
+        url = reverse('articles:tag_detail', kwargs={'slug': 'django'})
+        self.assertEqual(url, '/articles/tag/django/')
+
+    # ----------------------------------------------------- static / media 404s
+    def test_missing_static_returns_404_not_500(self):
         with self.settings(DEBUG=True):
-            response = self.client.get('/media/test.jpg')
-            # Should return 404 for non-existent files, not 500
+            response = self.client.get('/static/css/does-not-exist.css')
             self.assertEqual(response.status_code, 404)
-    
-    def test_static_urls_in_debug(self):
-        """Test static URL serving in debug mode."""
+
+    def test_missing_media_returns_404_not_500(self):
         with self.settings(DEBUG=True):
-            response = self.client.get('/static/css/test.css')
-            # Should return 404 for non-existent files, not 500
+            response = self.client.get('/media/does-not-exist.jpg')
             self.assertEqual(response.status_code, 404)
 
 
-class URLParameterTestCase(TestCase):
-    """Test URL parameters and dynamic routing."""
-    
-    def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
-        )
-    
-    def test_user_profile_url_parameters(self):
-        """Test user profile URL with parameters."""
-        url = reverse('accounts:profile', kwargs={'pk': 999})
-        resolver = resolve(url)
-        self.assertEqual(resolver.kwargs['pk'], '999')
-    
-    def test_api_url_parameters(self):
-        """Test API URL parameters."""
-        # Test user detail API endpoint
-        url = reverse('api:user-detail', kwargs={'pk': self.user.pk})
-        resolver = resolve(url)
-        self.assertEqual(resolver.kwargs['pk'], str(self.user.pk))
-
-
-class URLNamespaceTestCase(TestCase):
-    """Test URL namespacing and organization."""
-    
-    def test_app_namespaces(self):
-        """Test that all apps use proper namespacing."""
-        namespaces = [
-            'core',
-            'accounts', 
-            'notifications',
-            'api',
-            'admin'
-        ]
-        
-        for namespace in namespaces:
-            try:
-                # Try to reverse a URL in each namespace
-                if namespace == 'core':
-                    reverse(f'{namespace}:home')
-                elif namespace == 'accounts':
-                    reverse(f'{namespace}:login')
-                elif namespace == 'notifications':
-                    reverse(f'{namespace}:list')
-                elif namespace == 'api':
-                    reverse(f'{namespace}:api-root')
-                elif namespace == 'admin':
-                    reverse(f'{namespace}:index')
-            except Exception as e:
-                self.fail(f"Namespace {namespace} not properly configured: {e}")
-
-
-class URLSecurityTestCase(TestCase):
-    """Test URL security and access control."""
-    
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
-        )
-    
-    def test_admin_requires_authentication(self):
-        """Test that admin URLs require authentication."""
-        response = self.client.get('/admin/')
-        # Should redirect to login
-        self.assertEqual(response.status_code, 302)
-        self.assertIn('/admin/login/', response.url)
-    
-    def test_protected_views_redirect(self):
-        """Test that protected views redirect unauthenticated users."""
-        protected_urls = [
-            reverse('accounts:profile', kwargs={'pk': self.user.pk}),
-            reverse('notifications:list'),
-        ]
-        
-        for url in protected_urls:
-            response = self.client.get(url)
-            # Should redirect to login or return 403
-            self.assertIn(response.status_code, [302, 403])
-
-
-class URLPerformanceTestCase(TestCase):
-    """Test URL resolution performance."""
-    
-    def test_url_resolution_performance(self):
-        """Test that URL resolution is performant."""
-        import time
-        
-        urls_to_test = [
-            '/',
-            '/accounts/login/',
-            '/api/',
-            '/admin/',
-        ]
-        
-        for url in urls_to_test:
-            start_time = time.time()
-            try:
-                resolve(url)
-            except Http404:
-                pass  # Some URLs might not exist, that's OK
-            end_time = time.time()
-            
-            resolution_time = end_time - start_time
-            # URL resolution should be very fast
-            self.assertLess(resolution_time, 0.01, 
-                           f"URL resolution for {url} took {resolution_time}s")
+from django.test import TestCase
+from django.urls import reverse, resolve

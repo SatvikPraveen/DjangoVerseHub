@@ -1,0 +1,10 @@
+{{ title }}
+{{ title|length|add:"0"|ljust:title|length }}
+
+Hi {{ recipient.get_full_name|default:recipient.username }},
+
+{{ message }}
+
+---
+This is a message from {{ site_name }}.
+If you have questions, please contact our support team.

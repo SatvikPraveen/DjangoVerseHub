@@ -7,8 +7,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from rest_framework import generics, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics, viewsets, status
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -120,3 +120,38 @@ def delete_notification(request, notification_id):
             {'error': 'Notification not found'}, 
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """API ViewSet for Notification operations.
+
+    POST is excluded — notifications are created by the system, not by clients.
+    """
+
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'patch', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        return Notification.objects.filter(
+            recipient=self.request.user
+        ).select_related('sender', 'content_type').order_by('-created_at')
+
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """Mark a single notification as read."""
+        notification = self.get_object()
+        notification.mark_as_read()
+        return Response({'status': 'success'})
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all of the authenticated user's unread notifications as read."""
+        marked = self.get_queryset().filter(is_read=False).update(is_read=True)
+        return Response({'status': 'success', 'marked_count': marked})
+
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        """Return the count of unread notifications for the authenticated user."""
+        count = self.get_queryset().filter(is_read=False).count()
+        return Response({'unread_count': count})

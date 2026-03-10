@@ -218,7 +218,7 @@ class ProfileFormTest(TestCase):
         avatar = self.create_test_image()
         form_data = {}
         form_files = {'avatar': avatar}
-        form = ProfileForm(data=form_data, files=form_files, instance=self.profile)
+        form = ProfileForm(data=form_data, files=form_files, instance=self.profile)  # type: ignore[arg-type]
         self.assertTrue(form.is_valid())
 
     def test_avatar_size_validation(self):
@@ -232,7 +232,7 @@ class ProfileFormTest(TestCase):
         
         form_data = {}
         form_files = {'avatar': large_image}
-        form = ProfileForm(data=form_data, files=form_files, instance=self.profile)
+        form = ProfileForm(data=form_data, files=form_files, instance=self.profile)  # type: ignore[arg-type]
         # Size validation would trigger in actual upload
 
 

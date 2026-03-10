@@ -1,0 +1,22 @@
+Welcome to DjangoVerseHub!
+==========================
+
+Hi {{ user.first_name|default:user.username }},
+
+We're thrilled to have you as part of the DjangoVerseHub community — your
+go-to reference platform for Django development.
+
+Here's what you can do right away:
+  - Browse and bookmark articles
+  - Comment and engage with the community
+  - Get real-time notifications
+
+Visit the platform: {{ site_url }}
+
+If you have any questions, just reply to this email — we're always happy to help.
+
+Happy coding,
+The DjangoVerseHub Team
+
+--
+© {{ site_name }}. All rights reserved.

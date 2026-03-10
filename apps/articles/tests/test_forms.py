@@ -179,8 +179,8 @@ class CategoryFormTest(TestCase):
             'description': 'Test description'
         }
         form = CategoryForm(
-            data=form_data, 
-            files={'image': large_file}
+            data=form_data,
+            files={'image': large_file}  # type: ignore[arg-type]
         )
         self.assertFalse(form.is_valid())
         self.assertIn('image', form.errors)

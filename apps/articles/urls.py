@@ -23,6 +23,10 @@ urlpatterns = [
     # Category views
     path('categories/', views.CategoryListView.as_view(), name='category_list'),
     path('category/<slug:slug>/', views.CategoryDetailView.as_view(), name='category_detail'),
+
+    # Tag views
+    path('tags/', views.TagListView.as_view(), name='tags'),
+    path('tag/<slug:slug>/', views.TagDetailView.as_view(), name='tag_detail'),
     
     # Article CRUD
     path('<slug:slug>/', views.ArticleDetailView.as_view(), name='detail'),

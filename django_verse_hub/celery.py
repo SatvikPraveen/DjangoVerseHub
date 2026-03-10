@@ -7,7 +7,7 @@ from django.conf import settings
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_verse_hub.settings.dev')
 
-app = Celery('django_verse_hub')
+app = Celery('django_verse_hub')  # type: ignore[operator]
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
