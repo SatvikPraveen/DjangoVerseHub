@@ -9,4 +9,4 @@ class ArticlesConfig(AppConfig):
     verbose_name = 'Articles'
 
     def ready(self):
-        import apps.articles.signals
+        import apps.articles.signals  # noqa: F401

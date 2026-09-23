@@ -1,0 +1,45 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/includes/article_card.html -->
+{# Renders one article as a Bootstrap card. Expects `article` in context. #}
+<div class="card article-card h-100">
+  <img
+    src="{{ article.get_featured_image_url }}"
+    class="card-img-top"
+    alt="{{ article.title }}"
+  />
+  <div class="card-body d-flex flex-column">
+    <h5 class="card-title">
+      <a href="{% url 'articles:detail' slug=article.slug %}" class="text-decoration-none">{{ article.title }}</a>
+      {% if not article.is_published %}
+      <span class="badge bg-warning text-dark ms-1">{{ article.get_status_display }}</span>
+      {% endif %}
+    </h5>
+    <p class="card-text">{{ article.summary|default:article.content|striptags|truncatechars:120 }}</p>
+
+    <div class="article-meta mt-auto">
+      <small class="text-muted">
+        By {{ article.author.get_full_name|default:article.author.username }} •
+        {{ article.published_at|default:article.created_at|date:"M d, Y" }} •
+        {{ article.reading_time }} min read
+      </small>
+      <div class="mt-2">
+        {% if article.category %}
+        <a href="{% url 'articles:category_detail' slug=article.category.slug %}" class="badge bg-primary text-decoration-none">{{ article.category.name }}</a>
+        {% endif %}
+        <span class="badge bg-secondary">{{ article.views_count }} views</span>
+        <span class="badge bg-light text-dark border">
+          <i class="bi bi-heart{% if article.is_liked %}-fill text-danger{% endif %}"></i> {{ article.likes_count }}
+        </span>
+        {% if article.is_bookmarked %}
+        <span class="badge bg-light text-dark border" title="Bookmarked"><i class="bi bi-bookmark-fill text-primary"></i></span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <a href="{% url 'articles:detail' slug=article.slug %}" class="btn btn-primary btn-sm">Read More</a>
+      {% if user.is_authenticated and user == article.author %}
+      <a href="{% url 'articles:edit' slug=article.slug %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+      {% endif %}
+    </div>
+  </div>
+</div>

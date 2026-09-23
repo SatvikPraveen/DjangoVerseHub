@@ -1,0 +1,28 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/tag_list.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}Tags - DjangoVerseHub{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Tags</h1>
+    <a href="{% url 'articles:category_list' %}" class="btn btn-outline-secondary btn-sm">Browse by category</a>
+  </div>
+
+  {% if tags %}
+  <div class="card">
+    <div class="card-body">
+      {% for tag in tags %}
+      <a href="{% url 'articles:tag_detail' slug=tag.slug %}" class="btn btn-outline-primary btn-sm me-2 mb-2">
+        {{ tag.name }} <span class="badge bg-primary ms-1">{{ tag.article_count }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info text-center">
+    <h4>No tags yet</h4>
+    <p class="mb-0">Tags will appear here once articles are tagged.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

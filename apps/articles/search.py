@@ -1,13 +1,18 @@
 # File: DjangoVerseHub/apps/articles/search.py
 
-from django.db.models import Q, F, Value
-from django.db.models.functions import Concat
+from django.db.models import Q
 from django.contrib.postgres.search import (
     SearchVector, SearchQuery, SearchRank, SearchHeadline
 )
 from django.core.cache import cache
+from django.db import connection
 import re
 from .models import Article, Category, Tag
+
+
+def uses_postgresql():
+    """True when the default database supports the postgres full-text search functions."""
+    return connection.vendor == 'postgresql'
 
 
 class ArticleSearchManager:
@@ -110,7 +115,9 @@ class ArticleSearchManager:
     
     @classmethod
     def search_with_highlights(cls, query, filters=None):
-        """Search with highlighted results"""
+        """Search with highlighted results (PostgreSQL only; falls back to basic search)"""
+        if not uses_postgresql():
+            return cls.basic_search(query, filters)
         try:
             # Try PostgreSQL full-text search with highlights
             normalized_query = cls.normalize_query(query)
@@ -212,22 +219,21 @@ class TagSearchManager:
         tags = cache.get(cache_key)
         
         if tags is None:
-            tags = Tag.objects.popular(limit)
+            tags = list(Tag.objects.popular(limit))
             cache.set(cache_key, tags, 3600)  # Cache for 1 hour
         
         return tags
 
 
 def search_all(query, filters=None, use_postgresql=True):
-    """Main search function that combines all search functionality"""
-    if use_postgresql:
-        try:
-            return ArticleSearchManager.postgresql_search(query, filters)
-        except Exception:
-            # Fallback to basic search
-            return ArticleSearchManager.basic_search(query, filters)
-    else:
-        return ArticleSearchManager.basic_search(query, filters)
+    """Main search function: PostgreSQL full-text search when available, icontains otherwise.
+
+    Querysets are lazy, so a database error from the postgres path would only surface
+    when the results are evaluated; check the database vendor up front instead.
+    """
+    if use_postgresql and uses_postgresql():
+        return ArticleSearchManager.postgresql_search(query, filters)
+    return ArticleSearchManager.basic_search(query, filters)
 
 
 def get_trending_searches(limit=10):

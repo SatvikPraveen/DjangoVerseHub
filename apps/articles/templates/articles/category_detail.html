@@ -1,0 +1,43 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/category_detail.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}{{ category.name }} - Categories - DjangoVerseHub{% endblock %}
+{% block meta_description %}{{ category.description|default:category.name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'articles:list' %}">Articles</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'articles:category_list' %}">Categories</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex align-items-center mb-4">
+    {% if category.image %}
+    <img src="{{ category.image.url }}" alt="{{ category.name }}" class="rounded me-3" style="width: 72px; height: 72px; object-fit: cover" />
+    {% endif %}
+    <div>
+      <h1 class="mb-1">{{ category.name }}</h1>
+      {% if category.description %}<p class="text-muted mb-0">{{ category.description }}</p>{% endif %}
+      <small class="text-muted">{{ page_obj.paginator.count }} published article{{ page_obj.paginator.count|pluralize }}</small>
+    </div>
+  </div>
+
+  <div class="row">
+    {% for article in articles %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      {% include 'articles/includes/article_card.html' %}
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info text-center">
+        <h4>No articles in this category yet</h4>
+        <a href="{% url 'articles:create' %}" class="btn btn-primary">Write the first one</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% include 'articles/includes/pagination.html' %}
+</div>
+{% endblock %}

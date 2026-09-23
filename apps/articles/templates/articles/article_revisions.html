@@ -1,0 +1,68 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/article_revisions.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}History: {{ article.title }} - DjangoVerseHub{% endblock %}
+{% block content %}
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'articles:list' %}">Articles</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'articles:detail' slug=article.slug %}">{{ article.title|truncatechars:40 }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Revision history</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h2 mb-0">Revision history</h1>
+    <a href="{% url 'articles:edit' slug=article.slug %}" class="btn btn-warning btn-sm">Edit article</a>
+  </div>
+  <p class="text-muted">
+    Each entry is a snapshot of the article as it was <em>before</em> an edit.
+    Restoring one copies its title, summary and content back onto the article; the current
+    text is saved as a new revision first, so nothing is lost.
+  </p>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between">
+      <span><strong>Current version</strong> — {{ article.title }}</span>
+      <small class="text-muted">Updated {{ article.updated_at|date:"M d, Y H:i" }}</small>
+    </div>
+  </div>
+
+  {% if revisions %}
+  <div class="accordion" id="revisions">
+    {% for revision in revisions %}
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading-{{ revision.pk }}">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#revision-{{ revision.pk }}" aria-expanded="false" aria-controls="revision-{{ revision.pk }}">
+          <span class="me-auto">
+            {{ revision.created_at|date:"M d, Y H:i" }} — {{ revision.title }}
+          </span>
+          <small class="text-muted ms-3">
+            replaced by {% if revision.editor %}{{ revision.editor.get_full_name|default:revision.editor.username }}{% else %}system{% endif %}
+          </small>
+        </button>
+      </h2>
+      <div id="revision-{{ revision.pk }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ revision.pk }}" data-bs-parent="#revisions">
+        <div class="accordion-body">
+          {% if revision.summary %}
+          <p><strong>Summary:</strong> {{ revision.summary }}</p>
+          {% endif %}
+          <div class="border rounded p-3 bg-light mb-3" style="max-height: 320px; overflow-y: auto">
+            {{ revision.content|linebreaks }}
+          </div>
+          <form method="post" action="{% url 'articles:revision_restore' slug=article.slug pk=revision.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Restore this version
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info">This article has not been edited yet, so there are no earlier revisions.</div>
+  {% endif %}
+</div>
+{% endblock %}

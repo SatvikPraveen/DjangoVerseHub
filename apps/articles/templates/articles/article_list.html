@@ -1,10 +1,20 @@
 <!-- File: DjangoVerseHub/apps/articles/templates/articles/article_list.html -->
-{% extends 'base.html' %} {% load static %} {% block title %}Articles -
-DjangoVerseHub{% endblock %} {% block content %}
+{% extends 'base.html' %} {% load static %}
+{% block title %}{{ page_heading|default:"Articles" }} - DjangoVerseHub{% endblock %}
+{% block content %}
 <div class="container">
   <div class="row">
     <div class="col-lg-8">
-      <h1>Articles</h1>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>{{ page_heading|default:"Articles" }}</h1>
+        {% if user.is_authenticated %}
+        <div class="btn-group btn-group-sm" role="group" aria-label="My content">
+          <a href="{% url 'articles:my_articles' %}" class="btn btn-outline-secondary {% if page_heading == 'My Articles' %}active{% endif %}">My Articles</a>
+          <a href="{% url 'articles:drafts' %}" class="btn btn-outline-secondary {% if page_heading == 'My Drafts' %}active{% endif %}">Drafts</a>
+          <a href="{% url 'articles:bookmarks' %}" class="btn btn-outline-secondary {% if page_heading == 'Bookmarks' %}active{% endif %}">Bookmarks</a>
+        </div>
+        {% endif %}
+      </div>
 
       <!-- Featured Articles -->
       {% if featured_articles %}
@@ -13,7 +23,7 @@ DjangoVerseHub{% endblock %} {% block content %}
         <div class="row">
           {% for article in featured_articles %}
           <div class="col-md-4 mb-3">
-            <div class="card article-card">
+            <div class="card article-card h-100">
               <img
                 src="{{ article.featured_image_url }}"
                 class="card-img-top"
@@ -40,93 +50,25 @@ DjangoVerseHub{% endblock %} {% block content %}
       <div class="row">
         {% for article in articles %}
         <div class="col-md-6 col-lg-4 mb-4">
-          <div class="card article-card h-100">
-            <img
-              src="{{ article.get_featured_image_url }}"
-              class="card-img-top"
-              alt="{{ article.title }}"
-            />
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title">{{ article.title }}</h5>
-              <p class="card-text">{{ article.summary|truncatechars:120 }}</p>
-
-              <div class="article-meta mt-auto">
-                <small class="text-muted">
-                  By {{ article.author.get_full_name }} • {{ article.created_at|date:"M d, Y" }} • {{ article.reading_time }} min read
-                </small>
-                <div class="mt-2">
-                  {% if article.category %}
-                  <span class="badge bg-primary"
-                    >{{ article.category.name }}</span
-                  >
-                  {% endif %}
-                  <span class="badge bg-secondary"
-                    >{{ article.views_count }} views</span
-                  >
-                </div>
-              </div>
-
-              <div class="mt-3">
-                <a
-                  href="{% url 'articles:detail' slug=article.slug %}"
-                  class="btn btn-primary"
-                  >Read More</a
-                >
-              </div>
-            </div>
-          </div>
+          {% include 'articles/includes/article_card.html' %}
         </div>
         {% empty %}
         <div class="col-12">
           <div class="alert alert-info text-center">
             <h4>No articles found</h4>
+            {% if page_heading == 'Bookmarks' %}
+            <p>Articles you bookmark will show up here.</p>
+            <a href="{% url 'articles:list' %}" class="btn btn-primary">Browse Articles</a>
+            {% else %}
             <p>Be the first to write an article!</p>
-            <a href="{% url 'articles:create' %}" class="btn btn-primary"
-              >Write Article</a
-            >
+            <a href="{% url 'articles:create' %}" class="btn btn-primary">Write Article</a>
+            {% endif %}
           </div>
         </div>
         {% endfor %}
       </div>
 
-      <!-- Pagination -->
-      {% if is_paginated %}
-      <nav aria-label="Articles pagination">
-        <ul class="pagination justify-content-center">
-          {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?page=1">First</a>
-          </li>
-          <li class="page-item">
-            <a
-              class="page-link"
-              href="?page={{ page_obj.previous_page_number }}"
-              >Previous</a
-            >
-          </li>
-          {% endif %}
-
-          <li class="page-item active">
-            <span class="page-link"
-              >{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span
-            >
-          </li>
-
-          {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}"
-              >Next</a
-            >
-          </li>
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}"
-              >Last</a
-            >
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
-      {% endif %}
+      {% include 'articles/includes/pagination.html' %}
     </div>
 
     <!-- Sidebar -->
@@ -138,7 +80,7 @@ DjangoVerseHub{% endblock %} {% block content %}
             <h5>Search Articles</h5>
           </div>
           <div class="card-body">
-            <form method="get">
+            <form method="get" action="{% url 'articles:list' %}">
               {{ search_form.q }}
               <button type="submit" class="btn btn-primary mt-2">Search</button>
             </form>
@@ -160,6 +102,7 @@ DjangoVerseHub{% endblock %} {% block content %}
               {{ category.name }} ({{ category.article_count }})
             </a>
             {% endfor %}
+            <a href="{% url 'articles:category_list' %}" class="small">All categories</a>
           </div>
         </div>
         {% endif %}
@@ -172,7 +115,7 @@ DjangoVerseHub{% endblock %} {% block content %}
           </div>
           <div class="card-body">
             {% for tag in popular_tags %}
-            <a href="?tag={{ tag.slug }}" class="tag">{{ tag.name }}</a>
+            <a href="{% url 'articles:tag_detail' slug=tag.slug %}" class="badge bg-light text-dark border text-decoration-none me-1 mb-1">{{ tag.name }}</a>
             {% endfor %}
           </div>
         </div>

@@ -4,8 +4,14 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-8">
-      <article class="article-detail">
+      <article class="article-detail" data-article-slug="{{ article.slug }}">
         <header class="article-header mb-4">
+          {% if not article.is_published %}
+          <div class="alert alert-warning py-2">
+            <i class="bi bi-eye-slash me-1"></i>
+            This article is a <strong>{{ article.get_status_display|lower }}</strong> and is only visible to you{% if user.is_staff %} (staff){% endif %}.
+          </div>
+          {% endif %}
           <h1>{{ article.title }}</h1>
 
           <div class="article-meta mb-3">
@@ -16,23 +22,21 @@
                 alt="{{ article.author.get_full_name }}"
               />
               <div>
-                <strong>{{ article.author.get_full_name }}</strong><br />
+                <strong>{{ article.author.get_full_name|default:article.author.username }}</strong><br />
                 <small class="text-muted">
-                  Published {{ article.published_at|date:"M d, Y" }} • {{ article.reading_time }} min read • {{ article.views_count }}
-                  views
+                  {% if article.published_at %}Published {{ article.published_at|date:"M d, Y" }}{% else %}Created {{ article.created_at|date:"M d, Y" }}{% endif %}
+                  • {{ article.reading_time }} min read • {{ article.views_count }} views
                 </small>
               </div>
             </div>
           </div>
 
-          {% if article.category or article.tags.exists %}
+          {% if article.category or article.tags.all %}
           <div class="article-tags mb-3">
             {% if article.category %}
-            <span class="badge bg-primary me-2"
-              >{{ article.category.name }}</span
-            >
+            <a href="{% url 'articles:category_detail' slug=article.category.slug %}" class="badge bg-primary me-2 text-decoration-none">{{ article.category.name }}</a>
             {% endif %} {% for tag in article.tags.all %}
-            <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+            <a href="{% url 'articles:tag_detail' slug=tag.slug %}" class="badge bg-secondary me-1 text-decoration-none">{{ tag.name }}</a>
             {% endfor %}
           </div>
           {% endif %} {% if article.featured_image %}
@@ -57,34 +61,46 @@
         </div>
 
         <footer class="article-footer mt-5">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="article-actions">
-              <button
-                class="btn btn-outline-primary btn-sm"
-                onclick="likeArticle({{ article.id }})"
-              >
-                👍 Like ({{ article.likes_count }})
-              </button>
-              <button
-                class="btn btn-outline-secondary btn-sm"
-                onclick="shareArticle()"
-              >
-                📤 Share
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="article-actions d-flex gap-2">
+              {% if article.is_published %}
+              {% if user.is_authenticated %}
+              <form method="post" action="{% url 'articles:like' slug=article.slug %}" class="d-inline js-toggle-form" data-kind="like">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}" />
+                <button type="submit" class="btn btn-sm {% if is_liked %}btn-danger{% else %}btn-outline-danger{% endif %}" id="like-button" aria-pressed="{{ is_liked|yesno:'true,false' }}">
+                  <i class="bi bi-heart{% if is_liked %}-fill{% endif %}"></i>
+                  <span class="js-label">{% if is_liked %}Liked{% else %}Like{% endif %}</span>
+                  (<span id="likes-count">{{ article.likes_count }}</span>)
+                </button>
+              </form>
+              <form method="post" action="{% url 'articles:bookmark' slug=article.slug %}" class="d-inline js-toggle-form" data-kind="bookmark">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}" />
+                <button type="submit" class="btn btn-sm {% if is_bookmarked %}btn-primary{% else %}btn-outline-primary{% endif %}" id="bookmark-button" aria-pressed="{{ is_bookmarked|yesno:'true,false' }}">
+                  <i class="bi bi-bookmark{% if is_bookmarked %}-fill{% endif %}"></i>
+                  <span class="js-label">{% if is_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}</span>
+                </button>
+              </form>
+              {% else %}
+              <a href="{% url 'account_login' %}?next={{ request.path|urlencode }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-heart"></i> Like ({{ article.likes_count }})
+              </a>
+              <a href="{% url 'account_login' %}?next={{ request.path|urlencode }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-bookmark"></i> Bookmark
+              </a>
+              {% endif %}
+              {% endif %}
+              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareArticle()">
+                <i class="bi bi-share"></i> Share
               </button>
             </div>
 
-            {% if user.is_authenticated and user == article.author %}
+            {% if can_edit %}
             <div class="author-actions">
-              <a
-                href="{% url 'articles:edit' slug=article.slug %}"
-                class="btn btn-warning btn-sm"
-                >Edit</a
-              >
-              <a
-                href="{% url 'articles:delete' slug=article.slug %}"
-                class="btn btn-danger btn-sm"
-                >Delete</a
-              >
+              <a href="{% url 'articles:edit' slug=article.slug %}" class="btn btn-warning btn-sm">Edit</a>
+              <a href="{% url 'articles:revisions' slug=article.slug %}" class="btn btn-outline-secondary btn-sm">History</a>
+              <a href="{% url 'articles:delete' slug=article.slug %}" class="btn btn-danger btn-sm">Delete</a>
             </div>
             {% endif %}
           </div>
@@ -100,7 +116,7 @@
                 alt="{{ article.author.get_full_name }}"
               />
               <div>
-                <h5>{{ article.author.get_full_name }}</h5>
+                <h5>{{ article.author.get_full_name|default:article.author.username }}</h5>
                 <p>
                   {{ article.author.profile.bio|default:"No bio available." }}
                 </p>
@@ -117,14 +133,13 @@
 
       <!-- Comments Section -->
       {% if article.allow_comments %}
-      <section class="comments-section mt-5">
+      <section class="comments-section mt-5" id="comments">
         <h3>Comments ({{ article.comment_count }})</h3>
 
         {% if user.is_authenticated %}
         <div class="comment-form mb-4">
-          <form action="{% url 'comments:create' %}" method="post">
+          <form action="{% url 'comments:create' %}?content_type={{ article_content_type_id }}&amp;object_id={{ article.id }}" method="post">
             {% csrf_token %}
-            <input type="hidden" name="article" value="{{ article.id }}" />
             <div class="mb-3">
               <textarea
                 name="content"
@@ -139,14 +154,14 @@
         </div>
         {% else %}
         <div class="alert alert-info">
-          <a href="{% url 'account_login' %}">Login</a> to post a comment.
+          <a href="{% url 'account_login' %}?next={{ request.path|urlencode }}">Login</a> to post a comment.
         </div>
         {% endif %}
 
         <!-- Comments List -->
         <div class="comments-list">
           {% for comment in comments %}
-          <div class="comment">
+          <div class="comment" id="comment-{{ comment.id }}">
             <div class="d-flex">
               <img
                 src="{{ comment.author.profile.get_avatar_url }}"
@@ -154,7 +169,7 @@
                 alt="{{ comment.author.get_full_name }}"
               />
               <div class="flex-grow-1">
-                <strong>{{ comment.author.get_full_name }}</strong>
+                <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
                 <small class="text-muted"
                   >{{ comment.created_at|timesince }} ago</small
                 >
@@ -197,7 +212,7 @@
                 </a>
                 <br />
                 <small class="text-muted"
-                  >{{ related.created_at|date:"M d" }}</small
+                  >{{ related.published_at|default:related.created_at|date:"M d" }}</small
                 >
               </div>
             </div>
@@ -212,9 +227,9 @@
             <h5>Article Stats</h5>
           </div>
           <div class="card-body">
-            <ul class="list-unstyled">
+            <ul class="list-unstyled mb-0">
               <li><strong>Views:</strong> {{ article.views_count }}</li>
-              <li><strong>Likes:</strong> {{ article.likes_count }}</li>
+              <li><strong>Likes:</strong> <span id="likes-count-stat">{{ article.likes_count }}</span></li>
               <li><strong>Comments:</strong> {{ article.comment_count }}</li>
               <li><strong>Shares:</strong> {{ article.shares_count }}</li>
               <li>
@@ -229,22 +244,74 @@
 </div>
 
 <script>
-  function likeArticle(articleId) {
-    // AJAX call to like article
-    console.log("Like article:", articleId);
-  }
+  // Progressive enhancement: submit like/bookmark toggles over XHR and update the button in place.
+  document.querySelectorAll(".js-toggle-form").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var button = form.querySelector("button");
+      var kind = form.dataset.kind;
+      button.disabled = true;
+
+      fetch(form.action, {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+          Accept: "application/json",
+        },
+        credentials: "same-origin",
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error("Request failed");
+          return response.json();
+        })
+        .then(function (data) {
+          var icon = button.querySelector("i");
+          var label = button.querySelector(".js-label");
+          if (kind === "like") {
+            button.classList.toggle("btn-danger", data.liked);
+            button.classList.toggle("btn-outline-danger", !data.liked);
+            icon.className = data.liked ? "bi bi-heart-fill" : "bi bi-heart";
+            label.textContent = data.liked ? "Liked" : "Like";
+            button.setAttribute("aria-pressed", data.liked);
+            document.getElementById("likes-count").textContent = data.likes_count;
+            var stat = document.getElementById("likes-count-stat");
+            if (stat) stat.textContent = data.likes_count;
+          } else {
+            button.classList.toggle("btn-primary", data.bookmarked);
+            button.classList.toggle("btn-outline-primary", !data.bookmarked);
+            icon.className = data.bookmarked ? "bi bi-bookmark-fill" : "bi bi-bookmark";
+            label.textContent = data.bookmarked ? "Bookmarked" : "Bookmark";
+            button.setAttribute("aria-pressed", data.bookmarked);
+          }
+        })
+        .catch(function () {
+          form.submit(); // fall back to a normal form post
+        })
+        .finally(function () {
+          button.disabled = false;
+        });
+    });
+  });
 
   function shareArticle() {
+    var payload = {
+      title: "{{ article.title|escapejs }}",
+      text: "{{ article.summary|truncatechars:100|escapejs }}",
+      url: window.location.href,
+    };
     if (navigator.share) {
-      navigator.share({
-        title: "{{ article.title }}",
-        text: "{{ article.summary|truncatechars:100 }}",
-        url: window.location.href,
+      navigator.share(payload).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(payload.url).then(function () {
+        var button = document.querySelector('[onclick="shareArticle()"]');
+        if (button) {
+          button.innerHTML = '<i class="bi bi-check"></i> Link copied';
+          setTimeout(function () {
+            button.innerHTML = '<i class="bi bi-share"></i> Share';
+          }, 2000);
+        }
       });
-    } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
     }
   }
 </script>

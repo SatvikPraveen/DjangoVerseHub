@@ -1,8 +1,6 @@
 # File: DjangoVerseHub/apps/articles/cache.py
 
 from django.core.cache import cache
-from django.conf import settings
-from django.db.models import Count, Q
 from .models import Article, Category, Tag
 
 
@@ -52,7 +50,8 @@ class ArticleCacheManager:
             'summary': article.summary,
             'author_name': article.author.get_full_name(),
             'category_name': article.category.name if article.category else None,
-            'tags': list(article.tags.values_list('name', flat=True)),
+            'tags': list(article.tags.values_list('slug', flat=True)),
+            'tag_names': list(article.tags.values_list('name', flat=True)),
             'featured_image_url': article.get_featured_image_url(),
             'views_count': article.views_count,
             'likes_count': article.likes_count,
@@ -173,7 +172,7 @@ class CategoryCacheManager:
     def cache_active_categories(cls, timeout=3600):
         """Cache active categories"""
         cache_key = cls.get_categories_cache_key()
-        categories = Category.objects.active().order_by('name')
+        categories = Category.objects.active().with_article_count().order_by('name')
         categories_data = [{
             'id': category.id,
             'name': category.name,

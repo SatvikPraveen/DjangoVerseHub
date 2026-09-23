@@ -1,0 +1,31 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/includes/pagination.html -->
+{# Bootstrap pagination that preserves the current query string. Expects `page_obj`. #}
+{% if page_obj and page_obj.has_other_pages %}
+{% spaceless %}
+<nav aria-label="Pagination" class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key|urlencode }}={{ value|urlencode }}&amp;{% endif %}{% endfor %}page=1">First</a>
+    </li>
+    <li class="page-item">
+      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key|urlencode }}={{ value|urlencode }}&amp;{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+    </li>
+    {% endif %}
+
+    <li class="page-item active" aria-current="page">
+      <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    </li>
+
+    {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key|urlencode }}={{ value|urlencode }}&amp;{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+    </li>
+    <li class="page-item">
+      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key|urlencode }}={{ value|urlencode }}&amp;{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">Last</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endspaceless %}
+{% endif %}

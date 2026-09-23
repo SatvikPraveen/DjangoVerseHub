@@ -7,7 +7,6 @@ from apps.articles.models import Article, Category, Tag
 from apps.articles.cache import (
     ArticleCacheManager, CategoryCacheManager, TagCacheManager
 )
-import json
 
 User = get_user_model()
 

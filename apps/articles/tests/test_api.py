@@ -7,9 +7,16 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from apps.articles.models import Article, Category, Tag
-import json
 
 User = get_user_model()
+
+
+def validation_errors(response):
+    """Field errors, whether DRF's default shape or the project's ``{'error': {'details': ...}}`` envelope."""
+    data = response.data
+    if isinstance(data, dict) and isinstance(data.get('error'), dict):
+        return data['error'].get('details', {})
+    return data
 
 
 class ArticleAPITest(TestCase):
@@ -96,8 +103,9 @@ class ArticleAPITest(TestCase):
         response = self.client.post(url, data)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('title', response.data)
-        self.assertIn('content', response.data)
+        errors = validation_errors(response)
+        self.assertIn('title', errors)
+        self.assertIn('content', errors)
 
     def test_update_article_owner(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)

@@ -40,7 +40,7 @@ class ArticleFormTest(TestCase):
     def test_article_form_title_validation(self):
         # Test too short title
         form_data = {
-            'title': 'Short',  # Less than 5 characters
+            'title': 'Tiny',  # Less than 5 characters
             'content': 'This is test content.' * 10,
         }
         form = ArticleForm(data=form_data, user=self.user)

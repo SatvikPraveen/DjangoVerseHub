@@ -1,0 +1,36 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/tag_detail.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}#{{ tag.name }} - Tags - DjangoVerseHub{% endblock %}
+{% block content %}
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'articles:list' %}">Articles</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'articles:tags' %}">Tags</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ tag.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="mb-4">
+    <h1 class="mb-1"><i class="bi bi-tag me-2"></i>{{ tag.name }}</h1>
+    <small class="text-muted">{{ page_obj.paginator.count }} published article{{ page_obj.paginator.count|pluralize }}</small>
+  </div>
+
+  <div class="row">
+    {% for article in articles %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      {% include 'articles/includes/article_card.html' %}
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info text-center">
+        <h4>No articles with this tag yet</h4>
+        <a href="{% url 'articles:create' %}" class="btn btn-primary">Write the first one</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% include 'articles/includes/pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+<!-- File: DjangoVerseHub/apps/articles/templates/articles/search_results.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}{% if query %}"{{ query }}" - {% endif %}Search Articles - DjangoVerseHub{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8">
+      <h1>Search Articles</h1>
+
+      <form method="get" action="{% url 'articles:search' %}" class="mb-4" role="search">
+        <div class="input-group input-group-lg">
+          <input
+            type="search"
+            name="q"
+            value="{{ query }}"
+            class="form-control"
+            placeholder="Search by title, summary or content"
+            aria-label="Search articles"
+            autofocus
+          />
+          <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button>
+        </div>
+        <div class="row g-2 mt-2">
+          <div class="col-sm-6">{{ search_form.category }}</div>
+          <div class="col-sm-6">{{ search_form.tag }}</div>
+        </div>
+      </form>
+
+      {% if query %}
+      <p class="text-muted">
+        {% with count=page_obj.paginator.count %}
+        {{ count }} result{{ count|pluralize }} for <strong>{{ query }}</strong>
+        {% endwith %}
+      </p>
+
+      <div class="list-group mb-4">
+        {% for article in results %}
+        <a href="{% url 'articles:detail' slug=article.slug %}" class="list-group-item list-group-item-action">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ article.title }}</h5>
+            <small class="text-muted">{{ article.published_at|default:article.created_at|date:"M d, Y" }}</small>
+          </div>
+          <p class="mb-1">{{ article.summary|default:article.content|striptags|truncatewords:40 }}</p>
+          <small class="text-muted">
+            By {{ article.author.get_full_name|default:article.author.username }}
+            {% if article.category %} • {{ article.category.name }}{% endif %}
+            • {{ article.reading_time }} min read
+          </small>
+        </a>
+        {% empty %}
+        <div class="alert alert-info">
+          <h5 class="alert-heading">No results found</h5>
+          <p class="mb-0">Try different keywords, or <a href="{% url 'articles:list' %}">browse all articles</a>.</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% include 'articles/includes/pagination.html' %}
+      {% else %}
+      <div class="alert alert-light border">
+        Enter a search term above to find articles.
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header"><h5>Browse instead</h5></div>
+        <div class="card-body">
+          <a href="{% url 'articles:list' %}" class="d-block mb-2">All articles</a>
+          <a href="{% url 'articles:trending' %}" class="d-block mb-2">Trending</a>
+          <a href="{% url 'articles:category_list' %}" class="d-block mb-2">Categories</a>
+          <a href="{% url 'articles:tags' %}" class="d-block">Tags</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

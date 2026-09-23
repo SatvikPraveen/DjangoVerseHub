@@ -1,17 +1,19 @@
 # File: DjangoVerseHub/apps/articles/serializers.py
 
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Article, Category, Tag
+from django.db import models
+from rest_framework import serializers
+
+from .models import Article, ArticleRevision, Category, Tag
 
 User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for Category model"""
-    
+
     article_count = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Category
         fields = ['id', 'name', 'slug', 'description', 'image', 'article_count', 'created_at']
@@ -20,9 +22,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for Tag model"""
-    
+
     article_count = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Tag
         fields = ['id', 'name', 'slug', 'article_count', 'created_at']
@@ -31,26 +33,54 @@ class TagSerializer(serializers.ModelSerializer):
 
 class AuthorSerializer(serializers.ModelSerializer):
     """Serializer for article author"""
-    
+
     full_name = serializers.SerializerMethodField()
     avatar_url = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
-        fields = ['id', 'full_name', 'avatar_url', 'date_joined']
-    
+        fields = ['id', 'username', 'full_name', 'avatar_url', 'date_joined']
+
     def get_full_name(self, obj):
-        return obj.get_full_name()
-    
+        return obj.get_full_name() or obj.username
+
     def get_avatar_url(self, obj):
-        if hasattr(obj, 'profile') and obj.profile.avatar:
-            return obj.profile.get_avatar_url()
+        profile = getattr(obj, 'profile', None)
+        if profile is not None:
+            return profile.get_avatar_url()
         return '/static/images/default-avatar.png'
 
 
-class ArticleListSerializer(serializers.ModelSerializer):
+class UserFlagsMixin:
+    """``liked`` / ``bookmarked`` for the requesting user.
+
+    Reads the ``is_liked`` / ``is_bookmarked`` annotations added by
+    ``ArticleQuerySet.with_user_flags()`` so lists don't trigger extra queries.
+    Subclasses declare ``liked``/``bookmarked`` as SerializerMethodFields.
+    """
+
+    def _request_user(self):
+        request = self.context.get('request')
+        return getattr(request, 'user', None)
+
+    def get_liked(self, obj):
+        return obj.is_liked_by(self._request_user())
+
+    def get_bookmarked(self, obj):
+        return obj.is_bookmarked_by(self._request_user())
+
+
+class ArticleListSerializerMany(serializers.ListSerializer):
+    """Attach comment counts in one query before serializing a list of articles."""
+
+    def to_representation(self, data):
+        iterable = data.all() if isinstance(data, models.Manager) else data
+        return super().to_representation(Article.attach_comment_counts(iterable))
+
+
+class ArticleListSerializer(UserFlagsMixin, serializers.ModelSerializer):
     """Serializer for article list view"""
-    
+
     author = AuthorSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -58,23 +88,26 @@ class ArticleListSerializer(serializers.ModelSerializer):
     comment_count = serializers.ReadOnlyField()
     reading_time = serializers.ReadOnlyField()
     is_published = serializers.ReadOnlyField()
-    
+    liked = serializers.SerializerMethodField()
+    bookmarked = serializers.SerializerMethodField()
+
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'slug', 'author', 'category', 'tags',
             'summary', 'featured_image_url', 'status', 'is_featured',
             'views_count', 'likes_count', 'comment_count', 'reading_time',
-            'is_published', 'published_at', 'created_at', 'updated_at'
+            'is_published', 'liked', 'bookmarked', 'published_at', 'created_at', 'updated_at',
         ]
-    
+        list_serializer_class = ArticleListSerializerMany
+
     def get_featured_image_url(self, obj):
         return obj.get_featured_image_url()
 
 
-class ArticleDetailSerializer(serializers.ModelSerializer):
+class ArticleDetailSerializer(UserFlagsMixin, serializers.ModelSerializer):
     """Serializer for article detail view"""
-    
+
     author = AuthorSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -83,120 +116,139 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     reading_time = serializers.ReadOnlyField()
     is_published = serializers.ReadOnlyField()
     related_articles = serializers.SerializerMethodField()
-    
+    liked = serializers.SerializerMethodField()
+    bookmarked = serializers.SerializerMethodField()
+
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'slug', 'author', 'category', 'tags',
-            'summary', 'content', 'featured_image_url', 'status', 
+            'summary', 'content', 'featured_image_url', 'status',
             'is_featured', 'allow_comments', 'views_count', 'likes_count',
             'shares_count', 'comment_count', 'reading_time', 'is_published',
-            'meta_description', 'meta_keywords', 'published_at', 
-            'created_at', 'updated_at', 'related_articles'
+            'liked', 'bookmarked', 'meta_description', 'meta_keywords', 'published_at',
+            'created_at', 'updated_at', 'related_articles',
         ]
-    
+
     def get_featured_image_url(self, obj):
         return obj.get_featured_image_url()
-    
+
     def get_related_articles(self, obj):
         related = obj.get_related_articles(limit=3)
         return ArticleListSerializer(related, many=True, context=self.context).data
 
 
 class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for creating and updating articles"""
-    
-    tags = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        queryset=Tag.objects.all(), 
-        required=False
-    )
-    
+    """Serializer for creating and updating articles.
+
+    ``author`` and ``slug`` are never writable; ``is_featured`` is only honoured for staff.
+    """
+
+    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all(), required=False)
+
     class Meta:
         model = Article
         fields = [
-            'title', 'summary', 'content', 'category', 'tags',
+            'id', 'title', 'slug', 'summary', 'content', 'category', 'tags',
             'featured_image', 'status', 'is_featured', 'allow_comments',
-            'meta_description', 'meta_keywords'
+            'meta_description', 'meta_keywords',
         ]
-    
+        read_only_fields = ['id', 'slug']
+
+    def _request_user(self):
+        request = self.context.get('request')
+        return getattr(request, 'user', None)
+
     def validate_title(self, value):
         if len(value.strip()) < 5:
-            raise serializers.ValidationError("Title must be at least 5 characters long.")
+            raise serializers.ValidationError('Title must be at least 5 characters long.')
         return value
-    
+
     def validate_content(self, value):
         if len(value.strip()) < 100:
-            raise serializers.ValidationError("Content must be at least 100 characters long.")
+            raise serializers.ValidationError('Content must be at least 100 characters long.')
         return value
-    
+
     def validate_featured_image(self, value):
-        if value:
-            if value.size > 5 * 1024 * 1024:  # 5MB
-                raise serializers.ValidationError("Image file too large ( > 5MB )")
+        if value and value.size > 5 * 1024 * 1024:  # 5MB
+            raise serializers.ValidationError('Image file too large ( > 5MB )')
         return value
-    
+
+    def validate(self, attrs):
+        user = self._request_user()
+        if 'is_featured' in attrs and not (user and user.is_staff):
+            attrs.pop('is_featured')
+        return attrs
+
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         article = Article.objects.create(**validated_data)
         article.tags.set(tags_data)
         return article
-    
+
     def update(self, instance, validated_data):
         tags_data = validated_data.pop('tags', None)
-        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        instance.save()
-        
+        instance.save(editor=self._request_user())
         if tags_data is not None:
             instance.tags.set(tags_data)
-        
         return instance
+
+
+class ArticleRevisionSerializer(serializers.ModelSerializer):
+    """Serializer for article revision snapshots"""
+
+    editor = AuthorSerializer(read_only=True)
+
+    class Meta:
+        model = ArticleRevision
+        fields = ['id', 'title', 'summary', 'content', 'editor', 'created_at']
+        read_only_fields = fields
 
 
 class ArticleStatsSerializer(serializers.ModelSerializer):
     """Serializer for article statistics"""
-    
+
     comment_count = serializers.ReadOnlyField()
     reading_time = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'views_count', 'likes_count', 'shares_count',
-            'comment_count', 'reading_time', 'created_at', 'published_at'
+            'comment_count', 'reading_time', 'created_at', 'published_at',
         ]
 
 
 class PopularArticleSerializer(serializers.ModelSerializer):
     """Serializer for popular articles"""
-    
+
     author_name = serializers.SerializerMethodField()
     category_name = serializers.SerializerMethodField()
     featured_image_url = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'slug', 'author_name', 'category_name',
             'featured_image_url', 'views_count', 'likes_count',
-            'created_at', 'published_at'
+            'created_at', 'published_at',
         ]
-    
+
     def get_author_name(self, obj):
-        return obj.author.get_full_name()
-    
+        return obj.author.get_full_name() or obj.author.username
+
     def get_category_name(self, obj):
         return obj.category.name if obj.category else None
-    
+
     def get_featured_image_url(self, obj):
         return obj.get_featured_image_url()
 
 
 class ArticleSearchSerializer(serializers.ModelSerializer):
     """Serializer for search results"""
-    
+
     author = AuthorSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -204,51 +256,59 @@ class ArticleSearchSerializer(serializers.ModelSerializer):
     highlight_title = serializers.SerializerMethodField()
     highlight_summary = serializers.SerializerMethodField()
     highlight_content = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'slug', 'author', 'category', 'tags',
             'summary', 'featured_image_url', 'views_count', 'likes_count',
-            'created_at', 'published_at', 'highlight_title', 
-            'highlight_summary', 'highlight_content'
+            'created_at', 'published_at', 'highlight_title',
+            'highlight_summary', 'highlight_content',
         ]
-    
+
     def get_featured_image_url(self, obj):
         return obj.get_featured_image_url()
-    
+
     def get_highlight_title(self, obj):
         return getattr(obj, 'headline_title', obj.title)
-    
+
     def get_highlight_summary(self, obj):
         return getattr(obj, 'headline_summary', obj.summary)
-    
+
     def get_highlight_content(self, obj):
         return getattr(obj, 'headline_content', obj.content[:200] + '...')
 
 
 class CategoryCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating and updating categories"""
-    
+
     class Meta:
         model = Category
-        fields = ['name', 'description', 'image', 'is_active']
-    
+        fields = ['id', 'name', 'slug', 'description', 'image', 'is_active']
+        read_only_fields = ['id', 'slug']
+
     def validate_name(self, value):
-        if Category.objects.filter(name__iexact=value).exclude(pk=self.instance.pk if self.instance else None).exists():
-            raise serializers.ValidationError("Category with this name already exists.")
+        queryset = Category.objects.filter(name__iexact=value)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError('Category with this name already exists.')
         return value
 
 
 class TagCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating and updating tags"""
-    
+
     class Meta:
         model = Tag
-        fields = ['name']
-    
+        fields = ['id', 'name', 'slug']
+        read_only_fields = ['id', 'slug']
+
     def validate_name(self, value):
         value = value.lower().strip()
-        if Tag.objects.filter(name__iexact=value).exclude(pk=self.instance.pk if self.instance else None).exists():
-            raise serializers.ValidationError("Tag with this name already exists.")
+        queryset = Tag.objects.filter(name__iexact=value)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError('Tag with this name already exists.')
         return value

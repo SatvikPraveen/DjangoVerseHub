@@ -2,8 +2,6 @@
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 from apps.articles.models import Article, Category, Tag
 
 User = get_user_model()

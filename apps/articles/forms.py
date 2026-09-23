@@ -122,9 +122,9 @@ class ArticleForm(forms.ModelForm):
             article.author = self.user
         
         if commit:
-            article.save()
+            article.save(editor=self.user)
             self.save_m2m()
-        
+
         return article
 
 
