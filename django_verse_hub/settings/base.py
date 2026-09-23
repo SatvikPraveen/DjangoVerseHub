@@ -220,6 +220,10 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
+# drf-spectacular falls back to "string" for untyped SerializerMethodFields and
+# skips bare @api_view functions; the schema still generates, so keep checks quiet.
+SILENCED_SYSTEM_CHECKS = ["drf_spectacular.W001", "drf_spectacular.W002"]
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "DjangoVerseHub API",
     "DESCRIPTION": "REST API for articles, comments, users, notifications and search.",
