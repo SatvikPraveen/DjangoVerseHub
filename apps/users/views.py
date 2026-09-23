@@ -24,7 +24,6 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import DetailView, ListView, UpdateView
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
@@ -614,7 +613,6 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
 
     queryset = CustomUser.objects.filter(is_active=True)
     # Token first so anonymous requests get a 401 (with WWW-Authenticate) rather than 403.
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsSelfOrReadOnly]
     public_actions = ("register", "login")
 
@@ -761,7 +759,6 @@ class ProfileViewSet(
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsProfileOwnerOrReadOnly]
     public_actions = ("list", "retrieve", "search")
 

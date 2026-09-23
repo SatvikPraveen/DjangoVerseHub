@@ -127,6 +127,8 @@ class NotificationListAPIView(generics.ListAPIView):
     pagination_class = NotificationPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):  # schema generation runs unauthenticated
+            return Notification.objects.none()
         return _apply_filters(_user_notifications(self.request.user), self.request.query_params)
 
 
@@ -199,6 +201,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):  # schema generation runs unauthenticated
+            return Notification.objects.none()
         return _apply_filters(_user_notifications(self.request.user), self.request.query_params)
 
     def create(self, request, *args, **kwargs):

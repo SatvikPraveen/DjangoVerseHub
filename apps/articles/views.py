@@ -14,7 +14,6 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from rest_framework import permissions, status, viewsets
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
@@ -341,7 +340,6 @@ class ArticleViewSet(viewsets.ModelViewSet):
     """API ViewSet for Article operations"""
 
     queryset = Article.objects.all()
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]  # type: ignore[assignment]
     filterset_fields = ["status", "category", "tags", "is_featured"]
@@ -434,7 +432,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     queryset = Category.objects.active().with_article_count()
     serializer_class = CategorySerializer
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name", "description"]
@@ -459,7 +456,6 @@ class TagViewSet(viewsets.ModelViewSet):
 
     queryset = Tag.objects.with_article_count()
     serializer_class = TagSerializer
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name"]
