@@ -2,6 +2,7 @@
 
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView, TokenBlacklistView
 from rest_framework import permissions
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from .routers import api_router, versioned_router, admin_router
@@ -21,6 +22,10 @@ urlpatterns = [
     path('auth/login/', views.LoginAPIView.as_view(), name='auth_login'),
     path('auth/logout/', views.LogoutAPIView.as_view(), name='auth_logout'),
     path('auth/token/', obtain_auth_token, name='auth_token'),
+    path('auth/jwt/create/', TokenObtainPairView.as_view(), name='jwt_create'),
+    path('auth/jwt/refresh/', TokenRefreshView.as_view(), name='jwt_refresh'),
+    path('auth/jwt/verify/', TokenVerifyView.as_view(), name='jwt_verify'),
+    path('auth/jwt/blacklist/', TokenBlacklistView.as_view(), name='jwt_blacklist'),
     
     # Search
     path('search/', views.SearchAPIView.as_view(), name='search'),

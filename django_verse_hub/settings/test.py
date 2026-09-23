@@ -94,10 +94,10 @@ RATE_LIMIT_ENABLED = False
 # ---------------------------------------------------------------------------
 # DRF — disable throttling in tests
 # ---------------------------------------------------------------------------
+# Global throttles off; scoped throttles keep their rates so they can be tested explicitly.
 REST_FRAMEWORK = {
     **globals().get('REST_FRAMEWORK', {}),
     'DEFAULT_THROTTLE_CLASSES': [],
-    'DEFAULT_THROTTLE_RATES': {},
 }
 
 # ---------------------------------------------------------------------------

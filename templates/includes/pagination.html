@@ -1,3 +1,4 @@
+{% load core_tags %}
 <!-- File: DjangoVerseHub/templates/includes/pagination.html -->
 
 {% if is_paginated %}
@@ -39,7 +40,7 @@
         <!-- First Page -->
         {% if page_obj.has_previous and page_obj.number > 2 %}
             <li class="page-item">
-                <a class="page-link" href="?{% query_string page=1 %}" 
+                <a class="page-link" href="?{% update_query page=1 %}" 
                    title="First page" data-page="1">
                     <i class="bi bi-chevron-double-left"></i>
                     <span class="visually-hidden">First</span>
@@ -50,7 +51,7 @@
         <!-- Previous Page -->
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?{% query_string page=page_obj.previous_page_number %}" 
+                <a class="page-link" href="?{% update_query page=page_obj.previous_page_number %}" 
                    title="Previous page" data-page="{{ page_obj.previous_page_number }}">
                     <i class="bi bi-chevron-left"></i>
                     <span class="visually-hidden">Previous</span>
@@ -78,7 +79,7 @@
             {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
                 <!-- Pages within range -->
                 <li class="page-item">
-                    <a class="page-link" href="?{% query_string page=page_num %}" 
+                    <a class="page-link" href="?{% update_query page=page_num %}" 
                        data-page="{{ page_num }}">{{ page_num }}</a>
                 </li>
             {% elif page_num == page_obj.number|add:'-4' or page_num == page_obj.number|add:'4' %}
@@ -92,7 +93,7 @@
         <!-- Next Page -->
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?{% query_string page=page_obj.next_page_number %}" 
+                <a class="page-link" href="?{% update_query page=page_obj.next_page_number %}" 
                    title="Next page" data-page="{{ page_obj.next_page_number }}">
                     <i class="bi bi-chevron-right"></i>
                     <span class="visually-hidden">Next</span>
@@ -110,7 +111,7 @@
         <!-- Last Page -->
         {% if page_obj.has_next and page_obj.number < page_obj.paginator.num_pages|add:'-1' %}
             <li class="page-item">
-                <a class="page-link" href="?{% query_string page=page_obj.paginator.num_pages %}" 
+                <a class="page-link" href="?{% update_query page=page_obj.paginator.num_pages %}" 
                    title="Last page" data-page="{{ page_obj.paginator.num_pages }}">
                     <i class="bi bi-chevron-double-right"></i>
                     <span class="visually-hidden">Last</span>
@@ -123,7 +124,7 @@
     <div class="d-md-none mt-3">
         <div class="btn-group w-100" role="group">
             {% if page_obj.has_previous %}
-                <a href="?{% query_string page=page_obj.previous_page_number %}" 
+                <a href="?{% update_query page=page_obj.previous_page_number %}" 
                    class="btn btn-outline-primary">
                     <i class="bi bi-chevron-left me-1"></i>Previous
                 </a>
@@ -138,7 +139,7 @@
             </button>
             
             {% if page_obj.has_next %}
-                <a href="?{% query_string page=page_obj.next_page_number %}" 
+                <a href="?{% update_query page=page_obj.next_page_number %}" 
                    class="btn btn-outline-primary">
                     Next<i class="bi bi-chevron-right ms-1"></i>
                 </a>
@@ -358,14 +359,14 @@ document.addEventListener('keydown', function(e) {
         {% if page_obj.has_previous %}
         if (e.key === 'ArrowLeft') {
             e.preventDefault();
-            window.location.href = '?{% query_string page=page_obj.previous_page_number %}';
+            window.location.href = '?{% update_query page=page_obj.previous_page_number %}';
         }
         {% endif %}
         
         {% if page_obj.has_next %}
         if (e.key === 'ArrowRight') {
             e.preventDefault();
-            window.location.href = '?{% query_string page=page_obj.next_page_number %}';
+            window.location.href = '?{% update_query page=page_obj.next_page_number %}';
         }
         {% endif %}
     }

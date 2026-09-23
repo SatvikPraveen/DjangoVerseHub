@@ -32,8 +32,9 @@ python-decouple>=3.8
 # Web Server
 gunicorn>=21.2.0
 
-# API Documentation
+# API Documentation and auth
 drf-spectacular>=0.27.0
+djangorestframework-simplejwt>=5.3.0
 
 # Structured logging
 python-json-logger>=2.0.0

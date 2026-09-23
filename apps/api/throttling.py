@@ -19,11 +19,13 @@ class CustomUserRateThrottle(UserRateThrottle):
             'ident': ident
         }
 
+    STAFF_RATE = '5000/hour'
+
     def allow_request(self, request, view):
-        # Staff users get higher limits
+        # Staff users get higher limits; rate must be re-parsed, not just reassigned.
         if request.user.is_authenticated and request.user.is_staff:
-            self.rate = '5000/hour'
-        
+            self.rate = self.STAFF_RATE
+            self.num_requests, self.duration = self.parse_rate(self.rate)
         return super().allow_request(request, view)
 
 
