@@ -1,17 +1,19 @@
-Someone Liked Your Comment — DjangoVerseHub
+{% autoescape off %}Someone Liked Your Comment — {{ site_name }}
 ============================================
 
-Hi {{ recipient.first_name|default:recipient.username }},
+Hi {{ recipient_name }},
 
-{{ liker.get_full_name|default:liker.username }} liked your comment on "{{ article.title }}":
+{{ liker_name }} liked your comment on "{{ target_title }}":
 
-  {{ comment.body }}
+  {{ comment.content }}
 
 View the comment here:
-{{ article_url }}
+{{ comment_url }}
 
 Thanks,
-The DjangoVerseHub Team
+The {{ site_name }} Team
 
 --
 © {{ site_name }}. All rights reserved.
+You receive these emails because email notifications are enabled in your profile settings.
+{% endautoescape %}

@@ -1,0 +1,96 @@
+<!-- File: DjangoVerseHub/apps/comments/templates/comments/comment_tree.html -->
+{% comment %}
+  Renders a full comment thread for one object.
+  Context (provided by {% render_comments obj %}): comment_nodes, comment_total,
+  content_object, content_type_id, liked_ids, comments_open, user, request.
+{% endcomment %}
+<section class="comments-section mt-5" id="comments">
+  <h3>Comments ({{ comment_total }})</h3>
+
+  {% if comments_open %}
+    {% if user.is_authenticated %}
+    <div class="comment-form mb-4">
+      <form
+        action="{% url 'comments:create' %}?content_type={{ content_type_id }}&object_id={{ content_object.pk|urlencode }}"
+        method="post"
+      >
+        {% csrf_token %}
+        <input type="hidden" name="content_type" value="{{ content_type_id }}" />
+        <input type="hidden" name="object_id" value="{{ content_object.pk }}" />
+        <div class="mb-3">
+          <textarea
+            name="content"
+            class="form-control"
+            rows="4"
+            maxlength="1000"
+            placeholder="Share your thoughts..."
+            required
+          ></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Post Comment</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      <a href="{% url 'account_login' %}?next={{ request.path|urlencode }}">Login</a> to post a comment.
+    </div>
+    {% endif %}
+  {% else %}
+  <div class="alert alert-secondary">Comments are closed.</div>
+  {% endif %}
+
+  <div class="comments-list">
+    {% for comment in comment_nodes %}
+      {% include 'comments/comment_thread.html' with comment=comment %}
+    {% empty %}
+    <p class="text-muted">No comments yet. Be the first to comment!</p>
+    {% endfor %}
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var csrfInput = document.querySelector("[name=csrfmiddlewaretoken]");
+    var csrfToken = csrfInput ? csrfInput.value : "";
+
+    document.querySelectorAll(".like-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var button = this;
+        fetch(button.dataset.likeUrl, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "X-CSRFToken": csrfToken, "Accept": "application/json" },
+        })
+          .then(function (response) { return response.json(); })
+          .then(function (data) {
+            button.querySelector(".like-count").textContent = data.likes_count;
+            button.classList.toggle("btn-primary", data.liked);
+            button.classList.toggle("btn-outline-primary", !data.liked);
+            button.setAttribute("aria-pressed", data.liked ? "true" : "false");
+          })
+          .catch(function (error) { console.error("Error:", error); });
+      });
+    });
+
+    document.querySelectorAll(".reply-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var form = document.getElementById("reply-form-" + this.dataset.commentId);
+        if (!form) return;
+        form.hidden = !form.hidden;
+        this.textContent = form.hidden ? "Reply" : "Cancel Reply";
+        if (!form.hidden) form.querySelector("textarea").focus();
+      });
+    });
+
+    document.querySelectorAll(".cancel-reply").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var form = this.closest(".reply-form");
+        form.hidden = true;
+        var replyBtn = document.querySelector(
+          '.reply-btn[data-comment-id="' + form.id.replace("reply-form-", "") + '"]'
+        );
+        if (replyBtn) replyBtn.textContent = "Reply";
+      });
+    });
+  });
+</script>

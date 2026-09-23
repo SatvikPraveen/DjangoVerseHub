@@ -4,9 +4,10 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from apps.comments.models import Comment, CommentLike
+from apps.comments.models import Comment, CommentFlag, CommentLike
 from apps.articles.models import Article
 import json
+import uuid
 
 User = get_user_model()
 
@@ -260,9 +261,13 @@ class CommentViewTest(TestCase):
         
         self.assertEqual(response.status_code, 302)
         
-        # Check comment was flagged
+        # A flag record is stored; the comment is only marked flagged once
+        # COMMENTS_FLAG_THRESHOLD distinct users have reported it.
+        flag = CommentFlag.objects.get(comment=self.comment, user=self.other_user)
+        self.assertEqual(flag.reason, 'spam')
+        self.assertEqual(flag.details, 'This looks like spam content.')
         self.comment.refresh_from_db()
-        self.assertTrue(self.comment.is_flagged)
+        self.assertFalse(self.comment.is_flagged)
 
     def test_comment_flag_view_anonymous(self):
         url = reverse('comments:flag', kwargs={'comment_id': self.comment.id})
@@ -272,7 +277,7 @@ class CommentViewTest(TestCase):
 
     def test_comment_flag_view_nonexistent_comment(self):
         self.client.force_login(self.other_user)
-        url = reverse('comments:flag', kwargs={'comment_id': 'nonexistent-uuid'})
+        url = reverse('comments:flag', kwargs={'comment_id': uuid.uuid4()})
         
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)

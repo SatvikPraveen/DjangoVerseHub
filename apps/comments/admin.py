@@ -1,10 +1,12 @@
 # File: DjangoVerseHub/apps/comments/admin.py
 
 from django.contrib import admin
+from django.db.models import Count
+from django.urls import NoReverseMatch, reverse
 from django.utils.html import format_html
-from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from .models import Comment, CommentLike
+
+from .models import Comment, CommentFlag, CommentLike
 
 
 class CommentReplyInline(admin.TabularInline):
@@ -13,8 +15,18 @@ class CommentReplyInline(admin.TabularInline):
     fk_name = 'parent'
     fields = ['author', 'content', 'is_active', 'is_flagged', 'created_at']
     readonly_fields = ['created_at']
+    raw_id_fields = ['author']
     extra = 0
     show_change_link = True
+
+
+class CommentFlagInline(admin.TabularInline):
+    """Reports filed against this comment"""
+    model = CommentFlag
+    fields = ['user', 'reason', 'details', 'created_at']
+    readonly_fields = ['user', 'reason', 'details', 'created_at']
+    extra = 0
+    can_delete = True
 
 
 @admin.register(Comment)
@@ -22,115 +34,104 @@ class CommentAdmin(admin.ModelAdmin):
     """Admin for Comment model"""
     list_display = [
         'content_preview', 'author', 'content_object_link', 'parent_comment',
-        'is_active', 'is_flagged', 'is_edited', 'reply_count', 'likes_count',
-        'created_at'
+        'depth', 'is_active', 'is_flagged', 'flag_count', 'is_edited',
+        'likes_count', 'created_at',
     ]
-    list_filter = [
-        'is_active', 'is_flagged', 'is_edited', 'content_type',
-        'created_at', 'updated_at'
-    ]
-    search_fields = ['content', 'author__email', 'author__first_name', 'author__last_name']
+    list_filter = ['is_active', 'is_flagged', 'is_edited', 'content_type', 'created_at']
+    search_fields = ['content', 'author__email', 'author__username', 'author__first_name', 'author__last_name']
     raw_id_fields = ['author', 'parent']
     readonly_fields = [
-        'id', 'created_at', 'updated_at', 'content_object_link',
-        'thread_info', 'engagement_stats'
+        'id', 'depth', 'likes_count', 'created_at', 'updated_at',
+        'content_object_link', 'thread_info',
     ]
-    actions = ['mark_active', 'mark_inactive', 'mark_flagged', 'unflag']
+    actions = ['approve_comments', 'hide_comments', 'mark_flagged', 'unflag']
     date_hierarchy = 'created_at'
-    inlines = [CommentReplyInline]
+    inlines = [CommentFlagInline, CommentReplyInline]
 
     fieldsets = (
-        (_('Comment'), {
-            'fields': ('author', 'content', 'content_object_link')
-        }),
-        (_('Threading'), {
-            'fields': ('parent', 'thread_info'),
-            'classes': ('collapse',)
-        }),
-        (_('Status'), {
-            'fields': ('is_active', 'is_flagged', 'is_edited')
-        }),
-        (_('Engagement'), {
-            'fields': ('engagement_stats',),
-            'classes': ('collapse',)
-        }),
-        (_('Metadata'), {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
+        (_('Comment'), {'fields': ('author', 'content', 'content_object_link')}),
+        (_('Threading'), {'fields': ('parent', 'depth', 'thread_info'), 'classes': ('collapse',)}),
+        (_('Status'), {'fields': ('is_active', 'is_flagged', 'is_edited')}),
+        (_('Engagement'), {'fields': ('likes_count',), 'classes': ('collapse',)}),
+        (_('Metadata'), {'fields': ('id', 'created_at', 'updated_at'), 'classes': ('collapse',)}),
     )
 
-    def content_preview(self, obj):
-        """Show content preview"""
-        preview = obj.content[:100]
-        if len(obj.content) > 100:
-            preview += '...'
-        return preview
-    content_preview.short_description = _('Content')
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related('author', 'parent', 'content_type')
+            .annotate(_flag_count=Count('flags', distinct=True))
+        )
 
+    @admin.display(description=_('Content'))
+    def content_preview(self, obj):
+        return obj.content[:100] + ('...' if len(obj.content) > 100 else '')
+
+    @admin.display(description=_('Content Object'))
     def content_object_link(self, obj):
-        """Link to the commented object"""
-        if obj.content_object:
+        target = obj.content_object
+        if target is None:
+            return '-'
+        try:
             url = reverse(
                 f'admin:{obj.content_type.app_label}_{obj.content_type.model}_change',
-                args=[obj.object_id]
+                args=[obj.object_id],
             )
-            return format_html('<a href="{}">{}</a>', url, obj.content_object)
-        return '-'
-    content_object_link.short_description = _('Content Object')
+        except NoReverseMatch:
+            return str(target)
+        return format_html('<a href="{}">{}</a>', url, target)
 
+    @admin.display(description=_('Parent Comment'))
     def parent_comment(self, obj):
-        """Show parent comment if exists"""
-        if obj.parent:
-            url = reverse('admin:comments_comment_change', args=[obj.parent.pk])
-            return format_html(
-                '<a href="{}">{}</a>',
-                url,
-                obj.parent.content[:30] + '...'
-            )
-        return '-'
-    parent_comment.short_description = _('Parent Comment')
+        if not obj.parent_id:
+            return '-'
+        url = reverse('admin:comments_comment_change', args=[obj.parent_id])
+        return format_html('<a href="{}">{}</a>', url, obj.parent.content[:30] + '...')
 
+    @admin.display(description=_('Flags'), ordering='_flag_count')
+    def flag_count(self, obj):
+        return getattr(obj, '_flag_count', None) or obj.flags.count()
+
+    @admin.display(description=_('Thread Info'))
     def thread_info(self, obj):
-        """Show thread information"""
-        depth = obj.get_thread_depth()
-        total_replies = obj.total_replies
-        return f'Depth: {depth}, Total Replies: {total_replies}'
-    thread_info.short_description = _('Thread Info')
+        return f'Depth: {obj.depth}, Direct replies: {obj.reply_count}, Total replies: {obj.total_replies}'
 
-    def engagement_stats(self, obj):
-        """Show engagement statistics"""
-        return f'Likes: {obj.likes_count}, Replies: {obj.reply_count}'
-    engagement_stats.short_description = _('Engagement')
+    @admin.action(description=_('Approve selected comments (show and clear flags)'))
+    def approve_comments(self, request, queryset):
+        count = queryset.update(is_active=True, is_flagged=False)
+        CommentFlag.objects.filter(comment__in=queryset).delete()
+        self.message_user(request, f'{count} comments approved.')
 
-    def mark_active(self, request, queryset):
-        """Mark selected comments as active"""
-        count = queryset.update(is_active=True)
-        self.message_user(request, f'{count} comments marked as active.')
-    mark_active.short_description = _('Mark selected comments as active')
-
-    def mark_inactive(self, request, queryset):
-        """Mark selected comments as inactive"""
+    @admin.action(description=_('Hide selected comments'))
+    def hide_comments(self, request, queryset):
         count = queryset.update(is_active=False)
-        self.message_user(request, f'{count} comments marked as inactive.')
-    mark_inactive.short_description = _('Mark selected comments as inactive')
+        self.message_user(request, f'{count} comments hidden.')
 
+    @admin.action(description=_('Flag selected comments'))
     def mark_flagged(self, request, queryset):
-        """Flag selected comments"""
         count = queryset.update(is_flagged=True)
         self.message_user(request, f'{count} comments flagged.')
-    mark_flagged.short_description = _('Flag selected comments')
 
+    @admin.action(description=_('Unflag selected comments'))
     def unflag(self, request, queryset):
-        """Unflag selected comments"""
         count = queryset.update(is_flagged=False)
         self.message_user(request, f'{count} comments unflagged.')
-    unflag.short_description = _('Unflag selected comments')
+
+
+@admin.register(CommentFlag)
+class CommentFlagAdmin(admin.ModelAdmin):
+    list_display = ['comment_preview', 'user', 'reason', 'created_at']
+    list_filter = ['reason', 'created_at']
+    search_fields = ['comment__content', 'user__email', 'details']
+    raw_id_fields = ['comment', 'user']
+    readonly_fields = ['created_at']
+
+    @admin.display(description=_('Comment'))
+    def comment_preview(self, obj):
+        return obj.comment.content[:50]
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'author', 'parent', 'content_type'
-        ).prefetch_related('replies')
+        return super().get_queryset(request).select_related('comment', 'user')
 
 
 @admin.register(CommentLike)
@@ -142,10 +143,9 @@ class CommentLikeAdmin(admin.ModelAdmin):
     raw_id_fields = ['comment', 'user']
     readonly_fields = ['created_at']
 
+    @admin.display(description=_('Comment'))
     def comment_preview(self, obj):
-        """Show comment preview"""
-        return obj.comment.content[:50] + '...'
-    comment_preview.short_description = _('Comment')
+        return obj.comment.content[:50]
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('comment', 'user')

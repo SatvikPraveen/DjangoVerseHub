@@ -1,16 +1,24 @@
 # File: DjangoVerseHub/apps/comments/tests/test_api.py
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from apps.comments.models import Comment, CommentLike
+from apps.comments.models import Comment, CommentFlag, CommentLike
 from apps.articles.models import Article
 
 User = get_user_model()
+
+
+def error_fields(response):
+    """Field errors, whether DRF's plain dict or the project's error envelope."""
+    data = response.data
+    if isinstance(data, dict) and 'error' in data and isinstance(data['error'], dict):
+        return data['error'].get('details', data['error'])
+    return data
 
 
 class CommentAPITest(TestCase):
@@ -101,7 +109,7 @@ class CommentAPITest(TestCase):
         response = self.client.post(url, data)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('content', response.data)
+        self.assertIn('content', error_fields(response))
 
     def test_create_comment_invalid_content_type(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
@@ -115,7 +123,7 @@ class CommentAPITest(TestCase):
         response = self.client.post(url, data)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('content_type', response.data)
+        self.assertIn('content_type', error_fields(response))
 
     def test_create_comment_nonexistent_object(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
@@ -129,7 +137,7 @@ class CommentAPITest(TestCase):
         response = self.client.post(url, data)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('object_id', response.data)
+        self.assertIn('object_id', error_fields(response))
 
     def test_create_reply_comment(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.other_token.key)
@@ -185,7 +193,7 @@ class CommentAPITest(TestCase):
         response = self.client.post(url, data)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('parent', response.data)
+        self.assertIn('parent', error_fields(response))
 
     def test_update_comment_owner(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
@@ -258,15 +266,28 @@ class CommentAPITest(TestCase):
         self.assertFalse(response.data['liked'])
         self.assertEqual(response.data['likes_count'], 0)
 
+    @override_settings(COMMENTS_FLAG_THRESHOLD=1)
     def test_flag_comment_action(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.other_token.key)
         url = reverse('comments:comment-flag', kwargs={'pk': self.comment.pk})
         
-        response = self.client.post(url)
+        response = self.client.post(url, {'reason': 'spam'})
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(CommentFlag.objects.filter(comment=self.comment, user=self.other_user, reason='spam').exists())
         self.comment.refresh_from_db()
         self.assertTrue(self.comment.is_flagged)
+
+        # Flagging twice is rejected
+        response = self.client.post(url, {'reason': 'spam'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_flag_own_comment_rejected(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        url = reverse('comments:comment-flag', kwargs={'pk': self.comment.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CommentFlag.objects.filter(comment=self.comment).exists())
 
     def test_tree_action(self):
         # Create nested comments
@@ -293,7 +314,7 @@ class CommentAPITest(TestCase):
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('error', response.data)
+        self.assertTrue('error' in response.data or 'error' in error_fields(response))
 
     def test_stats_action(self):
         url = reverse('comments:comment-stats', kwargs={'pk': self.comment.pk})
@@ -311,8 +332,13 @@ class CommentAPITest(TestCase):
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['content'], 'Test comment content')
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['content'], 'Test comment content')
+
+    def test_user_comments_requires_auth(self):
+        url = reverse('comments:comment-user-comments')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_filter_comments_by_content_type(self):
         url = reverse('comments:comment-list')

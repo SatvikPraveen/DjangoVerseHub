@@ -1,71 +1,70 @@
 # File: DjangoVerseHub/apps/comments/signals.py
 
-from django.db.models.signals import post_save, post_delete
+from django.db import transaction
+from django.db.models import F
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from django.contrib.contenttypes.models import ContentType
+
 from .models import Comment, CommentLike
-from .tasks import send_comment_notification, moderate_comment
+from .tasks import moderate_comment, send_comment_like_notification, send_comment_notification
 
 
 @receiver(post_save, sender=Comment)
 def comment_post_save(sender, instance, created, **kwargs):
-    """Handle comment post-save operations"""
-    if created:
-        # Send notification to content author
-        if instance.content_object and hasattr(instance.content_object, 'author'):
-            content_author = instance.content_object.author
-            if content_author != instance.author:
-                send_comment_notification.delay(
-                    comment_id=str(instance.id),
-                    recipient_id=str(content_author.id)
-                )
-        
-        # Send notification to parent comment author if it's a reply
-        if instance.parent and instance.parent.author != instance.author:
+    """Queue notifications and auto-moderation for a new comment."""
+    if not created:
+        return
+
+    comment_id = str(instance.id)
+    author_id = instance.author_id
+
+    # Collect distinct recipients: the content author and, for a reply, the
+    # parent comment's author. Never notify the commenter about their own
+    # comment and never send the same person two emails.
+    recipients = []  # list of (recipient_id, is_reply)
+    seen = {author_id}
+
+    if instance.parent_id and instance.parent.author_id not in seen:
+        seen.add(instance.parent.author_id)
+        recipients.append((str(instance.parent.author_id), True))
+
+    target = instance.content_object
+    target_author_id = getattr(target, 'author_id', None)
+    if target_author_id and target_author_id not in seen:
+        seen.add(target_author_id)
+        recipients.append((str(target_author_id), False))
+
+    def dispatch():
+        for recipient_id, is_reply in recipients:
             send_comment_notification.delay(
-                comment_id=str(instance.id),
-                recipient_id=str(instance.parent.author.id),
-                is_reply=True
+                comment_id=comment_id,
+                recipient_id=recipient_id,
+                is_reply=is_reply,
             )
-        
-        # Auto-moderation for new comments
-        moderate_comment.delay(str(instance.id))
+        moderate_comment.delay(comment_id)
 
-
-@receiver(post_delete, sender=Comment)
-def comment_post_delete(sender, instance, **kwargs):
-    """Handle comment deletion"""
-    # Update parent comment reply count if needed
-    if instance.parent:
-        # This would be handled by the database CASCADE
-        pass
-    
-    # Clean up any related data
-    # CommentLike objects are automatically deleted due to CASCADE
+    transaction.on_commit(dispatch)
 
 
 @receiver(post_save, sender=CommentLike)
 def comment_like_post_save(sender, instance, created, **kwargs):
-    """Handle comment like operations"""
-    if created:
-        # Update comment likes count
-        comment = instance.comment
-        comment.likes_count = comment.likes.count()
-        comment.save(update_fields=['likes_count'])
-        
-        # Send notification to comment author
-        if comment.author != instance.user:
-            from .tasks import send_comment_like_notification
-            send_comment_like_notification.delay(
-                comment_id=str(comment.id),
-                liker_id=str(instance.user.id)
-            )
+    """Increment the denormalised like counter atomically and notify the author."""
+    if not created:
+        return
+
+    Comment.objects.filter(pk=instance.comment_id).update(likes_count=F('likes_count') + 1)
+
+    comment = instance.comment
+    if comment.author_id != instance.user_id:
+        comment_id, liker_id = str(comment.id), str(instance.user_id)
+        transaction.on_commit(
+            lambda: send_comment_like_notification.delay(comment_id=comment_id, liker_id=liker_id)
+        )
 
 
 @receiver(post_delete, sender=CommentLike)
 def comment_like_post_delete(sender, instance, **kwargs):
-    """Handle comment unlike operations"""
-    # Update comment likes count
-    comment = instance.comment
-    comment.likes_count = max(0, comment.likes.count())
-    comment.save(update_fields=['likes_count'])
+    """Decrement the like counter atomically, never below zero."""
+    Comment.objects.filter(
+        pk=instance.comment_id, likes_count__gt=0
+    ).update(likes_count=F('likes_count') - 1)

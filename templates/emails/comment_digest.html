@@ -34,8 +34,9 @@
           <div class="label">Flagged for Review</div>
         </div>
       </div>
-      {% if flagged_comments > 0 %}
-      <p><strong>Action needed:</strong> There are {{ flagged_comments }} comment(s) awaiting moderation review.</p>
+      {% if pending_review %}
+      <p><strong>Action needed:</strong> {{ pending_review }} flagged comment(s) are awaiting moderation review.
+        <a href="{{ site_url }}/admin/comments/comment/?is_flagged__exact=1&is_active__exact=1">Review them</a>.</p>
       {% endif %}
       <p>Thanks,<br><strong>The {{ site_name }} Team</strong></p>
     </div>

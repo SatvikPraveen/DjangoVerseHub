@@ -1,17 +1,19 @@
-New Comment on Your Article — DjangoVerseHub
+{% autoescape off %}{% if is_reply %}New Reply to Your Comment{% else %}New Comment on Your Post{% endif %} — {{ site_name }}
 =============================================
 
-Hi {{ recipient.first_name|default:recipient.username }},
+Hi {{ recipient_name }},
 
-{{ commenter.get_full_name|default:commenter.username }} left a comment on your article "{{ article.title }}":
+{% if is_reply %}{{ commenter_name }} replied to your comment on "{{ target_title }}":{% else %}{{ commenter_name }} left a comment on "{{ target_title }}":{% endif %}
 
-  {{ comment.body }}
+  {{ comment.content }}
 
-View the article here:
-{{ article_url }}
+View the comment here:
+{{ comment_url }}
 
 Thanks,
-The DjangoVerseHub Team
+The {{ site_name }} Team
 
 --
 © {{ site_name }}. All rights reserved.
+You receive these emails because email notifications are enabled in your profile settings.
+{% endautoescape %}

@@ -1,0 +1,65 @@
+<!-- File: DjangoVerseHub/apps/comments/templates/comments/comment_flag.html -->
+{% extends 'base.html' %} {% load static %} {% block title %}Flag Comment -
+DjangoVerseHub{% endblock %} {% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">Flag Comment for Review</h4>
+        </div>
+        <div class="card-body">
+          <blockquote class="blockquote bg-light border-start border-4 p-3">
+            <p class="mb-1">{{ comment.content|linebreaksbr }}</p>
+            <footer class="blockquote-footer mt-1">
+              {{ comment.author.get_full_name|default:comment.author.username }},
+              {{ comment.created_at|date:"M d, Y H:i" }}
+            </footer>
+          </blockquote>
+
+          {% if already_flagged %}
+          <div class="alert alert-info">
+            You have already flagged this comment. Our moderators will review it.
+          </div>
+          <a href="{{ comment.get_absolute_url }}" class="btn btn-secondary">Back</a>
+          {% else %}
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label for="{{ form.reason.id_for_label }}" class="form-label">Reason</label>
+              {{ form.reason }}
+              {% if form.reason.errors %}
+              <div class="invalid-feedback d-block">{{ form.reason.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.details.id_for_label }}" class="form-label">Details (optional)</label>
+              {{ form.details }}
+              {% if form.details.errors %}
+              <div class="invalid-feedback d-block">{{ form.details.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="alert alert-warning small">
+              Reports are reviewed by moderators. Please only flag content that breaks
+              the community guidelines.
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="{{ comment.get_absolute_url }}" class="btn btn-secondary">Cancel</a>
+              <button type="submit" class="btn btn-warning">Flag Comment</button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

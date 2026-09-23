@@ -12,12 +12,5 @@ class CommentsConfig(AppConfig):
     verbose_name = 'Comments'
     
     def ready(self):
-        """
-        Import signals when the app is ready.
-        This ensures that signal handlers are registered when Django starts.
-        """
-        try:
-            import apps.comments.signals
-        except ImportError:
-            # Handle the case where signals.py doesn't exist yet
-            pass
+        """Register signal handlers once the app registry is ready."""
+        import apps.comments.signals  # noqa: F401

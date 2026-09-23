@@ -4,46 +4,35 @@ DjangoVerseHub{% endblock %} {% block content %}
 <div class="container">
   <div class="row">
     <div class="col-12">
-      <h1>Comment Management</h1>
+      <h1>{% if user.is_staff %}Comment Management{% else %}Recent Comments{% endif %}</h1>
 
       <!-- Search and Filters -->
       <div class="card mb-4">
         <div class="card-header">
-          <h5>Filter Comments</h5>
+          <h5 class="mb-0">Filter Comments</h5>
         </div>
         <div class="card-body">
           <form method="get" class="row g-3">
             <div class="col-md-4">
-              <label for="q" class="form-label">Search</label>
-              <input
-                type="text"
-                class="form-control"
-                name="q"
-                value="{{ request.GET.q }}"
-                placeholder="Search comments..."
-              />
+              <label for="{{ filter_form.q.id_for_label }}" class="form-label">Search</label>
+              {{ filter_form.q }}
             </div>
             <div class="col-md-3">
-              <label for="author" class="form-label">Author</label>
-              <input
-                type="text"
-                class="form-control"
-                name="author"
-                value="{{ request.GET.author }}"
-                placeholder="Filter by author..."
-              />
+              <label for="{{ filter_form.author.id_for_label }}" class="form-label">Author</label>
+              {{ filter_form.author }}
+            </div>
+            <div class="col-md-2">
+              <label for="{{ filter_form.date_from.id_for_label }}" class="form-label">From</label>
+              {{ filter_form.date_from }}
+            </div>
+            <div class="col-md-2">
+              <label for="{{ filter_form.date_to.id_for_label }}" class="form-label">To</label>
+              {{ filter_form.date_to }}
             </div>
             <div class="col-md-3">
-              <label for="is_flagged" class="form-label">Status</label>
               <div class="form-check mt-2">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  name="is_flagged"
-                  id="is_flagged"
-                  {% if request.GET.is_flagged %}checked{% endif %}
-                />
-                <label class="form-check-label" for="is_flagged">
+                {{ filter_form.is_flagged }}
+                <label class="form-check-label" for="{{ filter_form.is_flagged.id_for_label }}">
                   Show flagged only
                 </label>
               </div>
@@ -57,15 +46,13 @@ DjangoVerseHub{% endblock %} {% block content %}
 
       <!-- Comments List -->
       <div class="card">
-        <div
-          class="card-header d-flex justify-content-between align-items-center"
-        >
-          <h5>Comments ({{ paginator.count }})</h5>
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Comments ({{ paginator.count }})</h5>
         </div>
         <div class="card-body">
           {% if comments %}
           <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle">
               <thead>
                 <tr>
                   <th>Author</th>
@@ -84,35 +71,31 @@ DjangoVerseHub{% endblock %} {% block content %}
                     <div class="d-flex align-items-center">
                       <img
                         src="{{ comment.author.profile.get_avatar_url }}"
-                        class="avatar-sm me-2"
-                        alt="{{ comment.author.get_full_name }}"
+                        class="avatar-sm me-2 rounded-circle"
+                        width="32"
+                        height="32"
+                        alt=""
                       />
                       <div>
-                        <strong>{{ comment.author.get_full_name }}</strong
-                        ><br />
-                        <small class="text-muted"
-                          >{{ comment.author.email }}</small
-                        >
+                        <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                        {% if user.is_staff %}
+                        <br /><small class="text-muted">{{ comment.author.email }}</small>
+                        {% endif %}
                       </div>
                     </div>
                   </td>
                   <td>
                     <div class="comment-content">
-                      {{ comment.content|truncatewords:15 }} {% if comment.is_edited %}
-                      <span class="badge bg-info ms-2">Edited</span>
-                      {% endif %} {% if comment.parent %}
-                      <br /><small class="text-muted"
-                        >Reply to: {{ comment.parent.content|truncatewords:5 }}</small
-                      >
+                      {{ comment.content|truncatewords:15 }}
+                      {% if comment.is_edited %}<span class="badge bg-info ms-2">Edited</span>{% endif %}
+                      {% if comment.parent %}
+                      <br /><small class="text-muted">Reply to: {{ comment.parent.content|truncatewords:5 }}</small>
                       {% endif %}
                     </div>
                   </td>
                   <td>
                     {% if comment.content_object %}
-                    <a
-                      href="{{ comment.content_object.get_absolute_url }}"
-                      class="text-decoration-none"
-                    >
+                    <a href="{{ comment.content_object.get_absolute_url }}" class="text-decoration-none">
                       {{ comment.content_object|truncatechars:30 }}
                     </a>
                     {% else %}
@@ -120,38 +103,27 @@ DjangoVerseHub{% endblock %} {% block content %}
                     {% endif %}
                   </td>
                   <td>
-                    <div>
-                      {% if comment.is_active %}
-                      <span class="badge bg-success">Active</span>
-                      {% else %}
-                      <span class="badge bg-secondary">Inactive</span>
-                      {% endif %} {% if comment.is_flagged %}
-                      <span class="badge bg-warning">Flagged</span>
-                      {% endif %}
-                    </div>
+                    {% if comment.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Hidden</span>
+                    {% endif %}
+                    {% if comment.is_flagged and user.is_staff %}
+                    <span class="badge bg-warning text-dark">Flagged</span>
+                    {% endif %}
                   </td>
                   <td>
                     <small>
-                      👍 {{ comment.likes_count }}<br />
-                      💬 {{ comment.reply_count }}
+                      &#128077; {{ comment.likes_count }}<br />
+                      &#128172; {{ comment.reply_count }}
                     </small>
                   </td>
-                  <td>
-                    <small>{{ comment.created_at|date:"M d, Y H:i" }}</small>
-                  </td>
+                  <td><small>{{ comment.created_at|date:"M d, Y H:i" }}</small></td>
                   <td>
                     <div class="btn-group-vertical btn-group-sm" role="group">
-                      <a
-                        href="{{ comment.get_absolute_url }}"
-                        class="btn btn-outline-primary btn-sm"
-                        >View</a
-                      >
+                      <a href="{{ comment.get_absolute_url }}" class="btn btn-outline-primary btn-sm">View</a>
                       {% if user.is_staff %}
-                      <a
-                        href="{% url 'admin:comments_comment_change' comment.pk %}"
-                        class="btn btn-outline-secondary btn-sm"
-                        >Edit</a
-                      >
+                      <a href="{% url 'admin:comments_comment_change' comment.pk %}" class="btn btn-outline-secondary btn-sm">Moderate</a>
                       {% endif %}
                     </div>
                   </td>
@@ -167,46 +139,29 @@ DjangoVerseHub{% endblock %} {% block content %}
             <ul class="pagination justify-content-center">
               {% if page_obj.has_previous %}
               <li class="page-item">
-                <a
-                  class="page-link"
-                  href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.author %}&author={{ request.GET.author }}{% endif %}{% if request.GET.is_flagged %}&is_flagged=on{% endif %}"
-                  >First</a
-                >
+                <a class="page-link" href="?page=1{% if querystring %}&{{ querystring }}{% endif %}">First</a>
               </li>
               <li class="page-item">
-                <a
-                  class="page-link"
-                  href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.author %}&author={{ request.GET.author }}{% endif %}{% if request.GET.is_flagged %}&is_flagged=on{% endif %}"
-                  >Previous</a
-                >
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">Previous</a>
               </li>
               {% endif %}
 
               <li class="page-item active">
-                <span class="page-link"
-                  >{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span
-                >
+                <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
               </li>
 
               {% if page_obj.has_next %}
               <li class="page-item">
-                <a
-                  class="page-link"
-                  href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.author %}&author={{ request.GET.author }}{% endif %}{% if request.GET.is_flagged %}&is_flagged=on{% endif %}"
-                  >Next</a
-                >
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">Next</a>
               </li>
               <li class="page-item">
-                <a
-                  class="page-link"
-                  href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.author %}&author={{ request.GET.author }}{% endif %}{% if request.GET.is_flagged %}&is_flagged=on{% endif %}"
-                  >Last</a
-                >
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if querystring %}&{{ querystring }}{% endif %}">Last</a>
               </li>
               {% endif %}
             </ul>
           </nav>
-          {% endif %} {% else %}
+          {% endif %}
+          {% else %}
           <div class="text-center py-5">
             <h4 class="text-muted">No comments found</h4>
             <p class="text-muted">No comments match your current filters.</p>

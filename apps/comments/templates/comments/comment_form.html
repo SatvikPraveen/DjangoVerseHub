@@ -9,8 +9,20 @@ DjangoVerseHub{% endblock %} {% block content %}
           <h4>Post a Comment</h4>
         </div>
         <div class="card-body">
+          {% if content_object %}
+          <p class="text-muted">
+            Commenting on <a href="{{ content_object.get_absolute_url }}">{{ content_object }}</a>
+          </p>
+          {% endif %}
+
           <form method="post" class="needs-validation" novalidate>
             {% csrf_token %}
+            <input type="hidden" name="content_type" value="{{ content_type_id }}" />
+            <input type="hidden" name="object_id" value="{{ content_object.pk }}" />
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
 
             <div class="mb-3">
               <label for="{{ form.content.id_for_label }}" class="form-label"
