@@ -13,6 +13,9 @@ updates:
     ignore:
       - dependency-name: "Django"
         update-types: ["version-update:semver-major"]
+      # 7+ requires Django 5.x
+      - dependency-name: "django-debug-toolbar"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
