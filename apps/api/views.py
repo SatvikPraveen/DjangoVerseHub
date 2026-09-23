@@ -47,17 +47,15 @@ def api_root(request, format=None):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def health_check(request):
-    """
-    API health check endpoint
-    """
-    return Response({
-        'status': 'healthy',
-        'timestamp': timezone.now().isoformat(),
-        'services': {
-            'database': 'operational',
-            'cache': 'operational',
-        }
-    })
+    """API health check: delegates to the project readiness probe."""
+    from django_verse_hub.health import readiness
+
+    probe = readiness(request._request)
+    import json
+
+    data = json.loads(probe.content)
+    data['timestamp'] = timezone.now().isoformat()
+    return Response(data, status=probe.status_code)
 
 
 @api_view(['GET'])

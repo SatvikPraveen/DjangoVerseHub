@@ -1,53 +1,85 @@
 # File: DjangoVerseHub/Dockerfile
+# syntax=docker/dockerfile:1.7
+#
+# Multi-stage build:
+#   base        - runtime image with system libs and a non-root user
+#   builder     - compiles wheels for all Python dependencies
+#   development - hot reload, dev requirements, source mounted at runtime
+#   production  - slim image running gunicorn (HTTP) or daphne (ASGI)
 
-# Use Python 3.11 slim image
-FROM python:3.11-slim
+ARG PYTHON_VERSION=3.12
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=django_verse_hub.settings.prod
+# --------------------------------------------------------------------------- #
+FROM python:${PYTHON_VERSION}-slim AS base
 
-# Set work directory
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq5 curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system app && useradd --system --gid app --create-home app
+
 WORKDIR /app
 
-# Install system dependencies
+# --------------------------------------------------------------------------- #
+FROM base AS builder
+
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        postgresql-client \
-        build-essential \
-        libpq-dev \
-        curl \
-        git \
+    && apt-get install -y --no-install-recommends build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser
-
-# Install Python dependencies
 COPY requirements/ requirements/
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements/prod.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip wheel --wheel-dir /wheels -r requirements/prod.txt
 
-# Copy project files
-COPY . .
+# --------------------------------------------------------------------------- #
+FROM base AS development
 
-# Create necessary directories
-RUN mkdir -p /app/staticfiles /app/mediafiles \
-    && chown -R appuser:appuser /app
+ENV DJANGO_SETTINGS_MODULE=django_verse_hub.settings.dev
 
-# Switch to non-root user
-USER appuser
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential libpq-dev git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Collect static files
-RUN python manage.py collectstatic --noinput --settings=django_verse_hub.settings.prod
+COPY requirements/ requirements/
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements/dev.txt
 
-# Expose port
+COPY --chown=app:app . .
+USER app
+EXPOSE 8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# --------------------------------------------------------------------------- #
+FROM base AS production
+
+ENV DJANGO_SETTINGS_MODULE=django_verse_hub.settings.prod \
+    GUNICORN_WORKERS=3 \
+    GUNICORN_TIMEOUT=60 \
+    PORT=8000
+
+COPY --from=builder /wheels /wheels
+RUN pip install --no-index --find-links=/wheels /wheels/* && rm -rf /wheels
+
+COPY --chown=app:app . .
+RUN mkdir -p /app/staticfiles /app/media /var/log/djangoversehub \
+    && chown -R app:app /app /var/log/djangoversehub
+
+USER app
+
+# Collect static with a throwaway secret; real settings come from the environment at runtime.
+RUN SECRET_KEY=build-only ALLOWED_HOSTS=localhost REDIS_URL=redis://localhost:6379/0 \
+    CELERY_BROKER_URL=redis://localhost:6379/2 CELERY_RESULT_BACKEND=redis://localhost:6379/3 \
+    python manage.py collectstatic --noinput
+
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost:${PORT}/health/live/ || exit 1
 
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "60", "django_verse_hub.wsgi:application"]
+COPY --chown=app:app scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["web"]

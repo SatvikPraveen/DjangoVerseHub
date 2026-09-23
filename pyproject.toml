@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "djangoversehub"
 version = "1.0.0"
 description = "Comprehensive Django learning platform with advanced features"
-authors = [{name = "DjangoVerse Team", email = "team@djangoverse.hub"}]
+authors = [{name = "Satvik Praveen", email = "satvikpraveen707@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -50,9 +50,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black>=23.0.0",
-    "flake8>=6.0.0",
-    "isort>=5.12.0",
+    "ruff>=0.6.0",
     "pre-commit>=3.3.0",
     "pytest>=7.4.0",
     "pytest-django>=4.5.0",
@@ -79,10 +77,10 @@ prod = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/djangoverse/hub"
-Documentation = "https://docs.djangoverse.hub"
-Repository = "https://github.com/djangoverse/hub.git"
-"Bug Tracker" = "https://github.com/djangoverse/hub/issues"
+Homepage = "https://github.com/SatvikPraveen/DjangoVerseHub"
+Documentation = "https://github.com/SatvikPraveen/DjangoVerseHub/tree/main/docs"
+Repository = "https://github.com/SatvikPraveen/DjangoVerseHub.git"
+"Bug Tracker" = "https://github.com/SatvikPraveen/DjangoVerseHub/issues"
 
 [tool.black]
 line-length = 88
@@ -124,4 +122,49 @@ django_settings_module = "django_verse_hub.settings.dev"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "django_verse_hub.settings.test"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
-addopts = "--cov=apps --cov-report=html --cov-report=term-missing"
+addopts = "-p no:cacheprovider --strict-markers"
+filterwarnings = [
+    "ignore::DeprecationWarning:drf_yasg",
+]
+markers = [
+    "slow: marks tests as slow",
+]
+
+[tool.coverage.run]
+source = ["apps", "django_verse_hub"]
+omit = ["*/migrations/*", "*/tests/*", "*/settings/*", "django_verse_hub/asgi.py", "django_verse_hub/wsgi.py"]
+branch = true
+
+[tool.coverage.report]
+skip_covered = false
+show_missing = true
+fail_under = 70
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["migrations", ".venv", "staticfiles", "media", "generate_djangoverse_structure.sh"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "C4", "SIM", "T20"]
+ignore = [
+    "E501",   # line length handled by formatter
+    "B904",   # allow raise without from inside except
+    "SIM108", # ternary rewrites hurt readability in views
+    "DJ001",  # null=True on CharField is used deliberately in places
+    "DJ012",  # model method ordering
+    "UP007",  # keep Optional[] for py3.10 readability
+    "T201",   # print used in management commands
+]
+
+[tool.ruff.lint.per-file-ignores]
+"django_verse_hub/settings/*" = ["F401", "F403", "F405"]
+"**/tests/*" = ["B", "SIM"]
+"tests/*" = ["B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "django_verse_hub"]
+section-order = ["future", "standard-library", "third-party", "django", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+django = ["django", "rest_framework", "channels", "celery"]

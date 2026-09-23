@@ -1,0 +1,41 @@
+# File: DjangoVerseHub/.pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(static/|docs/.*\.svg)
+      - id: end-of-file-fixer
+        exclude: ^(static/|docs/.*\.svg)
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: django-check
+        name: django check
+        entry: .venv/bin/python manage.py check
+        language: system
+        pass_filenames: false
+        env:
+          DJANGO_SETTINGS_MODULE: django_verse_hub.settings.test
+      - id: migrations-check
+        name: migrations up to date
+        entry: .venv/bin/python manage.py makemigrations --check --dry-run
+        language: system
+        pass_filenames: false
+        env:
+          DJANGO_SETTINGS_MODULE: django_verse_hub.settings.test

@@ -4,18 +4,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse
 
-def health_check(request):
-    """Simple health check endpoint"""
-    return JsonResponse({'status': 'ok', 'message': 'DjangoVerseHub is running'})
+from django_verse_hub import health
 
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # Health check
-    path('health/', health_check, name='health_check'),
+    # Health checks (liveness for the process, readiness for dependencies)
+    path('health/', health.readiness, name='health_check'),
+    path('health/live/', health.liveness, name='health_live'),
+    path('health/ready/', health.readiness, name='health_ready'),
     
     # Core: home, search, informational pages, sitemap, robots
     path('', include('apps.core.urls')),

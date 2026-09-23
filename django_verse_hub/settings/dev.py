@@ -51,9 +51,6 @@ CACHES = {
 CELERY_TASK_ALWAYS_EAGER = config('CELERY_TASK_ALWAYS_EAGER', default=False, cast=bool)
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/2')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/3')
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
 
 # Email configuration for development
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -61,59 +58,22 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # CORS settings for development
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Logging configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'maxBytes': 1024*1024*10,  # 10 MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console', 'file'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'django_verse_hub': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'apps': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-    },
+# Logging: readable console output plus a rotating file under logs/
+LOGGING['handlers']['file'] = {
+    'class': 'logging.handlers.RotatingFileHandler',
+    'filename': BASE_DIR / 'logs' / 'django.log',
+    'maxBytes': 1024 * 1024 * 10,
+    'backupCount': 5,
+    'formatter': 'verbose',
+    'filters': ['request_id'],
+}
+for _name in ('django_verse_hub', 'apps'):
+    LOGGING['loggers'][_name]['handlers'] = ['console', 'file']
+    LOGGING['loggers'][_name]['level'] = 'DEBUG'
+LOGGING['loggers']['django.db.backends'] = {
+    'handlers': ['console'],
+    'level': config('SQL_LOG_LEVEL', default='INFO'),
+    'propagate': False,
 }
 
 # Ensure logs directory exists

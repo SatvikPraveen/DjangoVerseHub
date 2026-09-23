@@ -14,14 +14,17 @@ whitenoise>=6.5.0
 
 # Caching and Task Queue
 redis>=4.5.0
+django-redis>=5.3.0
 celery>=5.3.0
+django-celery-beat>=2.5.0
 
 # Real-time Features
 channels>=4.0.0
 channels-redis>=4.1.0
+daphne>=4.0.0
 
 # Authentication
-django-allauth>=0.54.0
+django-allauth>=0.61.0
 
 # Configuration
 python-decouple>=3.8
@@ -29,11 +32,11 @@ python-decouple>=3.8
 # Web Server
 gunicorn>=21.2.0
 
-# Caching (Redis client)
-django-redis>=5.3.0
-
 # API Documentation
-drf-yasg>=1.21.0
+drf-spectacular>=0.27.0
+
+# Structured logging
+python-json-logger>=2.0.0
 
 # Utilities
 python-slugify>=8.0.0

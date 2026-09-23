@@ -1,0 +1,94 @@
+# File: DjangoVerseHub/docker-compose.prod.yml
+# Production-style stack built from the `production` image target.
+# docker compose -f docker-compose.prod.yml up -d
+
+x-app: &app
+  image: djangoversehub:latest
+  build:
+    context: .
+    target: production
+  env_file: .env
+  environment:
+    DJANGO_SETTINGS_MODULE: django_verse_hub.settings.prod
+    DB_HOST: db
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: always
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  web:
+    <<: *app
+    command: ["web"]
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+
+  asgi:
+    <<: *app
+    command: ["asgi"]
+    environment:
+      DJANGO_SETTINGS_MODULE: django_verse_hub.settings.prod
+      DB_HOST: db
+      PORT: "8001"
+
+  worker:
+    <<: *app
+    command: ["worker"]
+    volumes:
+      - media_volume:/app/media
+
+  beat:
+    <<: *app
+    command: ["beat"]
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    depends_on:
+      - web
+      - asgi
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:

@@ -30,9 +30,11 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_spectacular',
     'corsheaders',
     'django_filters',
     'channels',
+    'django_celery_beat',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -52,6 +54,7 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    'django_verse_hub.middleware.RequestIDMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -149,15 +152,25 @@ SITE_TAGLINE = config('SITE_TAGLINE', default='Connect, Learn, Build')
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
 # Django Allauth
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION = config('ACCOUNT_EMAIL_VERIFICATION', default='mandatory')
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+ACCOUNT_RATE_LIMITS = {'login_failed': '5/5m'}
+ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = True
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}},
+    'github': {'SCOPE': ['user:email']},
+}
 
+LOGIN_URL = '/users/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Application metadata
+APP_VERSION = config('APP_VERSION', default='1.1.0')
+SLOW_REQUEST_THRESHOLD_MS = config('SLOW_REQUEST_THRESHOLD_MS', default=1000, cast=int)
 
 # Django REST Framework
 REST_FRAMEWORK = {
@@ -181,8 +194,32 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
-        'user': '1000/hour'
-    }
+        'user': '1000/hour',
+        'comments': '30/hour',
+        'login': '10/minute',
+        'registration': '5/hour',
+        'search': '60/minute',
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'apps.api.exceptions.api_exception_handler',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'DjangoVerseHub API',
+    'DESCRIPTION': 'REST API for articles, comments, users, notifications and search.',
+    'VERSION': APP_VERSION,
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': r'/api/v[0-9]',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SWAGGER_UI_SETTINGS': {'deepLinking': True, 'persistAuthorization': True, 'displayRequestDuration': True},
+    'TAGS': [
+        {'name': 'auth', 'description': 'Login, logout and token management'},
+        {'name': 'users', 'description': 'Users, profiles and follows'},
+        {'name': 'articles', 'description': 'Articles, categories, tags, likes and bookmarks'},
+        {'name': 'comments', 'description': 'Threaded comments and moderation'},
+        {'name': 'notifications', 'description': 'In-app notifications'},
+        {'name': 'search', 'description': 'Global search'},
+    ],
 }
 
 # CORS settings
@@ -221,6 +258,61 @@ SESSION_COOKIE_AGE = 86400  # 1 day
 SESSION_SAVE_EVERY_REQUEST = True
 
 # Security settings
-SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # JS needs to read it for fetch() calls
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
+
+# Celery (shared defaults; dev/prod override broker URLs)
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_SOFT_TIME_LIMIT = 300
+CELERY_TASK_TIME_LIMIT = 600
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_TASK_ROUTES = {
+    'apps.notifications.tasks.*': {'queue': 'notifications'},
+    'apps.articles.tasks.*': {'queue': 'articles'},
+    'apps.users.tasks.*': {'queue': 'users'},
+}
+
+# Logging: JSON in production, readable in dev; every record carries request_id.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'request_id': {'()': 'django_verse_hub.middleware.RequestIDFilter'},
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+    },
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} [{request_id}] {name}: {message}',
+            'style': '{',
+        },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(request_id)s %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': config('LOG_FORMAT', default='verbose'),
+            'filters': ['request_id'],
+        },
+    },
+    'root': {'handlers': ['console'], 'level': config('LOG_LEVEL', default='INFO')},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'django.security': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'django_verse_hub': {'handlers': ['console'], 'level': config('LOG_LEVEL', default='INFO'), 'propagate': False},
+        'apps': {'handlers': ['console'], 'level': config('LOG_LEVEL', default='INFO'), 'propagate': False},
+    },
+}
