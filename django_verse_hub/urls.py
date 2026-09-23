@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from django_verse_hub import health
+from django_verse_hub import health, metrics
 
 urlpatterns = [
     # Admin
@@ -14,6 +14,8 @@ urlpatterns = [
     path("health/", health.readiness, name="health_check"),
     path("health/live/", health.liveness, name="health_live"),
     path("health/ready/", health.readiness, name="health_ready"),
+    # Prometheus metrics (token or staff protected)
+    path("metrics/", metrics.metrics_view, name="metrics"),
     # Core: home, search, informational pages, sitemap, robots
     path("", include("apps.core.urls")),
     # App URLs

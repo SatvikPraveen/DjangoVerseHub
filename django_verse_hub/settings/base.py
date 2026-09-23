@@ -30,6 +30,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    "django_prometheus",
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
@@ -58,6 +59,7 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django_verse_hub.middleware.RequestIDMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -72,6 +74,7 @@ MIDDLEWARE = [
     "django_verse_hub.middleware.RequestLoggingMiddleware",
     "django_verse_hub.middleware.RateLimitMiddleware",
     "django_verse_hub.middleware.SecurityHeadersMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "django_verse_hub.urls"
@@ -268,6 +271,16 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@djangoversehu
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+
+# Content Security Policy (see SecurityHeadersMiddleware)
+CSP_ENABLED = config("CSP_ENABLED", default=True, cast=bool)
+CSP_REPORT_ONLY = config("CSP_REPORT_ONLY", default=False, cast=bool)
+CSP_REPORT_URI = config("CSP_REPORT_URI", default="")
+CSP_EXTRA_SOURCES = {}
+
+# Prometheus /metrics/ access: bearer token, or staff session when unset
+METRICS_TOKEN = config("METRICS_TOKEN", default="")
+PROMETHEUS_EXPORT_MIGRATIONS = False
 
 # Simple per-IP rate limiting (see django_verse_hub.middleware.RateLimitMiddleware)
 RATE_LIMIT_ENABLED = config("RATE_LIMIT_ENABLED", default=True, cast=bool)

@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import HttpResponseNotModified, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.cache import cache_page
@@ -165,6 +165,35 @@ class ArticleDetailView(DetailView):
 
     def get_queryset(self):
         return Article.objects.visible_to(self.request.user).with_related().with_user_flags(self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        # Anonymous readers see identical markup, so let them revalidate with an ETag.
+        etag = None
+        if not request.user.is_authenticated:
+            etag = self.compute_etag(kwargs.get("slug"))
+            if etag and request.headers.get("If-None-Match") == etag:
+                return HttpResponseNotModified()
+        response = super().get(request, *args, **kwargs)
+        if etag:
+            response["ETag"] = etag
+            response["Cache-Control"] = "private, no-cache"
+        return response
+
+    @staticmethod
+    def compute_etag(slug):
+        """Weak validator from the article's and its latest comment's update time."""
+        row = Article.published.filter(slug=slug).values_list("pk", "updated_at").first()
+        if row is None:
+            return None
+        pk, updated_at = row
+        latest_comment = (
+            Comment.objects.filter(content_type=ContentType.objects.get_for_model(Article), object_id=pk)
+            .order_by("-updated_at")
+            .values_list("updated_at", flat=True)
+            .first()
+        )
+        stamp = max(filter(None, [updated_at, latest_comment])).timestamp()
+        return f'W/"{pk.hex[:12]}-{int(stamp * 1_000_000)}"'
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)

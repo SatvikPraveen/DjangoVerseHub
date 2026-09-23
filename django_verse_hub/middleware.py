@@ -58,7 +58,7 @@ class RequestIDMiddleware(MiddlewareMixin):
 class RequestLoggingMiddleware(MiddlewareMixin):
     """Log one structured line per request with timing and identity."""
 
-    SKIP_PREFIXES = ("/static/", "/media/", "/health/", "/__debug__/")
+    SKIP_PREFIXES = ("/static/", "/media/", "/health/", "/metrics/", "/__debug__/")
 
     def process_request(self, request):
         request._start_time = time.perf_counter()
@@ -104,7 +104,7 @@ class RateLimitMiddleware(MiddlewareMixin):
             return None
 
         # Skip rate limiting for certain paths
-        skip_paths = ["/admin/", "/static/", "/media/", "/health/"]
+        skip_paths = ["/admin/", "/static/", "/media/", "/health/", "/metrics/"]
         if any(request.path.startswith(path) for path in skip_paths):
             return None
 
@@ -124,23 +124,52 @@ class RateLimitMiddleware(MiddlewareMixin):
 
 
 class SecurityHeadersMiddleware(MiddlewareMixin):
-    """Add security headers to responses"""
+    """
+    Content-Security-Policy and related headers, built from settings so a
+    deployment can add CDNs or analytics hosts without code changes.
+    """
+
+    def build_csp(self):
+        cdn = ["https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"]
+        extra = getattr(settings, "CSP_EXTRA_SOURCES", {})
+        directives = {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "'unsafe-inline'", *cdn, *extra.get("script-src", [])],
+            "style-src": [
+                "'self'",
+                "'unsafe-inline'",
+                *cdn,
+                "https://fonts.googleapis.com",
+                *extra.get("style-src", []),
+            ],
+            "font-src": ["'self'", "data:", *cdn, "https://fonts.gstatic.com", *extra.get("font-src", [])],
+            "img-src": ["'self'", "data:", "blob:", "https:", *extra.get("img-src", [])],
+            "connect-src": ["'self'", "ws:", "wss:", *extra.get("connect-src", [])],
+            "frame-ancestors": ["'none'"],
+            "base-uri": ["'self'"],
+            "form-action": ["'self'", *extra.get("form-action", [])],
+            "object-src": ["'none'"],
+        }
+        parts = [f"{name} {' '.join(values)}" for name, values in directives.items()]
+        if getattr(settings, "CSP_REPORT_URI", ""):
+            parts.append(f"report-uri {settings.CSP_REPORT_URI}")
+        return "; ".join(parts)
 
     def process_response(self, request, response):
-        # Content Security Policy
-        response["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-            "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data: https:; "
-            "connect-src 'self' ws: wss:;"
+        if getattr(settings, "CSP_ENABLED", True) and "Content-Security-Policy" not in response:
+            header = (
+                "Content-Security-Policy-Report-Only"
+                if getattr(settings, "CSP_REPORT_ONLY", False)
+                else "Content-Security-Policy"
+            )
+            response[header] = self.build_csp()
+
+        response.setdefault("X-Content-Type-Options", "nosniff")
+        response.setdefault("X-Frame-Options", "DENY")
+        response.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
         )
-
-        # Additional security headers
-        response["X-Content-Type-Options"] = "nosniff"
-        response["X-Frame-Options"] = "DENY"
-        response["X-XSS-Protection"] = "1; mode=block"
-        response["Referrer-Policy"] = "strict-origin-when-cross-origin"
-
+        response.setdefault("Cross-Origin-Opener-Policy", "same-origin")
         return response
