@@ -6,8 +6,11 @@ Set via: DJANGO_SETTINGS_MODULE=django_verse_hub.settings.test
          or pyproject.toml / pytest.ini: django_settings_module = ...
 """
 
-from .base import *  # noqa: F401, F403
 import tempfile
+
+from decouple import config
+
+from .base import *  # noqa: F401, F403
 
 # ---------------------------------------------------------------------------
 # Database — fast in-memory SQLite
@@ -33,7 +36,10 @@ class DisableMigrations:
         return None
 
 
-MIGRATION_MODULES = DisableMigrations()
+# Set KEEP_MIGRATIONS=1 to run the real migration graph (used by `make check`,
+# makemigrations, and CI's migration drift check).
+if not config('KEEP_MIGRATIONS', default=False, cast=bool):
+    MIGRATION_MODULES = DisableMigrations()
 
 # ---------------------------------------------------------------------------
 # Email — captured in memory, never actually sent

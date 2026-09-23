@@ -61,7 +61,7 @@ typecheck: ## Type-check with mypy
 
 check: ## Django system checks + migration drift check
 	DJANGO_SETTINGS_MODULE=$(SETTINGS_DEV) $(MANAGE) check
-	DJANGO_SETTINGS_MODULE=django_verse_hub.settings.test $(MANAGE) makemigrations --check --dry-run
+	DJANGO_SETTINGS_MODULE=django_verse_hub.settings.test KEEP_MIGRATIONS=1 $(MANAGE) makemigrations --check --dry-run
 
 ci: lint check test ## What CI runs
 

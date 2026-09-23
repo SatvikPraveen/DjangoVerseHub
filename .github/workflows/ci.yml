@@ -51,7 +51,13 @@ jobs:
       - name: Migrations are up to date
         env:
           DJANGO_SETTINGS_MODULE: django_verse_hub.settings.test
+          KEEP_MIGRATIONS: "1"
         run: python manage.py makemigrations --check --dry-run
+      - name: Migration graph applies cleanly (SQLite)
+        env:
+          DJANGO_SETTINGS_MODULE: django_verse_hub.settings.test
+          KEEP_MIGRATIONS: "1"
+        run: python -m pytest -q -x --no-header -p no:cacheprovider apps/articles/tests/test_comment_relation.py
       - name: Run tests
         run: python -m pytest -q --cov --cov-report=xml --cov-report=term
       - name: Upload coverage

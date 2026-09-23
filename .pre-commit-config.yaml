@@ -34,7 +34,7 @@ repos:
           DJANGO_SETTINGS_MODULE: django_verse_hub.settings.test
       - id: migrations-check
         name: migrations up to date
-        entry: .venv/bin/python manage.py makemigrations --check --dry-run
+        entry: env KEEP_MIGRATIONS=1 .venv/bin/python manage.py makemigrations --check --dry-run
         language: system
         pass_filenames: false
         env:
