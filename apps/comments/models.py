@@ -174,7 +174,7 @@ class Comment(models.Model):
 
     # Generic foreign key to allow comments on any model
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.CharField(max_length=50)
+    object_id = models.UUIDField(db_index=True, help_text='Primary key of the target; all commentable models use UUID keys.')
     content_object = GenericForeignKey('content_type', 'object_id')
 
     # Comment details

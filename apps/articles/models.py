@@ -174,10 +174,8 @@ class Article(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # Comments live in apps.comments and attach through a generic FK.
-    # NOTE: Comment.object_id is a CharField while our pk is a UUID, so instance-level
-    # access (article.comments.all(), cascade delete) works, but SQL joins such as
-    # Count('comments') do not match rows. Use Comment.objects.for_object(article) or
-    # article.comment_count for counts.
+    # Comment.object_id is a UUIDField matching our pk, so both instance access
+    # (article.comments.all(), cascade delete) and SQL joins/annotations work.
     comments = GenericRelation(
         Comment,
         content_type_field='content_type',
@@ -272,8 +270,8 @@ class Article(models.Model):
     def attach_comment_counts(cls, articles):
         """Populate ``comment_count`` on a list of articles with a single query.
 
-        Needed because Comment.object_id is a CharField, so the count can't be
-        annotated through a join (see the ``comments`` relation above).
+        Cheaper than a join-based annotation on large lists, and keeps the
+        is_active filter explicit.
         """
         articles = list(articles)
         if not articles:
@@ -283,7 +281,7 @@ class Article(models.Model):
         counts = dict(
             Comment.objects.filter(
                 content_type=ContentType.objects.get_for_model(cls),
-                object_id__in=[str(article.pk) for article in articles],
+                object_id__in=[article.pk for article in articles],
                 is_active=True,
             )
             .values_list('object_id')
@@ -291,7 +289,7 @@ class Article(models.Model):
             .values_list('object_id', 'total')
         )
         for article in articles:
-            article.comment_count = counts.get(str(article.pk), 0)
+            article.comment_count = counts.get(article.pk, 0)
         return articles
 
     @property

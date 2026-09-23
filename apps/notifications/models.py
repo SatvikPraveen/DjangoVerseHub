@@ -171,7 +171,7 @@ class Notification(models.Model):
 
     # Generic foreign key for related object (CharField supports both int and UUID PKs)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.CharField(max_length=50, null=True, blank=True)
+    object_id = models.UUIDField(null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     is_read = models.BooleanField(default=False)

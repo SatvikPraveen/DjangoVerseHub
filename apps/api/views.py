@@ -266,7 +266,7 @@ def _compute_trending():
         Article.published.filter(published_at__gte=week_ago).select_related('author').order_by('-views_count')[:50]
     )
     for article in articles:
-        article.recent_comments = recent_comment_counts.get(str(article.pk), 0)
+        article.recent_comments = recent_comment_counts.get(article.pk, 0)
         article.trend_score = article.views_count + 5 * article.likes_count + 10 * article.recent_comments
     articles.sort(key=lambda a: a.trend_score, reverse=True)
 
