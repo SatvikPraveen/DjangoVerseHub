@@ -1,0 +1,23 @@
+# File: DjangoVerseHub/.github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      django:
+        patterns: ["django", "django-*", "djangorestframework*", "channels*", "drf-*"]
+      tooling:
+        patterns: ["ruff", "pytest*", "mypy", "*-stubs", "coverage", "pre-commit"]
+    ignore:
+      - dependency-name: "Django"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: monthly
