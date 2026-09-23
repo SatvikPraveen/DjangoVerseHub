@@ -3,7 +3,7 @@
 -r test.txt
 
 # Development Tools
-django-debug-toolbar>=4.1.0
+django-debug-toolbar>=8.0.0
 werkzeug>=2.3.0
 
 # Code Quality
@@ -13,7 +13,7 @@ pre-commit>=3.3.0
 # Type Checking
 mypy>=1.4.0
 django-stubs>=4.2.0
-djangorestframework-stubs>=3.14.0
+djangorestframework-stubs>=3.18.0
 celery-types>=0.22.0
 types-requests>=2.31.0
 
