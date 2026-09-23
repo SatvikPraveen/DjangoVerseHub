@@ -2,6 +2,9 @@
 
 import logging
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
+
 from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -23,7 +26,7 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import DetailView, ListView, UpdateView
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, permissions, serializers, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
@@ -605,6 +608,30 @@ class IsProfileOwnerOrReadOnly(permissions.BasePermission):
         return obj.user_id == request.user.pk
 
 
+# OpenAPI shapes for the dict responses of the custom actions below.
+USER_WITH_TOKEN_RESPONSE = inline_serializer(
+    "UserWithToken", fields={"user": UserSerializer(), "token": serializers.CharField()}
+)
+MESSAGE_RESPONSE = inline_serializer("Message", fields={"message": serializers.CharField()})
+FOLLOW_RESPONSE = inline_serializer(
+    "FollowResult",
+    fields={
+        "is_following": serializers.BooleanField(),
+        "created": serializers.BooleanField(),
+        "followers_count": serializers.IntegerField(),
+    },
+)
+UNFOLLOW_RESPONSE = inline_serializer(
+    "UnfollowResult",
+    fields={
+        "is_following": serializers.BooleanField(),
+        "removed": serializers.BooleanField(),
+        "followers_count": serializers.IntegerField(),
+    },
+)
+
+
+@extend_schema(tags=["users"])
 class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """API ViewSet for User operations.
 
@@ -655,6 +682,21 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
             status=http_status,
         )
 
+    @extend_schema(methods=["GET"], request=None, responses={200: UserSerializer})
+    @extend_schema(methods=["PATCH"], request=UserUpdateSerializer, responses={200: UserSerializer})
+    @extend_schema(
+        methods=["DELETE"],
+        request=AccountDeletionSerializer,
+        responses={
+            200: inline_serializer(
+                "AccountRemoved",
+                fields={
+                    "detail": serializers.CharField(),
+                    "outcome": serializers.ChoiceField(choices=["deleted", "anonymised"]),
+                },
+            )
+        },
+    )
     @action(detail=False, methods=["get", "patch", "delete"])
     def me(self, request):
         """Get, update, or delete (password required in the body) the current user's record"""
@@ -670,6 +712,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
         serializer = UserSerializer(request.user, context=self.get_serializer_context())
         return Response(serializer.data)
 
+    @extend_schema(request=None, responses={200: OpenApiTypes.OBJECT})
     @action(detail=False, methods=["get", "post"], url_path="me/export")
     def export(self, request):
         """Download the current user's data (GDPR export) as a JSON attachment"""
@@ -677,6 +720,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
         response["Content-Disposition"] = f'attachment; filename="{_export_filename(request.user)}"'
         return response
 
+    @extend_schema(tags=["auth"], request=UserRegistrationSerializer, responses={201: USER_WITH_TOKEN_RESPONSE})
     @action(detail=False, methods=["post"])
     def register(self, request):
         """Register new user"""
@@ -686,6 +730,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
         transaction.on_commit(lambda: send_verification_email(user))
         return self._user_response(user, status.HTTP_201_CREATED)
 
+    @extend_schema(tags=["auth"], request=UserLoginSerializer, responses={200: USER_WITH_TOKEN_RESPONSE})
     @action(detail=False, methods=["post"])
     def login(self, request):
         """User login endpoint"""
@@ -698,12 +743,14 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
 
         return self._user_response(user)
 
+    @extend_schema(tags=["auth"], request=None, responses={200: MESSAGE_RESPONSE})
     @action(detail=False, methods=["post"])
     def logout(self, request):
         """User logout endpoint (revokes the API token)"""
         Token.objects.filter(user=request.user).delete()
         return Response({"message": "Successfully logged out"})
 
+    @extend_schema(tags=["auth"], request=PasswordChangeSerializer, responses={200: MESSAGE_RESPONSE})
     @action(detail=False, methods=["post"], url_path="change-password")
     def change_password(self, request):
         """Change user password"""
@@ -712,6 +759,14 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
         serializer.save()
         return Response({"message": "Password changed successfully"})
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: OpenApiResponse(FOLLOW_RESPONSE, description="Already following"),
+            201: OpenApiResponse(FOLLOW_RESPONSE, description="Follow created"),
+            400: OpenApiResponse(description="Cannot follow yourself"),
+        },
+    )
     @action(detail=True, methods=["post"])
     def follow(self, request, pk=None):
         """Follow this user"""
@@ -724,6 +779,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+    @extend_schema(request=None, responses={200: UNFOLLOW_RESPONSE})
     @action(detail=True, methods=["post", "delete"])
     def unfollow(self, request, pk=None):
         """Unfollow this user"""
@@ -741,17 +797,20 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
             return self.get_paginated_response(serializer.data)
         return Response(serializer.data)
 
+    @extend_schema(responses={200: UserListSerializer(many=True)}, filters=False)
     @action(detail=True, methods=["get"])
     def followers(self, request, pk=None):
         """Users following this user"""
         return self._paginated_users(self.get_object().followers)
 
+    @extend_schema(responses={200: UserListSerializer(many=True)}, filters=False)
     @action(detail=True, methods=["get"])
     def following(self, request, pk=None):
         """Users this user follows"""
         return self._paginated_users(self.get_object().following)
 
 
+@extend_schema(tags=["users"])
 class ProfileViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
 ):
@@ -786,6 +845,15 @@ class ProfileViewSet(
             return profile
         return super().get_object()
 
+    @extend_schema(
+        parameters=[OpenApiParameter("q", str, description="Search terms; empty returns no results")],
+        responses={
+            200: inline_serializer(
+                "ProfileSearchResults",
+                fields={"results": PublicProfileSerializer(many=True), "count": serializers.IntegerField()},
+            )
+        },
+    )
     @action(detail=False, methods=["get"])
     def search(self, request):
         """Search public profiles"""
@@ -798,6 +866,27 @@ class ProfileViewSet(
 
         return Response({"results": serializer.data, "count": len(serializer.data)})
 
+    @extend_schema(
+        responses={
+            200: inline_serializer(
+                "ProfileStats",
+                fields={
+                    "activity_stats": inline_serializer(
+                        "ProfileActivityStats",
+                        fields={
+                            "login_count": serializers.IntegerField(),
+                            "profile_views": serializers.IntegerField(),
+                            "content_created": serializers.IntegerField(),
+                            "last_active": serializers.DateTimeField(allow_null=True),
+                            "activity_score": serializers.IntegerField(),
+                        },
+                    ),
+                    "profile_completion": serializers.FloatField(),
+                },
+            ),
+            403: OpenApiResponse(description="Private profile of another user"),
+        }
+    )
     @action(detail=True, methods=["get"])
     def stats(self, request, pk=None):
         """Get profile statistics (own profile or public profiles only)"""

@@ -210,9 +210,6 @@ make clean           # remove caches, coverage and htmlcov
 
 ## Troubleshooting
 
-**`TypeError: AbstractConnection.__init__() got an unexpected keyword argument 'CLIENT_CLASS'` on the first page load with the prod settings**
-`settings/prod.py` uses Django's built-in `django.core.cache.backends.redis.RedisCache` but passes django-redis options (`CLIENT_CLASS`, `CONNECTION_POOL_KWARGS`, `COMPRESSOR`) which Django forwards to redis-py. Either change `BACKEND` to `django_redis.cache.RedisCache` (django-redis is installed) or delete the `OPTIONS` block. The `dev`, `test` and `ci` settings are not affected.
-
 **`allauth.account.middleware.AccountMiddleware must be added to settings.MIDDLEWARE`** or **`ImproperlyConfigured` mentioning `ACCOUNT_LOGIN_METHODS`**
 The project targets django-allauth 0.61+ (`ACCOUNT_LOGIN_METHODS`, `ACCOUNT_SIGNUP_FIELDS`, `allauth.account.middleware.AccountMiddleware`). Reinstall dependencies with `make install` if an older allauth is on the path. The middleware is already listed in `base.py`; keep it after `AuthenticationMiddleware`.
 

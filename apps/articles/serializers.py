@@ -1,5 +1,7 @@
 # File: DjangoVerseHub/apps/articles/serializers.py
 
+from drf_spectacular.utils import extend_schema_field
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from rest_framework import serializers
@@ -41,10 +43,10 @@ class AuthorSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", "full_name", "avatar_url", "date_joined"]
 
-    def get_full_name(self, obj):
+    def get_full_name(self, obj) -> str:
         return obj.get_full_name() or obj.username
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str:
         profile = getattr(obj, "profile", None)
         if profile is not None:
             return profile.get_avatar_url()
@@ -63,10 +65,10 @@ class UserFlagsMixin:
         request = self.context.get("request")
         return getattr(request, "user", None)
 
-    def get_liked(self, obj):
+    def get_liked(self, obj) -> bool:
         return obj.is_liked_by(self._request_user())
 
-    def get_bookmarked(self, obj):
+    def get_bookmarked(self, obj) -> bool:
         return obj.is_bookmarked_by(self._request_user())
 
 
@@ -117,7 +119,7 @@ class ArticleListSerializer(UserFlagsMixin, serializers.ModelSerializer):
         ]
         list_serializer_class = ArticleListSerializerMany
 
-    def get_featured_image_url(self, obj):
+    def get_featured_image_url(self, obj) -> str:
         return obj.get_featured_image_url()
 
 
@@ -166,9 +168,10 @@ class ArticleDetailSerializer(UserFlagsMixin, serializers.ModelSerializer):
             "related_articles",
         ]
 
-    def get_featured_image_url(self, obj):
+    def get_featured_image_url(self, obj) -> str:
         return obj.get_featured_image_url()
 
+    @extend_schema_field(ArticleListSerializer(many=True))
     def get_related_articles(self, obj):
         related = obj.get_related_articles(limit=3)
         return ArticleListSerializer(related, many=True, context=self.context).data
@@ -296,13 +299,13 @@ class PopularArticleSerializer(serializers.ModelSerializer):
             "published_at",
         ]
 
-    def get_author_name(self, obj):
+    def get_author_name(self, obj) -> str:
         return obj.author.get_full_name() or obj.author.username
 
-    def get_category_name(self, obj):
+    def get_category_name(self, obj) -> str | None:
         return obj.category.name if obj.category else None
 
-    def get_featured_image_url(self, obj):
+    def get_featured_image_url(self, obj) -> str:
         return obj.get_featured_image_url()
 
 
@@ -337,16 +340,16 @@ class ArticleSearchSerializer(serializers.ModelSerializer):
             "highlight_content",
         ]
 
-    def get_featured_image_url(self, obj):
+    def get_featured_image_url(self, obj) -> str:
         return obj.get_featured_image_url()
 
-    def get_highlight_title(self, obj):
+    def get_highlight_title(self, obj) -> str:
         return getattr(obj, "headline_title", obj.title)
 
-    def get_highlight_summary(self, obj):
+    def get_highlight_summary(self, obj) -> str:
         return getattr(obj, "headline_summary", obj.summary)
 
-    def get_highlight_content(self, obj):
+    def get_highlight_content(self, obj) -> str:
         return getattr(obj, "headline_content", obj.content[:200] + "...")
 
 

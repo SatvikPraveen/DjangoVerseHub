@@ -50,10 +50,10 @@ class SearchArticleSerializer(serializers.Serializer):
     published_at = serializers.DateTimeField()
     url = serializers.CharField(source="get_absolute_url")
 
-    def get_author(self, obj):
+    def get_author(self, obj) -> str:
         return obj.author.get_full_name() or obj.author.username
 
-    def get_category(self, obj):
+    def get_category(self, obj) -> str | None:
         return obj.category.name if obj.category_id else None
 
 
@@ -64,7 +64,7 @@ class SearchUserSerializer(serializers.Serializer):
     avatar_url = serializers.SerializerMethodField()
     url = serializers.CharField(source="get_absolute_url")
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str | None:
         profile = getattr(obj, "profile", None)
         return profile.avatar_url if profile is not None else None
 

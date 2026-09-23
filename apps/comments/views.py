@@ -1,6 +1,7 @@
 # File: DjangoVerseHub/apps/comments/views.py
 
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -13,7 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -298,6 +299,7 @@ class CommentPagination(PageNumberPagination):
     max_page_size = 100
 
 
+@extend_schema(tags=["comments"])
 class CommentViewSet(viewsets.ModelViewSet):
     """
     Comment API.
@@ -382,6 +384,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.soft_delete()
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                "CommentLikeResult",
+                fields={"liked": serializers.BooleanField(), "likes_count": serializers.IntegerField()},
+            )
+        },
+    )
     @action(detail=True, methods=["post"])
     def like(self, request, pk=None):
         """Like/unlike a comment"""
@@ -389,6 +400,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         liked, likes_count = comment.toggle_like(request.user)
         return Response({"liked": liked, "likes_count": likes_count})
 
+    @extend_schema(
+        request=inline_serializer(
+            "CommentFlagRequest",
+            fields={
+                "reason": serializers.ChoiceField(choices=CommentFlag.Reason.choices, required=False),
+                "details": serializers.CharField(required=False, allow_blank=True, max_length=500),
+            },
+        ),
+        responses={
+            200: inline_serializer("CommentFlagged", fields={"message": serializers.CharField()}),
+            400: OpenApiResponse(description="Own comment, already flagged, or invalid reason"),
+        },
+    )
     @action(detail=True, methods=["post"])
     def flag(self, request, pk=None):
         """Report a comment. Body: {"reason": <choice>, "details": ""} (both optional)."""
@@ -404,7 +428,20 @@ class CommentViewSet(viewsets.ModelViewSet):
             return Response({"error": "You have already flagged this comment"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Comment flagged for review"})
 
-    @action(detail=False)
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "content_type", str, required=True, description='"app_label.model", e.g. "articles.article"'
+            ),
+            OpenApiParameter("object_id", str, required=True, description="Primary key of the commented object"),
+        ],
+        responses={
+            200: CommentTreeSerializer(many=True),
+            400: OpenApiResponse(description="Missing or invalid content_type / object_id"),
+        },
+        filters=False,
+    )
+    @action(detail=False, pagination_class=None)
     def tree(self, request):
         """Nested comment threads for one object: ?content_type=app.model&object_id=<pk>."""
         content_type = request.query_params.get("content_type")
@@ -428,6 +465,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         """Get comment statistics"""
         return Response(self.get_serializer(self.get_object()).data)
 
+    @extend_schema(responses={200: CommentSerializer(many=True)}, filters=False)
     @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def user_comments(self, request):
         """Paginated list of the current user's comments."""

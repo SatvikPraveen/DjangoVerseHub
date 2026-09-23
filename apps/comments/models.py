@@ -267,7 +267,7 @@ class Comment(models.Model):
         return self.is_active and self.get_thread_depth() < MAX_THREAD_DEPTH
 
     @property
-    def reply_count(self):
+    def reply_count(self) -> int:
         """Number of direct active replies (uses annotation when present)."""
         annotated = getattr(self, "active_reply_count", None)
         if annotated is not None:
@@ -277,7 +277,7 @@ class Comment(models.Model):
         return self.replies.filter(is_active=True).count()
 
     @property
-    def total_replies(self):
+    def total_replies(self) -> int:
         """
         Total number of active replies in the whole subtree.
 

@@ -1,6 +1,7 @@
 # File: DjangoVerseHub/apps/articles/views.py
 
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -13,7 +14,7 @@ from django.urls import reverse_lazy
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
@@ -336,6 +337,15 @@ def article_bookmark_view(request, slug):
 # ──────────────────────────────────────────────────────────────────────────────
 
 
+# OpenAPI shapes for the dict responses of the custom actions below.
+LIKE_RESPONSE = inline_serializer(
+    "ArticleLikeResult", fields={"liked": serializers.BooleanField(), "likes_count": serializers.IntegerField()}
+)
+BOOKMARK_RESPONSE = inline_serializer("ArticleBookmarkResult", fields={"bookmarked": serializers.BooleanField()})
+VIEWS_RESPONSE = inline_serializer("ArticleViewsCount", fields={"views_count": serializers.IntegerField()})
+
+
+@extend_schema(tags=["articles"])
 class ArticleViewSet(viewsets.ModelViewSet):
     """API ViewSet for Article operations"""
 
@@ -367,6 +377,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         serializer = serializer_class(queryset, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
 
+    @extend_schema(request=None, responses={200: VIEWS_RESPONSE})
     @action(detail=True, methods=["post"], permission_classes=[permissions.AllowAny])
     def increment_views(self, request, pk=None):
         """Increment article view count (deduplicated per session/IP for an hour)."""
@@ -374,6 +385,10 @@ class ArticleViewSet(viewsets.ModelViewSet):
         article.increment_views(request)
         return Response({"views_count": article.views_count})
 
+    @extend_schema(
+        request=None,
+        responses={200: LIKE_RESPONSE, 400: OpenApiResponse(description="Article is not published")},
+    )
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
         """Toggle the current user's like."""
@@ -383,6 +398,10 @@ class ArticleViewSet(viewsets.ModelViewSet):
         liked, likes_count = ArticleLike.toggle(request.user, article)
         return Response({"liked": liked, "likes_count": likes_count})
 
+    @extend_schema(
+        request=None,
+        responses={200: BOOKMARK_RESPONSE, 400: OpenApiResponse(description="Article is not published")},
+    )
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
     def bookmark(self, request, pk=None):
         """Toggle the current user's bookmark."""
@@ -394,7 +413,14 @@ class ArticleViewSet(viewsets.ModelViewSet):
         bookmarked = Bookmark.toggle(request.user, article)
         return Response({"bookmarked": bookmarked})
 
-    @action(detail=True, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    @extend_schema(
+        responses={
+            200: ArticleRevisionSerializer(many=True),
+            403: OpenApiResponse(description="Only the author or staff may view revisions"),
+        },
+        filters=False,
+    )
+    @action(detail=True, methods=["get"], permission_classes=[permissions.IsAuthenticated], pagination_class=None)
     def revisions(self, request, pk=None):
         """Revision history (author or staff only)."""
         article = self.get_object()
@@ -403,21 +429,25 @@ class ArticleViewSet(viewsets.ModelViewSet):
         serializer = ArticleRevisionSerializer(article.revisions.select_related("editor"), many=True)
         return Response(serializer.data)
 
-    @action(detail=False)
+    @extend_schema(responses={200: ArticleListSerializer(many=True)}, filters=False)
+    @action(detail=False, pagination_class=None)
     def featured(self, request):
         """Get featured articles"""
         return self._published_list_response(Article.published.featured())
 
-    @action(detail=False)
+    @extend_schema(responses={200: PopularArticleSerializer(many=True)}, filters=False)
+    @action(detail=False, pagination_class=None)
     def popular(self, request):
         """Get popular articles"""
         return self._published_list_response(Article.published.popular(), PopularArticleSerializer)
 
-    @action(detail=False)
+    @extend_schema(responses={200: ArticleListSerializer(many=True)}, filters=False)
+    @action(detail=False, pagination_class=None)
     def trending(self, request):
         """Get trending articles"""
         return self._published_list_response(Article.published.trending())
 
+    @extend_schema(responses={200: ArticleListSerializer(many=True)}, filters=False)
     @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def bookmarked(self, request):
         """Articles bookmarked by the current user"""
@@ -427,6 +457,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         return self.get_paginated_response(serializer.data)
 
 
+@extend_schema(tags=["articles"])
 class CategoryViewSet(viewsets.ModelViewSet):
     """API ViewSet for Category operations"""
 
@@ -442,7 +473,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return CategoryCreateUpdateSerializer
         return CategorySerializer
 
-    @action(detail=True)
+    @extend_schema(responses={200: ArticleListSerializer(many=True)}, filters=False)
+    @action(detail=True, pagination_class=None)
     def articles(self, request, pk=None):
         """Get articles for a category"""
         category = self.get_object()
@@ -451,6 +483,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@extend_schema(tags=["articles"])
 class TagViewSet(viewsets.ModelViewSet):
     """API ViewSet for Tag operations"""
 
@@ -466,13 +499,15 @@ class TagViewSet(viewsets.ModelViewSet):
             return TagCreateUpdateSerializer
         return TagSerializer
 
-    @action(detail=False)
+    @extend_schema(responses={200: TagSerializer(many=True)}, filters=False)
+    @action(detail=False, pagination_class=None)
     def popular(self, request):
         """Get popular tags"""
         serializer = TagSerializer(Tag.objects.popular(20), many=True, context=self.get_serializer_context())
         return Response(serializer.data)
 
-    @action(detail=True)
+    @extend_schema(responses={200: ArticleListSerializer(many=True)}, filters=False)
+    @action(detail=True, pagination_class=None)
     def articles(self, request, pk=None):
         """Get articles for a tag"""
         tag = self.get_object()

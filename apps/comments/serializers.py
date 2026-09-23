@@ -1,5 +1,7 @@
 # File: DjangoVerseHub/apps/comments/serializers.py
 
+from drf_spectacular.utils import extend_schema_field
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -29,10 +31,10 @@ class CommentAuthorSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", "full_name", "avatar_url"]
 
-    def get_full_name(self, obj):
+    def get_full_name(self, obj) -> str:
         return obj.get_full_name() or obj.username
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str:
         profile = getattr(obj, "profile", None)
         if profile is not None:
             return profile.get_avatar_url()
@@ -48,15 +50,15 @@ class _ViewerFieldsMixin:
             return request.user
         return None
 
-    def get_can_edit(self, obj):
+    def get_can_edit(self, obj) -> bool:
         user = self._user()
         return bool(user) and obj.can_edit(user)
 
-    def get_can_delete(self, obj):
+    def get_can_delete(self, obj) -> bool:
         user = self._user()
         return bool(user) and obj.can_delete(user)
 
-    def get_liked(self, obj):
+    def get_liked(self, obj) -> bool:
         user = self._user()
         if user is None:
             return False
@@ -107,7 +109,7 @@ class CommentSerializer(_ViewerFieldsMixin, serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_content_object_name(self, obj):
+    def get_content_object_name(self, obj) -> str | None:
         target = obj.content_object
         return str(target) if target is not None else None
 
@@ -236,9 +238,11 @@ class CommentTreeSerializer(_ViewerFieldsMixin, serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_is_placeholder(self, obj):
+    def get_is_placeholder(self, obj) -> bool:
         return bool(getattr(obj, "is_placeholder", False))
 
+    # Self-referencing: the class is not bound yet inside its own body, so point at the component by name.
+    @extend_schema_field({"type": "array", "items": {"$ref": "#/components/schemas/CommentTree"}})
     def get_replies(self, obj):
         nodes = getattr(obj, "child_nodes", None)
         if nodes is None:  # fallback when used outside a prebuilt tree
@@ -266,7 +270,7 @@ class CommentStatsSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ["id", "likes_count", "reply_count", "total_replies", "thread_depth", "flag_count", "created_at"]
 
-    def get_flag_count(self, obj):
+    def get_flag_count(self, obj) -> int | None:
         request = self.context.get("request")
         if request is not None and request.user.is_staff:
             return obj.flags.count()

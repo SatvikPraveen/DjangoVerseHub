@@ -1,4 +1,12 @@
 # File: DjangoVerseHub/apps/notifications/views.py
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    extend_schema_view,
+    inline_serializer,
+)
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -6,7 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, UpdateView
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -18,6 +26,27 @@ from .serializers import NotificationPreferenceSerializer, NotificationSerialize
 
 VALID_TYPES = {key for key, _ in NOTIFICATION_TYPES}
 STATUS_FILTERS = {"unread", "read"}
+
+# Response shapes of the small JSON endpoints (OpenAPI only; the views build plain dicts).
+UNREAD_COUNT_RESPONSE = inline_serializer(
+    "NotificationUnreadCount", fields={"unread_count": serializers.IntegerField()}
+)
+STATUS_WITH_UNREAD_RESPONSE = inline_serializer(
+    "NotificationStatusWithUnread",
+    fields={"status": serializers.CharField(), "unread_count": serializers.IntegerField()},
+)
+MARK_ALL_READ_RESPONSE = inline_serializer(
+    "NotificationMarkAllRead",
+    fields={
+        "status": serializers.CharField(),
+        "marked_count": serializers.IntegerField(),
+        "unread_count": serializers.IntegerField(),
+    },
+)
+LIST_FILTER_PARAMETERS = [
+    OpenApiParameter("status", str, enum=sorted(STATUS_FILTERS), description="Only read or unread notifications"),
+    OpenApiParameter("type", str, enum=sorted(VALID_TYPES), description="Only notifications of this type"),
+]
 
 
 def _user_notifications(user):
@@ -120,7 +149,14 @@ class NotificationPagination(PageNumberPagination):
         response.data["unread_count"] = Notification.objects.unread(self.request.user).count()
         return response
 
+    def get_paginated_response_schema(self, schema):
+        schema = super().get_paginated_response_schema(schema)
+        schema["properties"]["unread_count"] = {"type": "integer", "example": 3}
+        schema.setdefault("required", []).append("unread_count")
+        return schema
 
+
+@extend_schema(tags=["notifications"], parameters=LIST_FILTER_PARAMETERS)
 class NotificationListAPIView(generics.ListAPIView):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
@@ -132,6 +168,11 @@ class NotificationListAPIView(generics.ListAPIView):
         return _apply_filters(_user_notifications(self.request.user), self.request.query_params)
 
 
+@extend_schema(
+    tags=["notifications"],
+    request=None,
+    responses={200: STATUS_WITH_UNREAD_RESPONSE, 404: OpenApiResponse(description="Not the caller's notification")},
+)
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def mark_notification_read(request, notification_id):
@@ -146,6 +187,7 @@ def mark_notification_read(request, notification_id):
     )
 
 
+@extend_schema(tags=["notifications"], request=None, responses={200: MARK_ALL_READ_RESPONSE})
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def mark_all_notifications_read(request):
@@ -153,12 +195,18 @@ def mark_all_notifications_read(request):
     return Response({"status": "success", "marked_count": count, "unread_count": 0})
 
 
+@extend_schema(tags=["notifications"], responses={200: UNREAD_COUNT_RESPONSE})
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def unread_count(request):
     return Response({"unread_count": Notification.objects.unread(request.user).count()})
 
 
+@extend_schema(
+    tags=["notifications"],
+    request=None,
+    responses={200: STATUS_WITH_UNREAD_RESPONSE, 404: OpenApiResponse(description="Not the caller's notification")},
+)
 @api_view(["DELETE", "POST"])
 @permission_classes([IsAuthenticated])
 def delete_notification(request, notification_id):
@@ -173,6 +221,7 @@ def delete_notification(request, notification_id):
     )
 
 
+@extend_schema(tags=["notifications"])
 class NotificationPreferenceAPIView(generics.RetrieveUpdateAPIView):
     """GET / PUT / PATCH the caller's notification preferences."""
 
@@ -186,6 +235,15 @@ class NotificationPreferenceAPIView(generics.RetrieveUpdateAPIView):
 # ---------------------------------------------------------------------------
 # DRF router ViewSet (registered by apps.api under /api/v1/notifications/)
 # ---------------------------------------------------------------------------
+@extend_schema(tags=["notifications"])
+@extend_schema_view(
+    list=extend_schema(parameters=LIST_FILTER_PARAMETERS),
+    create=extend_schema(exclude=True),  # always 405: notifications are produced by the system
+    partial_update=extend_schema(
+        request=inline_serializer("NotificationReadState", fields={"is_read": serializers.BooleanField()}),
+        responses={200: NotificationSerializer, 400: OpenApiResponse(description="Only is_read can be updated")},
+    ),
+)
 class NotificationViewSet(viewsets.ModelViewSet):
     """
     Notifications of the authenticated user.
@@ -219,21 +277,41 @@ class NotificationViewSet(viewsets.ModelViewSet):
             notification.mark_as_unread()
         return Response(self.get_serializer(notification).data)
 
+    @extend_schema(
+        request=None,
+        responses={200: inline_serializer("NotificationStatus", fields={"status": serializers.CharField()})},
+    )
     @action(detail=True, methods=["post"])
     def mark_read(self, request, pk=None):
         notification = self.get_object()
         notification.mark_as_read()
         return Response({"status": "success"})
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                "NotificationMarkAllReadCount",
+                fields={"status": serializers.CharField(), "marked_count": serializers.IntegerField()},
+            )
+        },
+    )
     @action(detail=False, methods=["post"])
     def mark_all_read(self, request):
         marked = Notification.objects.mark_all_read(request.user)
         return Response({"status": "success", "marked_count": marked})
 
+    @extend_schema(responses={200: UNREAD_COUNT_RESPONSE})
     @action(detail=False, methods=["get"])
     def unread_count(self, request):
         return Response({"unread_count": Notification.objects.unread(request.user).count()})
 
+    @extend_schema(methods=["GET"], request=None, responses={200: NotificationPreferenceSerializer})
+    @extend_schema(
+        methods=["PUT", "PATCH"],
+        request=NotificationPreferenceSerializer,
+        responses={200: NotificationPreferenceSerializer},
+    )
     @action(detail=False, methods=["get", "put", "patch"])
     def preferences(self, request):
         prefs = NotificationPreference.for_user(request.user)

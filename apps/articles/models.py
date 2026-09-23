@@ -49,7 +49,7 @@ class AnnotatedArticleCountMixin:
     """
 
     @property
-    def article_count(self):
+    def article_count(self) -> int:
         cached = self.__dict__.get("_article_count")
         if cached is not None:
             return cached
@@ -252,11 +252,11 @@ class Article(models.Model):
 
     # ------------------------------------------------------------------ derived data
     @property
-    def is_published(self):
+    def is_published(self) -> bool:
         return self.status == "published"
 
     @property
-    def comment_count(self):
+    def comment_count(self) -> int:
         cached = self.__dict__.get("_comment_count")
         if cached is not None:
             return cached
@@ -293,7 +293,7 @@ class Article(models.Model):
         return articles
 
     @property
-    def reading_time(self):
+    def reading_time(self) -> int:
         """Estimated reading time in whole minutes (at least 1), based on ~200 words per minute."""
         words = len(re.findall(r"\S+", strip_tags(self.content or "")))
         return max(1, math.ceil(words / 200))

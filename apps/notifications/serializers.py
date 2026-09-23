@@ -1,4 +1,6 @@
 # File: DjangoVerseHub/apps/notifications/serializers.py
+from drf_spectacular.utils import extend_schema_field, inline_serializer
+
 from django.contrib.auth import get_user_model
 from django.utils.timesince import timesince
 from rest_framework import serializers
@@ -16,10 +18,10 @@ class NotificationSenderSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", "first_name", "last_name", "display_name", "avatar_url"]
 
-    def get_display_name(self, obj):
+    def get_display_name(self, obj) -> str:
         return obj.get_full_name() or obj.username
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str | None:
         profile = getattr(obj, "profile", None)
         return profile.avatar_url if profile is not None else None
 
@@ -50,12 +52,19 @@ class NotificationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_time_since(self, obj):
+    def get_time_since(self, obj) -> str:
         return timesince(obj.created_at) if obj.created_at else ""
 
-    def get_url(self, obj):
+    def get_url(self, obj) -> str:
         return obj.url
 
+    @extend_schema_field(
+        inline_serializer(
+            "NotificationTarget",
+            fields={"url": serializers.CharField(), "title": serializers.CharField()},
+            allow_null=True,
+        )
+    )
     def get_content_object_data(self, obj):
         target = obj.target
         if target is None:

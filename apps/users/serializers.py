@@ -143,7 +143,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ("created_at", "updated_at")
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str | None:
         if obj.avatar and hasattr(obj.avatar, "url"):
             request = self.context.get("request")
             if request:
@@ -234,13 +234,13 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active",
         )
 
-    def get_followers_count(self, obj):
+    def get_followers_count(self, obj) -> int:
         return getattr(obj, "followers_total", None) or obj.followers_count
 
-    def get_following_count(self, obj):
+    def get_following_count(self, obj) -> int:
         return getattr(obj, "following_total", None) or obj.following_count
 
-    def get_is_following(self, obj):
+    def get_is_following(self, obj) -> bool:
         request = self.context.get("request")
         requester = getattr(request, "user", None)
         if requester is None or not requester.is_authenticated or requester.pk == obj.pk:
@@ -321,7 +321,7 @@ class UserListSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ["id", "username", "display_name", "avatar_url", "date_joined", "is_active"]
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str | None:
         profile = getattr(obj, "profile", None)
         if profile is not None and profile.avatar:
             request = self.context.get("request")
@@ -355,7 +355,7 @@ class PublicProfileSerializer(serializers.ModelSerializer):
             "github",
         ]
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str | None:
         if obj.avatar and hasattr(obj.avatar, "url"):
             request = self.context.get("request")
             if request:
