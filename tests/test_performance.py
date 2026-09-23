@@ -70,7 +70,7 @@ class ResponseTimeTestCase(TestCase):
 
     def test_home_page_response_time(self):
         """Home page should respond within 2 seconds."""
-        elapsed, response = self._response_time(reverse('home'))
+        elapsed, response = self._response_time(reverse('core:home'))
         self.assertIn(response.status_code, [200, 301, 302])
         self.assertLess(elapsed, 2.0, f'Home page took {elapsed:.2f}s')
 

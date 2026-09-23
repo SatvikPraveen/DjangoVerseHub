@@ -1,0 +1,12 @@
+{% extends 'core/pages/_page_base.html' %}
+{% block page_content %}
+<p class="text-muted">Last updated: September 2026</p>
+<h2 class="h4 mt-4">What we collect</h2>
+<p>Your email address, username and the profile details you choose to share. We log IP addresses for security and abuse prevention and keep them for 90 days.</p>
+<h2 class="h4 mt-4">How we use it</h2>
+<p>To run the service, send the notifications you opt into, and improve the platform using aggregated statistics. We never sell personal data.</p>
+<h2 class="h4 mt-4">Your rights</h2>
+<p>You can export or delete your data from your settings at any time, or by <a href="{% url 'core:contact' %}">contacting us</a>.</p>
+<h2 class="h4 mt-4">Cookies</h2>
+<p>See the <a href="{% url 'core:cookies' %}">cookie policy</a>.</p>
+{% endblock %}

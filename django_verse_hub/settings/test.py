@@ -89,6 +89,7 @@ ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
+RATE_LIMIT_ENABLED = False
 
 # ---------------------------------------------------------------------------
 # DRF — disable throttling in tests

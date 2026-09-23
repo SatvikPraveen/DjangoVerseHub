@@ -153,7 +153,7 @@
                   >Settings</a
                 >
                 <hr class="my-1" />
-                <form method="post" action="{% url 'accounts:logout' %}">
+                <form method="post" action="{% url 'users:logout' %}">
                   {% csrf_token %}
                   <button
                     type="submit"
@@ -166,12 +166,12 @@
             </div>
             {% else %}
             <a
-              href="{% url 'accounts:login' %}"
+              href="{% url 'users:login' %}"
               class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
               >Login</a
             >
             <a
-              href="{% url 'accounts:register' %}"
+              href="{% url 'users:signup' %}"
               class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
               >Sign Up</a
             >

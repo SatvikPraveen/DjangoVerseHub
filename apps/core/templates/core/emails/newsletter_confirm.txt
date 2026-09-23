@@ -1,0 +1,9 @@
+Hi,
+
+Please confirm your subscription to the {{ site_name }} newsletter by opening this link:
+
+{{ confirm_url }}
+
+If you did not request this, ignore this email or unsubscribe here: {{ unsubscribe_url }}
+
+— The {{ site_name }} team

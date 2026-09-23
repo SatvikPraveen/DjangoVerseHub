@@ -33,7 +33,7 @@ class URLResolutionTestCase(TestCase):
 
     # ------------------------------------------------------------------- home
     def test_home_url(self):
-        url = reverse('home')
+        url = reverse('core:home')
         self.assertEqual(url, '/')
 
     # ---------------------------------------------------------------- api

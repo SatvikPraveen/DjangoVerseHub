@@ -24,6 +24,7 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.sitemaps',
 ]
 
 THIRD_PARTY_APPS = [
@@ -40,6 +41,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
+    'apps.core',
     'apps.users',
     'apps.articles',
     'apps.comments',
@@ -78,6 +80,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.core.context_processors.site',
+                'apps.core.context_processors.notifications',
             ],
         },
     },
@@ -140,6 +144,9 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 # Sites framework
 SITE_ID = 1
+SITE_NAME = config('SITE_NAME', default='DjangoVerseHub')
+SITE_TAGLINE = config('SITE_TAGLINE', default='Connect, Learn, Build')
+SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
 # Django Allauth
 ACCOUNT_EMAIL_REQUIRED = True
@@ -204,6 +211,10 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@djangoversehu
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+
+# Simple per-IP rate limiting (see django_verse_hub.middleware.RateLimitMiddleware)
+RATE_LIMIT_ENABLED = config('RATE_LIMIT_ENABLED', default=True, cast=bool)
+RATE_LIMIT_REQUESTS_PER_MINUTE = config('RATE_LIMIT_REQUESTS_PER_MINUTE', default=100, cast=int)
 
 # Session settings
 SESSION_COOKIE_AGE = 86400  # 1 day

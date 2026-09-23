@@ -240,7 +240,7 @@
             <li class="nav-item">
               <a
                 class="nav-link {% if 'community' in request.resolver_match.namespace %}active{% endif %}"
-                href="{% url 'community:discussions' %}"
+                href="{% url 'articles:list' %}"
               >
                 <i class="bi bi-people me-1"></i>Community
               </a>
@@ -328,7 +328,7 @@
                 <span
                   class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 >
-                  {{ unread_notifications_count|slice:":99" }}{% if unread_notifications_count > 99 %}+{% endif %}
+                  {% if unread_notifications_count > 99 %}99+{% else %}{{ unread_notifications_count }}{% endif %}
                 </span>
                 {% endif %}
               </a>
@@ -535,7 +535,7 @@
               </li>
               <li class="mb-2">
                 <a
-                  href="{% url 'community:discussions' %}"
+                  href="{% url 'articles:list' %}"
                   class="text-light-emphasis text-decoration-none"
                   >Discussions</a
                 >

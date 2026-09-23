@@ -1,0 +1,10 @@
+{% extends 'core/pages/_page_base.html' %}
+{% block page_content %}
+<p class="text-muted">Last updated: September 2026</p>
+<h2 class="h4 mt-4">Your content</h2>
+<p>You keep the copyright to everything you publish. You grant {{ SITE_NAME }} a licence to display and distribute it as part of the service.</p>
+<h2 class="h4 mt-4">Acceptable use</h2>
+<p>Follow the <a href="{% url 'core:guidelines' %}">community guidelines</a>. Accounts used for spam, abuse or unlawful content may be suspended.</p>
+<h2 class="h4 mt-4">The service</h2>
+<p>The platform is provided as is. We aim for high availability but make no guarantee, and we may change or discontinue features.</p>
+{% endblock %}

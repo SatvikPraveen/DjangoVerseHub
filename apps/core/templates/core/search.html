@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if query %}"{{ query }}" - {% endif %}Search - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <form method="get" action="{% url 'core:search' %}" class="mb-4" role="search">
+    <div class="input-group input-group-lg">
+      <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search articles, people and tags" aria-label="Search" autofocus />
+      <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+    </div>
+    <input type="hidden" name="scope" value="{{ scope }}" />
+  </form>
+
+  {% if query %}
+  <ul class="nav nav-pills mb-4">
+    <li class="nav-item"><a class="nav-link {% if scope == 'all' %}active{% endif %}" href="?q={{ query|urlencode }}&scope=all">All</a></li>
+    <li class="nav-item"><a class="nav-link {% if scope == 'articles' %}active{% endif %}" href="?q={{ query|urlencode }}&scope=articles">Articles</a></li>
+    <li class="nav-item"><a class="nav-link {% if scope == 'people' %}active{% endif %}" href="?q={{ query|urlencode }}&scope=people">People</a></li>
+    <li class="nav-item"><a class="nav-link {% if scope == 'tags' %}active{% endif %}" href="?q={{ query|urlencode }}&scope=tags">Tags</a></li>
+  </ul>
+  <p class="text-muted">{{ total_results }} result{{ total_results|pluralize }} for <strong>{{ query }}</strong></p>
+
+  {% if articles_page and articles_page.paginator.count %}
+  <section class="mb-5">
+    <h2 class="h5 border-bottom pb-2">Articles <span class="text-muted fw-normal">({{ articles_page.paginator.count }})</span></h2>
+    <div class="list-group list-group-flush">
+      {% for article in articles_page %}
+      <a href="{{ article.get_absolute_url }}" class="list-group-item list-group-item-action">
+        <div class="fw-semibold">{{ article.title }}</div>
+        <div class="small text-muted">{{ article.summary|default:article.content|striptags|truncatewords:30 }}</div>
+        <div class="small text-muted mt-1">{{ article.author.get_full_name|default:article.author.username }} · {{ article.published_at|date:"M j, Y" }}</div>
+      </a>
+      {% endfor %}
+    </div>
+    {% if scope == 'all' and articles_page.paginator.count > 5 %}<a class="small" href="?q={{ query|urlencode }}&scope=articles">See all articles</a>{% endif %}
+    {% if scope == 'articles' %}{% include 'core/includes/paginator.html' with page=articles_page %}{% endif %}
+  </section>
+  {% endif %}
+
+  {% if users_page and users_page.paginator.count %}
+  <section class="mb-5">
+    <h2 class="h5 border-bottom pb-2">People <span class="text-muted fw-normal">({{ users_page.paginator.count }})</span></h2>
+    <div class="list-group list-group-flush">
+      {% for person in users_page %}
+      <a href="{{ person.get_absolute_url }}" class="list-group-item list-group-item-action">
+        <div class="fw-semibold">{{ person.get_full_name|default:person.username }} <span class="text-muted fw-normal">@{{ person.username }}</span></div>
+        {% if person.profile.bio %}<div class="small text-muted">{{ person.profile.bio|truncatewords:20 }}</div>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% if scope == 'all' and users_page.paginator.count > 5 %}<a class="small" href="?q={{ query|urlencode }}&scope=people">See all people</a>{% endif %}
+    {% if scope == 'people' %}{% include 'core/includes/paginator.html' with page=users_page %}{% endif %}
+  </section>
+  {% endif %}
+
+  {% if tags_page and tags_page.paginator.count %}
+  <section class="mb-5">
+    <h2 class="h5 border-bottom pb-2">Tags <span class="text-muted fw-normal">({{ tags_page.paginator.count }})</span></h2>
+    {% for tag in tags_page %}<a href="{{ tag.get_absolute_url }}" class="badge bg-light text-dark border text-decoration-none me-1 mb-1 fs-6">#{{ tag.name }}</a>{% endfor %}
+    {% if scope == 'tags' %}{% include 'core/includes/paginator.html' with page=tags_page %}{% endif %}
+  </section>
+  {% endif %}
+
+  {% if not total_results %}
+  <div class="text-center text-muted py-5">
+    <i class="bi bi-search fs-1 d-block mb-2"></i>
+    Nothing matched <strong>{{ query }}</strong>. Try different keywords.
+  </div>
+  {% endif %}
+  {% else %}
+  <p class="text-muted">Type something to search across articles, people and tags.</p>
+  {% endif %}
+</div>
+{% endblock %}

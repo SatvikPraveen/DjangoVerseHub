@@ -1,0 +1,14 @@
+{% extends 'core/pages/_page_base.html' %}
+{% block page_content %}
+<p class="lead">Welcome to {{ SITE_NAME }}. Here is how to get the most out of the platform in five minutes.</p>
+<h2 class="h4 mt-4">1. Create your account</h2>
+<p><a href="{% url 'users:signup' %}">Sign up</a> with your email, confirm the verification link and fill in your <a href="{% url 'users:profile_edit' %}">profile</a>. A good bio and avatar make your articles easier to trust.</p>
+<h2 class="h4 mt-4">2. Read and follow</h2>
+<p>Browse <a href="{% url 'articles:list' %}">articles</a> by category or tag. Like posts you enjoy and bookmark the ones you want to return to.</p>
+<h2 class="h4 mt-4">3. Write your first article</h2>
+<p>Use <a href="{% url 'articles:create' %}">Write</a> in the navigation. Drafts are private until you publish. Markdown is supported and we estimate reading time automatically.</p>
+<h2 class="h4 mt-4">4. Join the conversation</h2>
+<p>Comments are threaded. You will get a real-time notification whenever someone replies to you or likes your work.</p>
+<h2 class="h4 mt-4">5. Build on the API</h2>
+<p>Everything you see here is available through the <a href="{% url 'core:api' %}">REST API</a>. Generate a token from your settings and start hacking.</p>
+{% endblock %}

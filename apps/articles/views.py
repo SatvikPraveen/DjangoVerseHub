@@ -72,6 +72,60 @@ class ArticleListView(ListView):
         return context
 
 
+class MyArticlesView(LoginRequiredMixin, ListView):
+    """Articles written by the current user, in any status."""
+    template_name = 'articles/article_list.html'
+    context_object_name = 'articles'
+    paginate_by = 12
+    page_heading = 'My Articles'
+    status_filter = None
+
+    def get_queryset(self):
+        queryset = Article.objects.filter(author=self.request.user).select_related('author', 'category').prefetch_related('tags')
+        if self.status_filter:
+            queryset = queryset.filter(status=self.status_filter)
+        return queryset.order_by('-updated_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_heading'] = self.page_heading
+        context['search_form'] = ArticleSearchForm()
+        context['categories'] = Category.objects.active()[:10]
+        context['popular_tags'] = Tag.objects.popular()[:20]
+        context['featured_articles'] = []
+        return context
+
+
+class DraftsView(MyArticlesView):
+    """Unpublished drafts of the current user."""
+    page_heading = 'My Drafts'
+    status_filter = 'draft'
+
+
+class BookmarksView(LoginRequiredMixin, ListView):
+    """Articles the current user has bookmarked."""
+    template_name = 'articles/article_list.html'
+    context_object_name = 'articles'
+    paginate_by = 12
+
+    def get_queryset(self):
+        return (
+            Article.published.filter(bookmarks__user=self.request.user)
+            .select_related('author', 'category')
+            .prefetch_related('tags')
+            .order_by('-bookmarks__created_at')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_heading'] = 'Bookmarks'
+        context['search_form'] = ArticleSearchForm()
+        context['categories'] = Category.objects.active()[:10]
+        context['popular_tags'] = Tag.objects.popular()[:20]
+        context['featured_articles'] = []
+        return context
+
+
 class ArticleDetailView(DetailView):
     """Display single article"""
     model = Article

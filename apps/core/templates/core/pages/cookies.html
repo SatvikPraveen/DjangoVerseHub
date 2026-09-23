@@ -1,0 +1,13 @@
+{% extends 'core/pages/_page_base.html' %}
+{% block page_content %}
+<p>{{ SITE_NAME }} uses a small number of strictly necessary cookies.</p>
+<table class="table table-sm">
+  <thead><tr><th>Cookie</th><th>Purpose</th><th>Lifetime</th></tr></thead>
+  <tbody>
+    <tr><td><code>sessionid</code></td><td>Keeps you signed in</td><td>1 day</td></tr>
+    <tr><td><code>csrftoken</code></td><td>Protects forms against cross-site request forgery</td><td>1 year</td></tr>
+    <tr><td><code>theme</code></td><td>Remembers light or dark mode</td><td>1 year</td></tr>
+  </tbody>
+</table>
+<p>We do not use advertising or third-party tracking cookies.</p>
+{% endblock %}

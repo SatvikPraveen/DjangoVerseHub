@@ -1,0 +1,14 @@
+{% extends 'core/pages/_page_base.html' %}
+{% block page_content %}
+<p class="lead">A complete REST API exposes every feature of {{ SITE_NAME }}.</p>
+<ul>
+  <li><a href="/api/v1/docs/">Interactive Swagger UI</a></li>
+  <li><a href="/api/v1/redoc/">ReDoc reference</a></li>
+  <li><a href="/api/v1/schema.json">OpenAPI schema (JSON)</a></li>
+</ul>
+<h2 class="h4 mt-4">Authentication</h2>
+<pre class="bg-light p-3 rounded"><code>curl -X POST /api/v1/auth/token/ -d "username=you@example.com" -d "password=secret"
+curl -H "Authorization: Token &lt;token&gt;" /api/v1/articles/</code></pre>
+<h2 class="h4 mt-4">Rate limits</h2>
+<p>Anonymous clients get 100 requests per hour, authenticated users 1000. Limits are returned in standard headers.</p>
+{% endblock %}

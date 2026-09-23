@@ -1,0 +1,12 @@
+{% extends 'core/pages/_page_base.html' %}
+{% block page_content %}
+<p class="lead">{{ SITE_NAME }} is a place to learn together. These guidelines keep it useful and welcoming.</p>
+<h2 class="h4 mt-4">Be respectful</h2>
+<p>Critique ideas, not people. Harassment, hate speech and personal attacks are not tolerated and lead to removal.</p>
+<h2 class="h4 mt-4">Write for the reader</h2>
+<p>Use a clear title, a short summary and code samples that actually run. Cite sources and credit original authors.</p>
+<h2 class="h4 mt-4">No spam or self-promotion</h2>
+<p>Linking to your own project is fine when it adds value to the discussion. Repeated promotional posts are removed.</p>
+<h2 class="h4 mt-4">Report problems</h2>
+<p>Use the flag button on any comment, or <a href="{% url 'core:contact' %}">contact us</a> for anything else. Moderators review every report.</p>
+{% endblock %}

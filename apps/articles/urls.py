@@ -16,6 +16,9 @@ urlpatterns = [
     # Web views
     path('', views.ArticleListView.as_view(), name='list'),
     path('create/', views.ArticleCreateView.as_view(), name='create'),
+    path('mine/', views.MyArticlesView.as_view(), name='my_articles'),
+    path('drafts/', views.DraftsView.as_view(), name='drafts'),
+    path('bookmarks/', views.BookmarksView.as_view(), name='bookmarks'),
     path('search/', views.search_view, name='search'),
     path('trending/', views.trending_articles_view, name='trending'),
     path('autocomplete/', views.autocomplete_view, name='autocomplete'),

@@ -6,7 +6,7 @@
     <!-- Brand -->
     <a
       class="navbar-brand fw-bold d-flex align-items-center"
-      href="{% url 'home' %}"
+      href="{% url 'core:home' %}"
     >
       <img
         src="{% static 'images/logo.svg' %}"
@@ -38,7 +38,7 @@
         <li class="nav-item">
           <a
             class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
-            href="{% url 'home' %}"
+            href="{% url 'core:home' %}"
           >
             <i class="bi bi-house me-1"></i>Home
           </a>
@@ -266,7 +266,7 @@
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="{% url 'users:drafts' %}">
+              <a class="dropdown-item" href="{% url 'articles:drafts' %}">
                 <i class="bi bi-file-earmark-minus me-2"></i>Drafts
               </a>
             </li>

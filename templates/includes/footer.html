@@ -50,7 +50,7 @@
           <h6 class="fw-semibold mb-2">Stay Updated</h6>
           <form
             class="d-flex"
-            action="{% url 'newsletter:subscribe' %}"
+            action="{% url 'core:newsletter_signup' %}"
             method="post"
           >
             {% csrf_token %}
@@ -180,7 +180,7 @@
         <ul class="list-unstyled">
           <li class="mb-2">
             <a
-              href="{% url 'legal:privacy' %}"
+              href="{% url 'core:privacy' %}"
               class="text-light-emphasis text-decoration-none"
             >
               <i class="bi bi-shield-check me-2"></i>Privacy Policy
@@ -188,7 +188,7 @@
           </li>
           <li class="mb-2">
             <a
-              href="{% url 'legal:terms' %}"
+              href="{% url 'core:terms' %}"
               class="text-light-emphasis text-decoration-none"
             >
               <i class="bi bi-file-text me-2"></i>Terms of Service
@@ -196,7 +196,7 @@
           </li>
           <li class="mb-2">
             <a
-              href="{% url 'legal:cookies' %}"
+              href="{% url 'core:cookies' %}"
               class="text-light-emphasis text-decoration-none"
             >
               <i class="bi bi-cookie me-2"></i>Cookie Policy
@@ -204,7 +204,7 @@
           </li>
           <li class="mb-2">
             <a
-              href="{% url 'legal:guidelines' %}"
+              href="{% url 'core:guidelines' %}"
               class="text-light-emphasis text-decoration-none"
             >
               <i class="bi bi-list-check me-2"></i>Guidelines

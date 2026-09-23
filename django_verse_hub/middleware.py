@@ -30,7 +30,7 @@ class RateLimitMiddleware(MiddlewareMixin):
     """Simple rate limiting middleware using Redis cache"""
     
     def process_request(self, request):
-        if settings.DEBUG:
+        if settings.DEBUG or not getattr(settings, 'RATE_LIMIT_ENABLED', True):
             return None
             
         # Skip rate limiting for certain paths
@@ -45,13 +45,15 @@ class RateLimitMiddleware(MiddlewareMixin):
         else:
             ip = request.META.get('REMOTE_ADDR')
             
-        # Rate limit: 100 requests per minute
+        limit = getattr(settings, 'RATE_LIMIT_REQUESTS_PER_MINUTE', 100)
         cache_key = f'rate_limit:{ip}'
         requests = cache.get(cache_key, 0)
-        
-        if requests >= 100:
-            return HttpResponse('Rate limit exceeded', status=429)
-            
+
+        if requests >= limit:
+            response = HttpResponse('Rate limit exceeded', status=429)
+            response['Retry-After'] = '60'
+            return response
+
         cache.set(cache_key, requests + 1, 60)  # 60 seconds
         return None
 
