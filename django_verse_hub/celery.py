@@ -26,6 +26,10 @@ app.conf.beat_schedule = {
         'task': 'apps.notifications.tasks.cleanup_old_notifications',
         'schedule': 3600.0,  # 1 hour
     },
+    'send-weekly-digest': {
+        'task': 'apps.notifications.tasks.send_weekly_digest',
+        'schedule': 604800.0,  # 1 week
+    },
     'cleanup-unused-media': {
         'task': 'apps.articles.tasks.cleanup_unused_media',
         'schedule': 604800.0,  # 1 week

@@ -92,10 +92,16 @@ def generate_article_preview(self, article_id):
 
 @shared_task
 def notify_followers(author_id, article_id):
-    """Notify an author's followers that a new article was published."""
+    """
+    Manually fan out a 'new article' notification to an author's followers.
+
+    Normal publishing already triggers this through apps.notifications.signals;
+    this task exists for re-sends from the admin or shell and goes through the
+    same notify() helper so it is deduplicated and preference-aware.
+    """
     from django.contrib.auth import get_user_model
 
-    from apps.notifications.models import Notification
+    from apps.notifications.signals import notify
 
     from .models import Article
 
@@ -109,18 +115,12 @@ def notify_followers(author_id, article_id):
     if not article.is_published:
         return 0
 
-    content_type = ContentType.objects.get_for_model(Article)
-    notifications = [
-        Notification(
-            recipient=follower,
-            sender=author,
-            notification_type='post',
-            message=f'{author.get_full_name() or author.username} published a new article: "{article.title}"',
-            content_type=content_type,
-            object_id=str(article.pk),
-        )
-        for follower in author.followers.only('id')
-    ]
-    Notification.objects.bulk_create(notifications)
+    notifications = notify(
+        author.followers.filter(is_active=True),
+        author,
+        'post',
+        f'{author.get_full_name() or author.username} published a new article: "{article.title}"',
+        target=article,
+    )
     logger.info('Notified %d followers about article %s', len(notifications), article_id)
     return len(notifications)

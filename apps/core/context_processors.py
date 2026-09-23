@@ -36,7 +36,7 @@ def notifications(request):
     def _recent():
         return list(
             Notification.objects.filter(recipient=user)
-            .select_related('sender')
+            .select_related('sender', 'sender__profile')
             .order_by('-created_at')[:5]
         )
 

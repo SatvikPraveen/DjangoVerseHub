@@ -7,7 +7,7 @@ from django.dispatch import receiver
 
 from .cache import ArticleCacheManager
 from .models import Article, Category, Tag
-from .tasks import notify_followers, process_article_images
+from .tasks import process_article_images
 
 
 def _invalidate_article(instance):
@@ -23,10 +23,10 @@ def article_post_save(sender, instance, created, **kwargs):
     if created and instance.featured_image:
         transaction.on_commit(lambda: process_article_images.delay(str(instance.id)))
 
-    # Notify the author's followers the first time an article goes live
+    # Follower fan-out on publish is handled by apps.notifications.signals
+    # (deduped, preference-aware, pushed over WebSocket). Nothing to do here.
     if getattr(instance, '_just_published', False):
         instance._just_published = False
-        transaction.on_commit(lambda: notify_followers.delay(str(instance.author_id), str(instance.id)))
 
 
 @receiver(post_delete, sender=Article)
