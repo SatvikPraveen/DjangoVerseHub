@@ -9,12 +9,15 @@
         <a href="#account" class="list-group-item list-group-item-action"><i class="bi bi-person me-2"></i>Account</a>
         <a href="#profile" class="list-group-item list-group-item-action"><i class="bi bi-card-text me-2"></i>Profile Settings</a>
         <a href="#password" class="list-group-item list-group-item-action"><i class="bi bi-shield-lock me-2"></i>Change Password</a>
+        <a href="#privacy" class="list-group-item list-group-item-action"><i class="bi bi-database-down me-2"></i>Data &amp; privacy</a>
         <a href="{% url 'users:profile' pk=user.pk %}" class="list-group-item list-group-item-action"><i class="bi bi-eye me-2"></i>View profile</a>
       </div>
     </div>
 
     <div class="col-lg-9">
       <h1 class="h2 mb-4"><i class="bi bi-gear me-2"></i>Settings</h1>
+
+      {% include 'users/includes_verify_banner.html' %}
 
       <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
@@ -105,6 +108,30 @@
           </div>
         </div>
       </form>
+
+      <div class="card mb-4" id="privacy">
+        <div class="card-header"><h5 class="mb-0">Data &amp; privacy</h5></div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+            <div>
+              <strong>Download your data</strong>
+              <div class="form-text">A JSON file with your profile, articles, comments, likes, bookmarks, follows and notifications.</div>
+            </div>
+            <form method="post" action="{% url 'users:export_data' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-primary"><i class="bi bi-download me-1"></i>Export my data</button>
+            </form>
+          </div>
+          <hr />
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <strong>Delete your account</strong>
+              <div class="form-text">Permanently remove your account and personal data.</div>
+            </div>
+            <a href="{% url 'users:delete_account' %}" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete account</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

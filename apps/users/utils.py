@@ -1,21 +1,20 @@
 # File: DjangoVerseHub/apps/users/utils.py
 
 import hashlib
-import os
+import logging
 import secrets
-import uuid
-from datetime import datetime, timedelta
-from io import BytesIO
-
-from PIL import Image
 
 from django.conf import settings
-from django.contrib.sites.models import Site
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
+from django.contrib.sessions.models import Session
+from django.core import signing
 from django.urls import reverse
-from django.utils.crypto import get_random_string
-from django.utils.html import strip_tags
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Authentication helpers
+# ---------------------------------------------------------------------------
 
 
 def authenticate_by_identifier(request, identifier, password):
@@ -39,232 +38,6 @@ def authenticate_by_identifier(request, identifier, password):
             return None
 
     return authenticate(request, **{CustomUser.USERNAME_FIELD: email, "password": password})
-
-
-def generate_username(email):
-    """Generate a unique username from email"""
-    base_username = email.split("@")[0]
-    username = base_username
-
-    # Import here to avoid circular imports
-    from .models import CustomUser
-
-    counter = 1
-    while CustomUser.objects.filter(username=username).exists():
-        username = f"{base_username}{counter}"
-        counter += 1
-
-    return username
-
-
-def upload_avatar_path(instance, filename):
-    """Generate upload path for user avatars"""
-    ext = filename.split(".")[-1]
-    filename = f"{uuid.uuid4()}.{ext}"
-    return os.path.join("avatars", str(instance.user.id), filename)
-
-
-def upload_cover_path(instance, filename):
-    """Generate upload path for cover images"""
-    ext = filename.split(".")[-1]
-    filename = f"{uuid.uuid4()}.{ext}"
-    return os.path.join("covers", str(instance.user.id), filename)
-
-
-def resize_image(image_path, size=(300, 300), quality=85):
-    """Resize image to specified dimensions"""
-    try:
-        with Image.open(image_path) as img:
-            if img.mode != "RGB":
-                img = img.convert("RGB")
-
-            img.thumbnail(size, Image.Resampling.LANCZOS)
-
-            # Save the resized image
-            output = BytesIO()
-            img.save(output, format="JPEG", quality=quality, optimize=True)
-
-            with open(image_path, "wb") as f:
-                f.write(output.getvalue())
-
-        return True
-    except Exception as e:
-        print(f"Error resizing image: {e}")
-        return False
-
-
-def generate_verification_token():
-    """Generate a secure verification token"""
-    return secrets.token_urlsafe(32)
-
-
-def send_verification_email(user):
-    """Send email verification email to user"""
-    if not user.email:
-        return False
-
-    # Generate verification token (this would typically be stored in DB)
-    token = generate_verification_token()
-
-    # Get current site
-    current_site = Site.objects.get_current()
-
-    # Build verification URL
-    verification_url = f"http://{current_site.domain}{reverse('users:verify_email', kwargs={'token': token})}"
-
-    # Email context
-    context = {
-        "user": user,
-        "verification_url": verification_url,
-        "site_name": current_site.name,
-    }
-
-    # Render email templates
-    subject = f"Verify your email address - {current_site.name}"
-    html_message = render_to_string("users/emails/verify_email.html", context)
-    plain_message = strip_tags(html_message)
-
-    try:
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        return True
-    except Exception as e:
-        print(f"Error sending verification email: {e}")
-        return False
-
-
-def send_welcome_email(user):
-    """Send welcome email to new user"""
-    if not user.email:
-        return False
-
-    # Get current site
-    current_site = Site.objects.get_current()
-
-    # Email context
-    context = {
-        "user": user,
-        "site_name": current_site.name,
-        "site_url": f"http://{current_site.domain}",
-        "login_url": f"http://{current_site.domain}{reverse('users:login')}",
-        "profile_url": f"http://{current_site.domain}{reverse('users:profile', kwargs={'pk': user.pk})}",
-    }
-
-    # Render email templates
-    subject = f"Welcome to {current_site.name}!"
-    html_message = render_to_string("users/emails/welcome.html", context)
-    plain_message = strip_tags(html_message)
-
-    try:
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        return True
-    except Exception as e:
-        print(f"Error sending welcome email: {e}")
-        return False
-
-
-def send_password_reset_email(user, reset_token):
-    """Send password reset email"""
-    if not user.email:
-        return False
-
-    # Get current site
-    current_site = Site.objects.get_current()
-
-    # Build reset URL
-    reset_url = f"http://{current_site.domain}{reverse('users:password_reset_confirm', kwargs={'token': reset_token})}"
-
-    # Email context
-    context = {
-        "user": user,
-        "reset_url": reset_url,
-        "site_name": current_site.name,
-    }
-
-    # Render email templates
-    subject = f"Password Reset - {current_site.name}"
-    html_message = render_to_string("users/emails/password_reset.html", context)
-    plain_message = strip_tags(html_message)
-
-    try:
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        return True
-    except Exception as e:
-        print(f"Error sending password reset email: {e}")
-        return False
-
-
-def validate_username(username):
-    """Validate username according to rules"""
-    import re
-
-    # Check length
-    if len(username) < 3 or len(username) > 30:
-        return False, "Username must be between 3 and 30 characters."
-
-    # Check format (alphanumeric, underscores, hyphens)
-    if not re.match(r"^[a-zA-Z0-9_-]+$", username):
-        return False, "Username can only contain letters, numbers, underscores, and hyphens."
-
-    # Check prohibited usernames
-    prohibited = [
-        "admin",
-        "administrator",
-        "root",
-        "api",
-        "www",
-        "mail",
-        "support",
-        "help",
-        "info",
-        "contact",
-        "about",
-        "blog",
-        "news",
-        "team",
-        "staff",
-        "mod",
-        "moderator",
-        "null",
-        "undefined",
-        "delete",
-        "edit",
-        "create",
-        "update",
-    ]
-
-    if username.lower() in prohibited:
-        return False, "This username is not allowed."
-
-    # Check for consecutive special characters
-    if "__" in username or "--" in username or "_-" in username or "-_" in username:
-        return False, "Username cannot contain consecutive special characters."
-
-    # Check start/end with special characters
-    if username.startswith(("_", "-")) or username.endswith(("_", "-")):
-        return False, "Username cannot start or end with special characters."
-
-    return True, "Username is valid."
 
 
 def get_user_ip(request):
@@ -315,44 +88,361 @@ def get_client_info(request):
     return info
 
 
-def generate_api_key():
-    """Generate API key for user"""
-    return f"dvh_{get_random_string(32)}"
+# ---------------------------------------------------------------------------
+# Signed, expiring tokens (email verification / password reset)
+# ---------------------------------------------------------------------------
+
+EMAIL_VERIFICATION_SALT = "users.email-verification"
+EMAIL_VERIFICATION_MAX_AGE = 3 * 24 * 60 * 60  # 3 days
+
+PASSWORD_RESET_SALT = "users.password-reset"
+PASSWORD_RESET_MAX_AGE = 60 * 60  # 1 hour
+
+RESEND_VERIFICATION_COOLDOWN = 10 * 60  # seconds
 
 
-def hash_api_key(api_key):
-    """Hash API key for storage"""
-    return hashlib.sha256(api_key.encode()).hexdigest()
+def _password_fingerprint(user):
+    """Short digest of the password hash; changes whenever the password does."""
+    return hashlib.sha256((user.password or "").encode()).hexdigest()[:16]
 
 
-def create_user_directory(user):
-    """Create user-specific directories"""
-    user_dir = os.path.join(settings.MEDIA_ROOT, "users", str(user.id))
-
-    directories = ["avatars", "covers", "uploads", "documents"]
-
-    for directory in directories:
-        dir_path = os.path.join(user_dir, directory)
-        os.makedirs(dir_path, exist_ok=True)
-
-    return user_dir
+def build_absolute_url(path):
+    """Prefix a site-relative path with settings.SITE_URL."""
+    base = getattr(settings, "SITE_URL", "http://localhost:8000").rstrip("/")
+    return f"{base}{path}"
 
 
-def cleanup_user_files(user):
-    """Clean up all files for a user"""
-    import shutil
+def make_email_verification_token(user):
+    """Signed token binding the user to the email address being verified."""
+    return signing.dumps({"uid": str(user.pk), "email": user.email}, salt=EMAIL_VERIFICATION_SALT)
 
-    user_dir = os.path.join(settings.MEDIA_ROOT, "users", str(user.id))
 
-    if os.path.exists(user_dir):
-        try:
-            shutil.rmtree(user_dir)
-            return True
-        except Exception as e:
-            print(f"Error cleaning up user files: {e}")
-            return False
+def load_email_verification_token(token):
+    """Return the user for `token`.
 
+    Raises `signing.SignatureExpired` after 3 days and `signing.BadSignature`
+    when the token is tampered with, refers to an unknown user, or the
+    address on the account has changed since the token was issued.
+    """
+    from .models import CustomUser
+
+    data = signing.loads(token, salt=EMAIL_VERIFICATION_SALT, max_age=EMAIL_VERIFICATION_MAX_AGE)
+    user = CustomUser.objects.filter(pk=data.get("uid"), is_active=True).first()
+    if user is None or user.email != data.get("email"):
+        raise signing.BadSignature("Verification token does not match any account.")
+    return user
+
+
+def make_password_reset_token(user):
+    """Signed token that becomes invalid as soon as the password changes."""
+    return signing.dumps({"uid": str(user.pk), "pw": _password_fingerprint(user)}, salt=PASSWORD_RESET_SALT)
+
+
+def load_password_reset_token(token):
+    """Return the user for `token`; raises `signing.BadSignature` (or `SignatureExpired`)."""
+    from .models import CustomUser
+
+    data = signing.loads(token, salt=PASSWORD_RESET_SALT, max_age=PASSWORD_RESET_MAX_AGE)
+    user = CustomUser.objects.filter(pk=data.get("uid"), is_active=True).first()
+    if user is None or _password_fingerprint(user) != data.get("pw"):
+        raise signing.BadSignature("Password reset token is no longer valid.")
+    return user
+
+
+def resend_verification_cache_key(user):
+    return f"users:resend-verification:{user.pk}"
+
+
+# ---------------------------------------------------------------------------
+# Transactional email (queued through Celery; broker errors never propagate)
+# ---------------------------------------------------------------------------
+
+
+def _queue(task, *args):
+    try:
+        task.delay(*args)
+    except Exception as exc:  # noqa: BLE001 - broker/connection errors
+        logger.warning("Could not queue %s: %s", task.name, exc)
+        return False
     return True
+
+
+def send_verification_email(user):
+    """Queue the email-verification message for `user`. Returns True if queued."""
+    if not user.email:
+        return False
+
+    from .tasks import send_email_verification
+
+    token = make_email_verification_token(user)
+    url = build_absolute_url(reverse("users:verify_email", kwargs={"token": token}))
+    return _queue(send_email_verification, str(user.pk), url)
+
+
+def send_password_reset_email(user):
+    """Queue the password-reset message for `user`. Returns True if queued."""
+    if not user.email:
+        return False
+
+    from .tasks import send_password_reset_email as task
+
+    token = make_password_reset_token(user)
+    url = build_absolute_url(reverse("users:password_reset_confirm", kwargs={"token": token}))
+    return _queue(task, str(user.pk), url)
+
+
+# ---------------------------------------------------------------------------
+# GDPR: data export
+# ---------------------------------------------------------------------------
+
+
+def _profile_data(profile):
+    if profile is None:
+        return None
+    return {
+        "full_name": profile.full_name,
+        "bio": profile.bio,
+        "avatar": profile.avatar.name if profile.avatar else None,
+        "cover_image": profile.cover_image.name if profile.cover_image else None,
+        "gender": profile.gender,
+        "location": profile.location,
+        "website": profile.website,
+        "twitter": profile.twitter,
+        "linkedin": profile.linkedin,
+        "github": profile.github,
+        "theme": profile.theme,
+        "timezone": profile.timezone,
+        "language": profile.language,
+        "is_public": profile.is_public,
+        "show_email": profile.show_email,
+        "show_real_name": profile.show_real_name,
+        "email_notifications": profile.email_notifications,
+        "push_notifications": profile.push_notifications,
+        "marketing_emails": profile.marketing_emails,
+        "created_at": profile.created_at,
+        "updated_at": profile.updated_at,
+    }
+
+
+def build_user_export(user):
+    """Everything the platform stores about `user`, as a JSON-serialisable dict.
+
+    Only the public model APIs of the other apps are used; nothing is modified.
+    Serialise with `django.core.serializers.json.DjangoJSONEncoder` (UUIDs, datetimes).
+    """
+    from apps.articles.models import Article, ArticleLike, Bookmark
+    from apps.comments.models import Comment, CommentLike
+    from apps.notifications.models import Notification
+
+    from .models import Follow
+
+    profile = getattr(user, "profile", None)
+
+    articles = [
+        {
+            "id": a.id,
+            "title": a.title,
+            "slug": a.slug,
+            "status": a.status,
+            "summary": a.summary,
+            "content": a.content,
+            "created_at": a.created_at,
+            "updated_at": a.updated_at,
+            "published_at": a.published_at,
+        }
+        for a in Article.objects.filter(author=user).order_by("created_at")
+    ]
+
+    comments = [
+        {
+            "id": c.id,
+            "content": c.content,
+            "target_type": c.content_type.model,
+            "target_id": c.object_id,
+            "parent_id": c.parent_id,
+            "is_active": c.is_active,
+            "created_at": c.created_at,
+            "updated_at": c.updated_at,
+        }
+        for c in Comment.objects.filter(author=user).select_related("content_type").order_by("created_at")
+    ]
+
+    likes = {
+        "articles": [
+            {"article_id": like.article_id, "title": like.article.title, "created_at": like.created_at}
+            for like in ArticleLike.objects.filter(user=user).select_related("article").order_by("created_at")
+        ],
+        "comments": [
+            {"comment_id": like.comment_id, "created_at": like.created_at}
+            for like in CommentLike.objects.filter(user=user).order_by("created_at")
+        ],
+    }
+
+    bookmarks = [
+        {"article_id": b.article_id, "title": b.article.title, "slug": b.article.slug, "created_at": b.created_at}
+        for b in Bookmark.objects.filter(user=user).select_related("article").order_by("created_at")
+    ]
+
+    follows = {
+        "following": [
+            {"user_id": f.following_id, "username": f.following.username, "since": f.created_at}
+            for f in Follow.objects.filter(follower=user).select_related("following").order_by("created_at")
+        ],
+        "followers": [
+            {"user_id": f.follower_id, "username": f.follower.username, "since": f.created_at}
+            for f in Follow.objects.filter(following=user).select_related("follower").order_by("created_at")
+        ],
+    }
+
+    notifications = [
+        {
+            "id": n.id,
+            "type": n.notification_type,
+            "message": n.message,
+            "sender": n.sender.username if n.sender else None,
+            "is_read": n.is_read,
+            "created_at": n.created_at,
+            "read_at": n.read_at,
+        }
+        for n in Notification.objects.filter(recipient=user).select_related("sender").order_by("created_at")
+    ]
+
+    return {
+        "exported_at": timezone.now(),
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone_number": user.phone_number,
+            "date_of_birth": user.date_of_birth,
+            "email_verified": user.email_verified,
+            "date_joined": user.date_joined,
+            "last_login": user.last_login,
+            "login_count": user.login_count,
+        },
+        "profile": _profile_data(profile),
+        "articles": articles,
+        "comments": comments,
+        "likes": likes,
+        "bookmarks": bookmarks,
+        "follows": follows,
+        "notifications": notifications,
+    }
+
+
+# ---------------------------------------------------------------------------
+# GDPR: account deletion / anonymisation
+# ---------------------------------------------------------------------------
+
+ANONYMISED_EMAIL_DOMAIN = "deleted.invalid"
+
+
+def has_published_content(user):
+    from apps.articles.models import Article
+
+    return Article.objects.filter(author=user, status="published").exists()
+
+
+def _expire_user_sessions(user):
+    """Best-effort removal of DB-backed sessions for `user`.
+
+    Independently of this sweep, every session is rejected on the next request
+    because the password hash changes (session auth hash) and `is_active` is False.
+    """
+    if "django.contrib.sessions" not in settings.INSTALLED_APPS:
+        return
+    uid = str(user.pk)
+    try:
+        for session in Session.objects.filter(expire_date__gte=timezone.now()).iterator():
+            if session.get_decoded().get("_auth_user_id") == uid:
+                session.delete()
+    except Exception as exc:  # noqa: BLE001 - table absent / cache-backed sessions
+        logger.debug("Session sweep skipped for %s: %s", user.pk, exc)
+
+
+def anonymise_user(user):
+    """Scrub personal data from `user` while keeping their published content.
+
+    The row survives so article/comment attribution stays consistent, but the
+    account can never be used again: unusable password, inactive, API tokens and
+    sessions revoked, and everything identifying replaced or cleared.
+    """
+    from rest_framework.authtoken.models import Token
+
+    from apps.articles.models import Article, ArticleLike, Bookmark
+    from apps.notifications.models import Notification
+
+    from .models import Follow
+
+    suffix = secrets.token_hex(4)  # 8 hex characters
+    user.username = f"deleted-{suffix}"
+    user.email = f"deleted-{suffix}@{ANONYMISED_EMAIL_DOMAIN}"
+    user.first_name = ""
+    user.last_name = ""
+    user.phone_number = ""
+    user.date_of_birth = None
+    user.last_login_ip = None
+    user.email_verified = False
+    user.is_active = False
+    user.is_staff = False
+    user.is_superuser = False
+    user.set_unusable_password()
+    user.save()
+
+    profile = getattr(user, "profile", None)
+    if profile is not None:
+        if profile.avatar:
+            profile.avatar.delete(save=False)
+        if profile.cover_image:
+            profile.cover_image.delete(save=False)
+        for field in ("full_name", "bio", "gender", "location", "website", "twitter", "linkedin", "github"):
+            setattr(profile, field, "")
+        profile.is_public = False
+        profile.show_email = False
+        profile.email_notifications = False
+        profile.push_notifications = False
+        profile.marketing_emails = False
+        profile.save()
+
+    # Personal, non-content data goes; published (and archived) articles and comments stay.
+    Article.objects.filter(author=user, status="draft").delete()
+    ArticleLike.objects.filter(user=user).delete()
+    Bookmark.objects.filter(user=user).delete()
+    Follow.objects.filter(follower=user).delete()
+    Follow.objects.filter(following=user).delete()
+    Notification.objects.filter(recipient=user).delete()
+
+    Token.objects.filter(user=user).delete()
+    _expire_user_sessions(user)
+    return user
+
+
+def delete_or_anonymise_user(user):
+    """Remove `user`'s account. Returns "anonymised" or "deleted".
+
+    Accounts with published articles are anonymised so the articles remain
+    readable; everything else is hard-deleted (cascades remove the rest).
+    """
+    if has_published_content(user):
+        anonymise_user(user)
+        logger.info("Anonymised account %s", user.pk)
+        return "anonymised"
+
+    from rest_framework.authtoken.models import Token
+
+    Token.objects.filter(user=user).delete()
+    _expire_user_sessions(user)
+    pk = user.pk
+    user.delete()
+    logger.info("Deleted account %s", pk)
+    return "deleted"
+
+
+# ---------------------------------------------------------------------------
+# Statistics
+# ---------------------------------------------------------------------------
 
 
 class UserStatsCalculator:
@@ -361,20 +451,13 @@ class UserStatsCalculator:
     @staticmethod
     def get_user_activity_stats(user, days=30):
         """Get user activity statistics for specified days"""
-
-        end_date = datetime.now()
-        end_date - timedelta(days=days)
-
-        # This would integrate with activity tracking
-        stats = {
+        return {
             "login_count": user.login_count,
             "profile_views": 0,  # Would track in separate model
             "content_created": 0,  # Would count articles, comments, etc.
             "last_active": user.last_login,
             "activity_score": 0,  # Calculated activity score
         }
-
-        return stats
 
     @staticmethod
     def calculate_profile_completion(profile):

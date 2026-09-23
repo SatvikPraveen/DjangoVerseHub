@@ -1,0 +1,38 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/verify_email_failed.html -->
+{% extends 'base.html' %}
+{% block title %}Verification link {{ reason }} - {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card text-center">
+        <div class="card-body p-5">
+          <i class="bi bi-envelope-x display-4 text-warning mb-3"></i>
+          {% if reason == "expired" %}
+          <h1 class="h3 mb-3">This verification link has expired</h1>
+          <p class="text-muted">Verification links are valid for 3 days. Request a new one and we'll send it right away.</p>
+          {% else %}
+          <h1 class="h3 mb-3">This verification link isn't valid</h1>
+          <p class="text-muted">The link may have been copied incorrectly, already used, or issued before your email address changed.</p>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+            {% if user.email_verified %}
+            <p class="mb-4"><i class="bi bi-patch-check-fill text-success"></i> Your email address is already verified.</p>
+            <a href="{% url 'users:settings' %}" class="btn btn-primary">Go to settings</a>
+            {% else %}
+            <form method="post" action="{% url 'users:resend_verification' %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Resend verification email</button>
+            </form>
+            {% endif %}
+          {% else %}
+          <p class="mb-4">Sign in to request a new verification email.</p>
+          <a href="{% url 'users:login' %}?next={% url 'users:settings' %}" class="btn btn-primary">Sign in</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

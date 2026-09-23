@@ -1,0 +1,14 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/includes_verify_banner.html -->
+{% if user.is_authenticated and not user.email_verified %}
+<div class="alert alert-warning alert-dismissible fade show d-flex align-items-center flex-wrap gap-2" role="alert" id="verify-email-banner">
+  <i class="bi bi-envelope-exclamation me-2"></i>
+  <span class="flex-grow-1">
+    <strong>Verify your email.</strong> We sent a link to <em>{{ user.email }}</em>. Didn't get it?
+  </span>
+  <form method="post" action="{% url 'users:resend_verification' %}" class="d-inline">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-dark">Resend verification email</button>
+  </form>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}

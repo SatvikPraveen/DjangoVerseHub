@@ -1,0 +1,57 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/delete_account.html -->
+{% extends 'base.html' %}
+{% block title %}Delete account - {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+          <h1 class="h4 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Delete your account</h1>
+        </div>
+        <div class="card-body">
+          <p>This cannot be undone. You will be signed out immediately and will not be able to sign in again.</p>
+
+          {% if will_anonymise %}
+          <div class="alert alert-warning">
+            <strong>You have published articles.</strong> To keep them readable, your account will be
+            <em>anonymised</em> rather than erased: your name, email, profile, drafts, bookmarks, likes,
+            follows and notifications are removed, and your published articles and comments are re-attributed
+            to a "deleted user".
+          </div>
+          {% else %}
+          <div class="alert alert-warning">
+            Your account and <strong>all</strong> of its data (profile, drafts, comments, bookmarks, likes,
+            follows and notifications) will be permanently deleted.
+          </div>
+          {% endif %}
+
+          <p class="text-muted small">
+            Want a copy of your data first?
+            <form method="post" action="{% url 'users:export_data' %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">Download your data</button>
+            </form>
+          </p>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>{% endif %}
+            <div class="mb-3">
+              <label for="{{ form.password.id_for_label }}" class="form-label">Confirm with your current password</label>
+              {{ form.password }}
+              {% if form.password.errors %}<div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'users:settings' %}" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash me-1"></i>{% if will_anonymise %}Close my account{% else %}Delete my account{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

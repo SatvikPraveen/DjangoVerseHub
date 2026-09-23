@@ -3,6 +3,9 @@
 {% extends 'base.html' %} {% load static %} {% block title %}{{ profile_user.profile.display_name }} - Profile{% endblock %} {% block extra_css %}
 <link href="{% static 'css/profile.css' %}" rel="stylesheet" />
 {% endblock %} {% block content %}
+{% if is_own_profile %}
+<div class="container pt-3">{% include 'users/includes_verify_banner.html' %}</div>
+{% endif %}
 <div class="profile-container">
   <!-- Cover Image Section -->
   <div class="profile-cover">

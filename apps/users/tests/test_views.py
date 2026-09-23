@@ -93,15 +93,23 @@ class UserViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_logout_view(self):
-        """Test logout functionality"""
+        """Logging out is a POST (the navbar submits a form)"""
         self.client.login(username="test@example.com", password="testpass123")
-        response = self.client.get(reverse("users:logout"))
+        response = self.client.post(reverse("users:logout"))
 
         # Should redirect
         self.assertEqual(response.status_code, 302)
 
         # Check user is logged out
         self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_logout_view_rejects_get(self):
+        """A plain link or prefetch must not end the session"""
+        self.client.login(username="test@example.com", password="testpass123")
+        response = self.client.get(reverse("users:logout"))
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
 
     def test_profile_detail_view(self):
         """Test profile detail view"""

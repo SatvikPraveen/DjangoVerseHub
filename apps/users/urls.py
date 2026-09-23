@@ -17,6 +17,15 @@ urlpatterns = [
     path("signup/", views.signup_view, name="signup"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
+    # Email verification
+    path("verify-email/resend/", views.resend_verification_view, name="resend_verification"),
+    path("verify-email/<str:token>/", views.verify_email_view, name="verify_email"),
+    # Password reset
+    path("password-reset/", views.password_reset_view, name="password_reset"),
+    path("password-reset/confirm/<str:token>/", views.password_reset_confirm_view, name="password_reset_confirm"),
+    # Account data & deletion
+    path("export/", views.export_data_view, name="export_data"),
+    path("delete/", views.delete_account_view, name="delete_account"),
     # Profile management
     path("", views.UserListView.as_view(), name="list"),
     path("leaderboard/", views.LeaderboardView.as_view(), name="leaderboard"),

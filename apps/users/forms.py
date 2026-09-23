@@ -252,3 +252,37 @@ class PasswordChangeForm(forms.Form):
         self.user.set_password(password)
         self.user.save()
         return self.user
+
+
+class PasswordResetRequestForm(forms.Form):
+    """Ask for the address to send a password-reset link to."""
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={"class": "form-control", "placeholder": "Enter your email address", "autofocus": True}
+        )
+    )
+
+    def get_user(self):
+        """The active account for the submitted address, or None (never revealed to the caller)."""
+        email = self.cleaned_data.get("email", "")
+        return CustomUser.objects.filter(email__iexact=email, is_active=True).first()
+
+
+class DeleteAccountForm(forms.Form):
+    """Confirm account deletion with the current password."""
+
+    password = forms.CharField(
+        label=_("Current password"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Your current password"}),
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+        if not self.user.check_password(password):
+            raise ValidationError(_("Your current password is incorrect."))
+        return password

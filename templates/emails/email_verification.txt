@@ -8,7 +8,7 @@ Please verify your email address to finish setting up your DjangoVerseHub accoun
 Verification link:
 {{ verification_url }}
 
-This link expires in 24 hours.
+This link expires in 3 days.
 
 If you didn't create an account, you can safely ignore this email.
 

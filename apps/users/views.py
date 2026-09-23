@@ -1,19 +1,27 @@
 # File: DjangoVerseHub/apps/users/views.py
 
+import logging
+
 from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import redirect_to_login
+from django.core import signing
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
 from django.db.models import Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import DetailView, ListView, UpdateView
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -22,9 +30,18 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.response import Response
 
-from .forms import CustomLoginForm, CustomUserCreationForm, PasswordChangeForm, ProfileForm, UserUpdateForm
+from .forms import (
+    CustomLoginForm,
+    CustomUserCreationForm,
+    DeleteAccountForm,
+    PasswordChangeForm,
+    PasswordResetRequestForm,
+    ProfileForm,
+    UserUpdateForm,
+)
 from .models import CustomUser, Profile
 from .serializers import (
+    AccountDeletionSerializer,
     PasswordChangeSerializer,
     ProfileSerializer,
     PublicProfileSerializer,
@@ -34,7 +51,20 @@ from .serializers import (
     UserSerializer,
     UserUpdateSerializer,
 )
-from .utils import get_client_info
+from .utils import (
+    RESEND_VERIFICATION_COOLDOWN,
+    build_user_export,
+    delete_or_anonymise_user,
+    get_client_info,
+    has_published_content,
+    load_email_verification_token,
+    load_password_reset_token,
+    resend_verification_cache_key,
+    send_password_reset_email,
+    send_verification_email,
+)
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -129,7 +159,12 @@ def signup_view(request):
             client_info = get_client_info(request)
             user.update_login_stats(client_info["ip_address"])
 
-            messages.success(request, "Account created successfully! Welcome aboard!")
+            transaction.on_commit(lambda: send_verification_email(user))
+
+            messages.success(
+                request,
+                "Account created successfully! Welcome aboard! We've sent a link to verify your email address.",
+            )
             return redirect("users:profile", pk=user.pk)
     else:
         form = CustomUserCreationForm()
@@ -164,11 +199,143 @@ def login_view(request):
     return render(request, "users/login.html", {"form": form, "next": request.GET.get("next", "")})
 
 
+@require_POST
 def logout_view(request):
-    """User logout view"""
+    """User logout view (POST only, so a link or prefetch can't end a session)"""
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect("users:login")
+
+
+def _export_filename(user):
+    return f"djangoversehub-export-{user.username}-{timezone.now():%Y%m%d}.json"
+
+
+def verify_email_view(request, token):
+    """Confirm an email address from the signed link sent at signup."""
+    try:
+        user = load_email_verification_token(token)
+    except signing.SignatureExpired:
+        return render(request, "users/verify_email_failed.html", {"reason": "expired"}, status=400)
+    except signing.BadSignature:
+        return render(request, "users/verify_email_failed.html", {"reason": "invalid"}, status=400)
+
+    if user.email_verified:
+        messages.info(request, "Your email address was already verified.")
+    else:
+        user.email_verified = True
+        user.save(update_fields=["email_verified"])
+        logger.info("Email verified for user %s (%s)", user.pk, user.email)
+        messages.success(request, "Your email address has been verified. Thank you!")
+
+    if request.user.is_authenticated:
+        return redirect("users:settings")
+    return redirect("users:login")
+
+
+@login_required
+@require_POST
+def resend_verification_view(request):
+    """Send a fresh verification link, at most once per 10 minutes per user."""
+    user = request.user
+    fallback = reverse("users:settings")
+    back = _safe_redirect_target(request, request.META.get("HTTP_REFERER"), fallback)
+
+    if user.email_verified:
+        messages.info(request, "Your email address is already verified.")
+        return redirect(back)
+
+    # cache.add is atomic: it only succeeds when no cooldown key exists yet.
+    if not cache.add(resend_verification_cache_key(user), timezone.now().isoformat(), RESEND_VERIFICATION_COOLDOWN):
+        messages.warning(request, "A verification email was sent recently. Please wait 10 minutes and try again.")
+        return redirect(back)
+
+    if send_verification_email(user):
+        messages.success(request, f"We've sent a new verification link to {user.email}.")
+    else:
+        messages.error(request, "We couldn't send the verification email right now. Please try again later.")
+    return redirect(back)
+
+
+def password_reset_view(request):
+    """Request a password-reset link. The response never reveals whether the address exists."""
+    if request.user.is_authenticated:
+        return redirect("users:settings")
+
+    if request.method == "POST":
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if user is not None:
+                send_password_reset_email(user)
+            messages.success(
+                request,
+                "If an account exists for that email address, we've sent a link to reset your password.",
+            )
+            return redirect("users:login")
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, "users/password_reset.html", {"form": form})
+
+
+def password_reset_confirm_view(request, token):
+    """Choose a new password from the signed link in the reset email."""
+    try:
+        user = load_password_reset_token(token)
+    except signing.BadSignature:
+        return render(request, "users/password_reset_confirm.html", {"validlink": False}, status=400)
+
+    if request.method == "POST":
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            logger.info("Password reset completed for user %s", user.pk)
+            messages.success(request, "Your password has been reset. You can now sign in.")
+            return redirect("users:login")
+    else:
+        form = SetPasswordForm(user)
+
+    for field in form.fields.values():
+        field.widget.attrs.setdefault("class", "form-control")
+
+    return render(request, "users/password_reset_confirm.html", {"form": form, "validlink": True})
+
+
+@login_required
+@require_POST
+def export_data_view(request):
+    """Download everything stored about the current user as a JSON attachment."""
+    response = JsonResponse(build_user_export(request.user), encoder=DjangoJSONEncoder, json_dumps_params={"indent": 2})
+    response["Content-Disposition"] = f'attachment; filename="{_export_filename(request.user)}"'
+    return response
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def delete_account_view(request):
+    """Confirm (GET) and perform (POST, password required) account deletion."""
+    user = request.user
+    will_anonymise = has_published_content(user)
+
+    if request.method == "POST":
+        form = DeleteAccountForm(user, request.POST)
+        if form.is_valid():
+            outcome = delete_or_anonymise_user(user)
+            logout(request)
+            if outcome == "anonymised":
+                messages.success(
+                    request,
+                    "Your account has been closed and your personal data removed. "
+                    "Your published articles remain, attributed to a deleted user.",
+                )
+            else:
+                messages.success(request, "Your account and all of its data have been deleted.")
+            return redirect("users:login")
+    else:
+        form = DeleteAccountForm(user)
+
+    return render(request, "users/delete_account.html", {"form": form, "will_anonymise": will_anonymise})
 
 
 class UserListView(ListView):
@@ -442,7 +609,7 @@ class IsProfileOwnerOrReadOnly(permissions.BasePermission):
 class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """API ViewSet for User operations.
 
-    Account creation happens through `register`; there is no destroy endpoint.
+    Account creation happens through `register`; deletion through `DELETE /users/me/`.
     """
 
     queryset = CustomUser.objects.filter(is_active=True)
@@ -490,9 +657,14 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
             status=http_status,
         )
 
-    @action(detail=False, methods=["get", "patch"])
+    @action(detail=False, methods=["get", "patch", "delete"])
     def me(self, request):
-        """Get or update the current user's record"""
+        """Get, update, or delete (password required in the body) the current user's record"""
+        if request.method == "DELETE":
+            serializer = AccountDeletionSerializer(data=request.data, context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            outcome = delete_or_anonymise_user(request.user)
+            return Response({"detail": "Account removed.", "outcome": outcome}, status=status.HTTP_200_OK)
         if request.method == "PATCH":
             serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
@@ -500,12 +672,20 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Updat
         serializer = UserSerializer(request.user, context=self.get_serializer_context())
         return Response(serializer.data)
 
+    @action(detail=False, methods=["get", "post"], url_path="me/export")
+    def export(self, request):
+        """Download the current user's data (GDPR export) as a JSON attachment"""
+        response = Response(build_user_export(request.user))
+        response["Content-Disposition"] = f'attachment; filename="{_export_filename(request.user)}"'
+        return response
+
     @action(detail=False, methods=["post"])
     def register(self, request):
         """Register new user"""
         serializer = UserRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        transaction.on_commit(lambda: send_verification_email(user))
         return self._user_response(user, status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["post"])
