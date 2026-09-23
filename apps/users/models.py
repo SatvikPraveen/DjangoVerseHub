@@ -48,6 +48,38 @@ class CustomUser(AbstractUser):
     def get_absolute_url(self):
         return reverse('users:profile', kwargs={'pk': self.pk})
     
+    @property
+    def followers(self):
+        """Users who follow this user."""
+        return CustomUser.objects.filter(following_set__following=self)
+
+    @property
+    def following(self):
+        """Users this user follows."""
+        return CustomUser.objects.filter(followers_set__follower=self)
+
+    @property
+    def followers_count(self):
+        return self.followers_set.count()
+
+    @property
+    def following_count(self):
+        return self.following_set.count()
+
+    def is_following(self, other):
+        if other is None or not getattr(other, 'pk', None):
+            return False
+        return self.following_set.filter(following=other).exists()
+
+    def follow(self, other):
+        """Follow `other`. Returns (follow, created); self-follow is a no-op."""
+        if other == self:
+            return None, False
+        return Follow.objects.get_or_create(follower=self, following=other)
+
+    def unfollow(self, other):
+        return self.following_set.filter(following=other).delete()[0] > 0
+
     def get_full_name(self):
         """Return the first_name plus the last_name, with a space in between"""
         full_name = f'{self.first_name} {self.last_name}'
@@ -188,3 +220,42 @@ class Profile(models.Model):
         except Exception:
             # If image processing fails, keep the original
             pass
+
+class Follow(models.Model):
+    """A directed follow relationship between two users."""
+
+    follower = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='following_set',
+        help_text=_('The user who follows.'),
+    )
+    following = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='followers_set',
+        help_text=_('The user being followed.'),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'users_follow'
+        verbose_name = _('Follow')
+        verbose_name_plural = _('Follows')
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['follower', 'following'], name='unique_follow'),
+            models.CheckConstraint(check=~models.Q(follower=models.F('following')), name='no_self_follow'),
+        ]
+        indexes = [
+            models.Index(fields=['following', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.follower} -> {self.following}'
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.follower_id == self.following_id:
+            raise ValidationError(_('You cannot follow yourself.'))
