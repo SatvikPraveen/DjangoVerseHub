@@ -115,13 +115,16 @@ def send_email_verification(self, user_id, verification_url):
 
 @shared_task
 def cleanup_unverified_users():
-    """Clean up unverified users older than 7 days"""
+    """Remove stale registrations: unverified, never logged in, older than 7 days"""
     from django.utils import timezone
     from datetime import timedelta
     
     cutoff_date = timezone.now() - timedelta(days=7)
     unverified_users = User.objects.filter(
-        is_verified=False,
+        email_verified=False,
+        last_login__isnull=True,
+        is_staff=False,
+        is_superuser=False,
         date_joined__lt=cutoff_date
     )
     

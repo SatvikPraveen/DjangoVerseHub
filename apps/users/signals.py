@@ -1,5 +1,6 @@
 # File: DjangoVerseHub/apps/users/signals.py
 
+import logging
 import os
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
@@ -8,6 +9,8 @@ from django.conf import settings
 
 from .models import CustomUser, Profile
 
+logger = logging.getLogger(__name__)
+
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -15,19 +18,12 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
         
-        # Send welcome email (if celery task exists)
+        # Queue the welcome email; never let a broker outage break signup.
         try:
             from .tasks import send_welcome_email
             send_welcome_email.delay(instance.id)
-        except ImportError:
-            pass
-
-
-@receiver(post_save, sender=CustomUser)
-def save_user_profile(sender, instance, **kwargs):
-    """Save the profile when the user is saved"""
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
+        except Exception as exc:  # noqa: BLE001 - broker/connection errors
+            logger.warning('Could not queue welcome email for %s: %s', instance.pk, exc)
 
 
 @receiver(post_save, sender=Profile)

@@ -1,0 +1,69 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/leaderboard.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}Leaderboard - {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4">
+    <h1 class="h2 mb-1"><i class="bi bi-trophy text-warning me-2"></i>Leaderboard</h1>
+    <p class="text-muted mb-0">Top authors ranked by published articles and total article views</p>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" class="text-center" style="width: 4rem">#</th>
+            <th scope="col">Author</th>
+            <th scope="col" class="text-end">Articles</th>
+            <th scope="col" class="text-end">Views</th>
+            <th scope="col" class="text-end d-none d-md-table-cell">Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for leader in leaders %}
+          <tr>
+            <td class="text-center fw-bold">
+              {% if page_obj.number == 1 and forloop.counter == 1 %}<i class="bi bi-trophy-fill text-warning"></i>
+              {% elif page_obj.number == 1 and forloop.counter == 2 %}<i class="bi bi-trophy-fill text-secondary"></i>
+              {% elif page_obj.number == 1 and forloop.counter == 3 %}<i class="bi bi-trophy-fill" style="color: #cd7f32"></i>
+              {% else %}{{ page_obj.start_index|add:forloop.counter0 }}{% endif %}
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <img
+                  src="{{ leader.profile.avatar_url }}"
+                  alt="{{ leader.profile.display_name }}"
+                  class="rounded-circle me-2"
+                  width="40"
+                  height="40"
+                  style="object-fit: cover"
+                />
+                <div>
+                  <a href="{% url 'users:profile' pk=leader.pk %}" class="text-decoration-none fw-medium">
+                    {{ leader.profile.display_name }}
+                  </a>
+                  <small class="text-muted d-block">@{{ leader.username }}</small>
+                </div>
+              </div>
+            </td>
+            <td class="text-end"><span class="badge bg-primary rounded-pill">{{ leader.published_count }}</span></td>
+            <td class="text-end">{{ leader.total_views }}</td>
+            <td class="text-end d-none d-md-table-cell text-muted">{{ leader.date_joined|date:"M Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center py-5 text-muted">
+              <i class="bi bi-file-earmark-text display-4 d-block mb-2"></i>
+              No published articles yet. Be the first to write one!
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include 'users/includes_pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/following.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}Following - {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4">
+    <h1 class="h2 mb-1"><i class="bi bi-people me-2"></i>Your network</h1>
+    <p class="text-muted mb-0">People you follow and people who follow you</p>
+  </div>
+
+  <ul class="nav nav-tabs mb-4" id="networkTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="following-tab" data-bs-toggle="tab" data-bs-target="#following-pane" type="button" role="tab">
+        Following <span class="badge bg-primary rounded-pill ms-1">{{ following_count }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers-pane" type="button" role="tab">
+        Followers <span class="badge bg-secondary rounded-pill ms-1">{{ followers_count }}</span>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="following-pane" role="tabpanel">
+      <div class="row g-3">
+        {% for member in following %}
+        <div class="col-md-6 col-lg-4">
+          {% include 'users/includes_user_card.html' with member=member following_ids=following_ids %}
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 text-muted">
+          <i class="bi bi-person-plus display-1"></i>
+          <h5 class="mt-3">You are not following anyone yet</h5>
+          <a href="{% url 'users:list' %}" class="btn btn-primary mt-2">Find people to follow</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="followers-pane" role="tabpanel">
+      <div class="row g-3">
+        {% for member in followers %}
+        <div class="col-md-6 col-lg-4">
+          {% include 'users/includes_user_card.html' with member=member following_ids=following_ids %}
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 text-muted">
+          <i class="bi bi-people display-1"></i>
+          <h5 class="mt-3">No followers yet</h5>
+          <p class="mb-0">Publish articles to get noticed by the community.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/profile_edit.html -->
+{% extends 'base.html' %} {% load static %}
+{% block title %}Edit Profile - {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0"><i class="bi bi-pencil-square me-2"></i>Edit profile</h1>
+        <a href="{% url 'users:profile' pk=user.pk %}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i>Back to profile
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% include 'users/includes_profile_form_fields.html' with form=form %}
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <a href="{% url 'users:profile' pk=user.pk %}" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

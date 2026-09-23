@@ -1,0 +1,120 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/includes_profile_form_fields.html -->
+{# Renders ProfileForm fields. Expects `form` (a ProfileForm). #}
+{% if form.non_field_errors %}
+<div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+{% endif %}
+
+<h6 class="text-uppercase text-muted small fw-bold mb-3">About you</h6>
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <label for="{{ form.full_name.id_for_label }}" class="form-label">Full name</label>
+    {{ form.full_name }}
+    {% if form.full_name.errors %}<div class="invalid-feedback d-block">{{ form.full_name.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-6 mb-3">
+    <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+    {{ form.location }}
+    {% if form.location.errors %}<div class="invalid-feedback d-block">{{ form.location.errors.0 }}</div>{% endif %}
+  </div>
+</div>
+<div class="mb-3">
+  <label for="{{ form.bio.id_for_label }}" class="form-label">Bio <small class="text-muted">(max 500 characters)</small></label>
+  {{ form.bio }}
+  {% if form.bio.errors %}<div class="invalid-feedback d-block">{{ form.bio.errors.0 }}</div>{% endif %}
+</div>
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
+    {{ form.gender }}
+    {% if form.gender.errors %}<div class="invalid-feedback d-block">{{ form.gender.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-6 mb-3">
+    <label for="{{ form.website.id_for_label }}" class="form-label">Website</label>
+    {{ form.website }}
+    {% if form.website.errors %}<div class="invalid-feedback d-block">{{ form.website.errors.0 }}</div>{% endif %}
+  </div>
+</div>
+
+<h6 class="text-uppercase text-muted small fw-bold mb-3 mt-2">Images</h6>
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <label for="{{ form.avatar.id_for_label }}" class="form-label">Avatar <small class="text-muted">(max 5 MB)</small></label>
+    {{ form.avatar }}
+    {% if form.avatar.errors %}<div class="invalid-feedback d-block">{{ form.avatar.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-6 mb-3">
+    <label for="{{ form.cover_image.id_for_label }}" class="form-label">Cover image <small class="text-muted">(max 10 MB)</small></label>
+    {{ form.cover_image }}
+    {% if form.cover_image.errors %}<div class="invalid-feedback d-block">{{ form.cover_image.errors.0 }}</div>{% endif %}
+  </div>
+</div>
+
+<h6 class="text-uppercase text-muted small fw-bold mb-3 mt-2">Social links</h6>
+<div class="row">
+  <div class="col-md-4 mb-3">
+    <label for="{{ form.twitter.id_for_label }}" class="form-label"><i class="bi bi-twitter"></i> Twitter</label>
+    {{ form.twitter }}
+    {% if form.twitter.errors %}<div class="invalid-feedback d-block">{{ form.twitter.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-4 mb-3">
+    <label for="{{ form.linkedin.id_for_label }}" class="form-label"><i class="bi bi-linkedin"></i> LinkedIn</label>
+    {{ form.linkedin }}
+    {% if form.linkedin.errors %}<div class="invalid-feedback d-block">{{ form.linkedin.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-4 mb-3">
+    <label for="{{ form.github.id_for_label }}" class="form-label"><i class="bi bi-github"></i> GitHub</label>
+    {{ form.github }}
+    {% if form.github.errors %}<div class="invalid-feedback d-block">{{ form.github.errors.0 }}</div>{% endif %}
+  </div>
+</div>
+
+<h6 class="text-uppercase text-muted small fw-bold mb-3 mt-2">Preferences</h6>
+<div class="row">
+  <div class="col-md-4 mb-3">
+    <label for="{{ form.theme.id_for_label }}" class="form-label">Theme</label>
+    {{ form.theme }}
+    {% if form.theme.errors %}<div class="invalid-feedback d-block">{{ form.theme.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-4 mb-3">
+    <label for="{{ form.timezone.id_for_label }}" class="form-label">Timezone</label>
+    {{ form.timezone }}
+    {% if form.timezone.errors %}<div class="invalid-feedback d-block">{{ form.timezone.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-4 mb-3">
+    <label for="{{ form.language.id_for_label }}" class="form-label">Language</label>
+    {{ form.language }}
+    {% if form.language.errors %}<div class="invalid-feedback d-block">{{ form.language.errors.0 }}</div>{% endif %}
+  </div>
+</div>
+
+<h6 class="text-uppercase text-muted small fw-bold mb-3 mt-2">Privacy</h6>
+<div class="row">
+  <div class="col-md-4 mb-2 form-check ms-3">
+    {{ form.is_public }}
+    <label class="form-check-label" for="{{ form.is_public.id_for_label }}">Public profile</label>
+  </div>
+  <div class="col-md-4 mb-2 form-check ms-3">
+    {{ form.show_email }}
+    <label class="form-check-label" for="{{ form.show_email.id_for_label }}">Show email</label>
+  </div>
+  <div class="col-md-3 mb-2 form-check ms-3">
+    {{ form.show_real_name }}
+    <label class="form-check-label" for="{{ form.show_real_name.id_for_label }}">Show real name</label>
+  </div>
+</div>
+
+<h6 class="text-uppercase text-muted small fw-bold mb-3 mt-3">Notifications</h6>
+<div class="row">
+  <div class="col-md-4 mb-2 form-check ms-3">
+    {{ form.email_notifications }}
+    <label class="form-check-label" for="{{ form.email_notifications.id_for_label }}">Email notifications</label>
+  </div>
+  <div class="col-md-4 mb-2 form-check ms-3">
+    {{ form.push_notifications }}
+    <label class="form-check-label" for="{{ form.push_notifications.id_for_label }}">Push notifications</label>
+  </div>
+  <div class="col-md-3 mb-2 form-check ms-3">
+    {{ form.marketing_emails }}
+    <label class="form-check-label" for="{{ form.marketing_emails.id_for_label }}">Marketing emails</label>
+  </div>
+</div>

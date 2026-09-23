@@ -49,7 +49,7 @@ class UserViewsTest(TestCase):
         
         # Check user is logged in
         new_user = User.objects.get(email='newuser@example.com')
-        self.assertEqual(int(self.client.session['_auth_user_id']), new_user.id)
+        self.assertEqual(self.client.session['_auth_user_id'], str(new_user.pk))
 
     def test_signup_view_post_invalid(self):
         """Test signup view with invalid data"""
@@ -84,7 +84,7 @@ class UserViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
         
         # Check user is logged in
-        self.assertEqual(int(self.client.session['_auth_user_id']), self.user.id)
+        self.assertEqual(self.client.session['_auth_user_id'], str(self.user.pk))
 
     def test_login_view_post_invalid(self):
         """Test login view with invalid credentials"""

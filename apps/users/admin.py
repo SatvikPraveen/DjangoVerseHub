@@ -7,8 +7,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
-from .models import CustomUser, Profile
-from .forms import CustomUserCreationForm
+from .models import CustomUser, Profile, Follow
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -16,6 +15,13 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
         fields = '__all__'
+
+
+class AdminUserCreationForm(UserCreationForm):
+    """Admin add form (no terms checkbox, unlike the public signup form)"""
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'username')
 
 
 class ProfileInline(admin.StackedInline):
@@ -58,7 +64,7 @@ class CustomUserAdmin(BaseUserAdmin):
     """Custom User Admin with enhanced functionality"""
     
     form = CustomUserChangeForm
-    add_form = CustomUserCreationForm
+    add_form = AdminUserCreationForm
     
     list_display = [
         'email', 'username', 'get_full_name', 'is_active', 
@@ -221,3 +227,14 @@ class ProfileAdmin(admin.ModelAdmin):
             )
         return 'No cover image'
     cover_preview.short_description = 'Cover Preview'
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    """Follow relationship admin"""
+
+    list_display = ['follower', 'following', 'created_at']
+    search_fields = ['follower__username', 'follower__email', 'following__username', 'following__email']
+    list_select_related = ['follower', 'following']
+    raw_id_fields = ['follower', 'following']
+    date_hierarchy = 'created_at'

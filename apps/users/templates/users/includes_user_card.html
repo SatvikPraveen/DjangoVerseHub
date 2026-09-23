@@ -1,0 +1,39 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/includes_user_card.html -->
+{# Reusable user card. Expects `member`; optional `following_ids`. #}
+<div class="card h-100 user-card">
+  <div class="card-body d-flex align-items-center">
+    <img
+      src="{{ member.profile.avatar_url }}"
+      alt="{{ member.profile.display_name }}"
+      class="rounded-circle me-3"
+      width="56"
+      height="56"
+      style="object-fit: cover"
+    />
+    <div class="flex-grow-1 min-w-0">
+      <h6 class="mb-0 text-truncate">
+        <a href="{% url 'users:profile' pk=member.pk %}" class="text-decoration-none">
+          {{ member.profile.display_name }}
+        </a>
+      </h6>
+      <small class="text-muted d-block">@{{ member.username }}</small>
+      {% if member.profile.location %}
+      <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ member.profile.location }}</small>
+      {% endif %}
+    </div>
+    {% if user.is_authenticated and user != member %}
+    <form
+      method="post"
+      class="ms-2 follow-form"
+      action="{% if member.pk in following_ids %}{% url 'users:unfollow' pk=member.pk %}{% else %}{% url 'users:follow' pk=member.pk %}{% endif %}"
+    >
+      {% csrf_token %}
+      {% if member.pk in following_ids %}
+      <button type="submit" class="btn btn-outline-secondary btn-sm">Unfollow</button>
+      {% else %}
+      <button type="submit" class="btn btn-primary btn-sm">Follow</button>
+      {% endif %}
+    </form>
+    {% endif %}
+  </div>
+</div>

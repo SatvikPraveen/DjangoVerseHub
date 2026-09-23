@@ -58,7 +58,9 @@ class UserAPITest(TestCase):
         response = self.client.post(url, data)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('email', response.data)
+        # Field errors may be wrapped by the project-wide exception handler.
+        errors = response.data.get('error', {}).get('details', response.data)
+        self.assertIn('email', errors)
 
     def test_user_login_api(self):
         """Test user login via API"""

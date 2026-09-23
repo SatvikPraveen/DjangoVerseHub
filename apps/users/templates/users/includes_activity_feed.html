@@ -1,0 +1,24 @@
+<!-- File: DjangoVerseHub/apps/users/templates/users/includes_activity_feed.html -->
+{# Expects `activities`: list of dicts with type, description, created_at, object. #}
+<div class="activity-feed">
+  {% for activity in activities %}
+  <div class="d-flex align-items-start mb-3">
+    <div class="me-3 fs-5">
+      {% if activity.type == 'article_published' %}<i class="bi bi-file-earmark-check text-success"></i>
+      {% elif activity.type == 'article_created' %}<i class="bi bi-file-plus text-primary"></i>
+      {% elif activity.type == 'comment_posted' %}<i class="bi bi-chat-dots text-info"></i>
+      {% else %}<i class="bi bi-activity text-secondary"></i>{% endif %}
+    </div>
+    <div class="flex-grow-1">
+      <p class="mb-1">{{ activity.description }}</p>
+      <small class="text-muted">{{ activity.created_at|timesince }} ago</small>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-center py-5">
+    <i class="bi bi-activity display-1 text-muted"></i>
+    <h5 class="mt-3 text-muted">No recent activity</h5>
+    <p class="text-muted mb-0">Articles and comments will appear here</p>
+  </div>
+  {% endfor %}
+</div>

@@ -16,6 +16,32 @@ from PIL import Image
 from io import BytesIO
 
 
+def authenticate_by_identifier(request, identifier, password):
+    """Authenticate with either an email address or a username.
+
+    The default ModelBackend only understands USERNAME_FIELD (email), so a
+    plain username is first resolved to the matching account's email.
+    """
+    from django.contrib.auth import authenticate
+    from .models import CustomUser
+
+    identifier = (identifier or '').strip()
+    if not identifier or not password:
+        return None
+
+    email = identifier
+    if '@' not in identifier:
+        email = (
+            CustomUser.objects.filter(username__iexact=identifier)
+            .values_list('email', flat=True)
+            .first()
+        )
+        if not email:
+            return None
+
+    return authenticate(request, **{CustomUser.USERNAME_FIELD: email, 'password': password})
+
+
 def generate_username(email):
     """Generate a unique username from email"""
     base_username = email.split('@')[0]

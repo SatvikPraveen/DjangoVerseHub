@@ -1,12 +1,13 @@
 # File: DjangoVerseHub/apps/users/models.py
 
+import os
 import uuid
 from typing import ClassVar
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import URLValidator
+from django.core.validators import URLValidator, MaxLengthValidator
 from django.utils import timezone
 from PIL import Image
 from io import BytesIO
@@ -120,7 +121,7 @@ class Profile(models.Model):
     
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=100, blank=True)
-    bio = models.TextField(max_length=500, blank=True)
+    bio = models.TextField(max_length=500, blank=True, validators=[MaxLengthValidator(500)])
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     cover_image = models.ImageField(upload_to='covers/', null=True, blank=True)
     
@@ -186,40 +187,48 @@ class Profile(models.Model):
         return self.avatar_url
     
     def save(self, *args, **kwargs):
-        """Override save to process images"""
-        super().save(*args, **kwargs)
-        
-        # Resize avatar if it exists
-        if self.avatar:
+        """Resize newly uploaded images before persisting the row.
+
+        Only images whose stored name changed are processed, so re-saving a
+        profile (or its user) does not re-encode the same JPEG over and over.
+        """
+        previous = {}
+        if self.pk:
+            previous = (
+                Profile.objects.filter(pk=self.pk)
+                .values('avatar', 'cover_image')
+                .first()
+            ) or {}
+
+        if self.avatar and self.avatar.name != previous.get('avatar'):
             self._resize_image(self.avatar, (300, 300))
-        
-        # Resize cover image if it exists
-        if self.cover_image:
+
+        if self.cover_image and self.cover_image.name != previous.get('cover_image'):
             self._resize_image(self.cover_image, (1200, 400))
-    
-    def _resize_image(self, image_field, size):
-        """Resize image to specified dimensions"""
+
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def _resize_image(image_field, size):
+        """Resize an (uncommitted) image field in place, converting to JPEG."""
         try:
-            img = Image.open(image_field.path)
+            image_field.open('rb')
+            img = Image.open(image_field.file)
             if img.mode != 'RGB':
                 img = img.convert('RGB')
-            
+
             img.thumbnail(size, Image.Resampling.LANCZOS)
-            
-            # Save the resized image
+
             output = BytesIO()
             img.save(output, format='JPEG', quality=85, optimize=True)
-            output.seek(0)
-            
-            # Replace the original image
-            image_field.save(
-                image_field.name,
-                ContentFile(output.getvalue()),
-                save=False
-            )
+
+            base, _ext = os.path.splitext(os.path.basename(image_field.name))
+            # save=False: the model row is written by the caller.
+            image_field.save(f'{base}.jpg', ContentFile(output.getvalue()), save=False)
         except Exception:
-            # If image processing fails, keep the original
+            # If image processing fails, keep the original upload untouched.
             pass
+
 
 class Follow(models.Model):
     """A directed follow relationship between two users."""

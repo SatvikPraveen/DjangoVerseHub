@@ -68,14 +68,36 @@
                 <i class="bi bi-gear"></i> Settings
               </a>
             </div>
+            {% elif user.is_authenticated %}
+            <div class="profile-actions">
+              <form
+                method="post"
+                id="follow-form"
+                class="d-inline"
+                action="{% if is_following %}{% url 'users:unfollow' pk=profile_user.pk %}{% else %}{% url 'users:follow' pk=profile_user.pk %}{% endif %}"
+                data-follow-url="{% url 'users:follow' pk=profile_user.pk %}"
+                data-unfollow-url="{% url 'users:unfollow' pk=profile_user.pk %}"
+              >
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  id="follow-button"
+                  class="btn {% if is_following %}btn-outline-light{% else %}btn-primary{% endif %}"
+                  data-following="{{ is_following|yesno:'true,false' }}"
+                >
+                  {% if is_following %}
+                  <i class="bi bi-person-check"></i> Following
+                  {% else %}
+                  <i class="bi bi-person-plus"></i> Follow
+                  {% endif %}
+                </button>
+              </form>
+            </div>
             {% else %}
             <div class="profile-actions">
-              <button class="btn btn-primary" onclick="followUser()">
+              <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn btn-primary">
                 <i class="bi bi-person-plus"></i> Follow
-              </button>
-              <button class="btn btn-outline-light" onclick="sendMessage()">
-                <i class="bi bi-envelope"></i> Message
-              </button>
+              </a>
             </div>
             {% endif %}
           </div>
@@ -95,27 +117,34 @@
             <div class="card-body">
               <h5 class="card-title">Statistics</h5>
               <div class="row text-center">
-                <div class="col-4">
+                <div class="col-6 mb-3">
                   <div class="stat-item">
-                    <h4 class="stat-number">
-                      {{ profile_data.login_count|default:0 }}
-                    </h4>
-                    <small class="text-muted">Visits</small>
-                  </div>
-                </div>
-                <div class="col-4">
-                  <div class="stat-item">
-                    <h4 class="stat-number">0</h4>
+                    <h4 class="stat-number">{{ articles_count }}</h4>
                     <small class="text-muted">Articles</small>
                   </div>
                 </div>
-                <div class="col-4">
+                <div class="col-6 mb-3">
                   <div class="stat-item">
-                    <h4 class="stat-number">0</h4>
+                    <h4 class="stat-number">{{ comments_count }}</h4>
                     <small class="text-muted">Comments</small>
                   </div>
                 </div>
+                <div class="col-6">
+                  <div class="stat-item">
+                    <h4 class="stat-number" id="followers-count">{{ followers_count }}</h4>
+                    <small class="text-muted">Followers</small>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="stat-item">
+                    <h4 class="stat-number">{{ following_count }}</h4>
+                    <small class="text-muted">Following</small>
+                  </div>
+                </div>
               </div>
+              {% if is_own_profile %}
+              <a href="{% url 'users:following' %}" class="btn btn-outline-secondary btn-sm w-100 mt-2">Manage network</a>
+              {% endif %}
             </div>
           </div>
 
@@ -251,36 +280,50 @@
                 id="activity"
                 role="tabpanel"
               >
-                <div class="activity-feed">
-                  <div class="text-center py-5">
-                    <i class="bi bi-activity display-1 text-muted"></i>
-                    <h5 class="mt-3 text-muted">No recent activity</h5>
-                    <p class="text-muted">User activity will appear here</p>
-                  </div>
-                </div>
+                {% include 'users/includes_activity_feed.html' with activities=recent_activities %}
               </div>
 
               <!-- Articles Tab -->
               <div class="tab-pane fade" id="articles" role="tabpanel">
-                <div class="articles-list">
+                <div class="list-group list-group-flush">
+                  {% for article in recent_articles %}
+                  <a href="{{ article.get_absolute_url }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <h6 class="mb-1">{{ article.title }}</h6>
+                      {% if article.status != 'published' %}
+                      <span class="badge bg-secondary">{{ article.get_status_display }}</span>
+                      {% endif %}
+                    </div>
+                    <small class="text-muted">
+                      {{ article.created_at|date:"M d, Y" }} &middot; {{ article.views_count }} views
+                      {% if article.category %}&middot; {{ article.category.name }}{% endif %}
+                    </small>
+                  </a>
+                  {% empty %}
                   <div class="text-center py-5">
                     <i class="bi bi-file-text display-1 text-muted"></i>
                     <h5 class="mt-3 text-muted">No articles yet</h5>
-                    <p class="text-muted">
-                      Published articles will appear here
-                    </p>
+                    <p class="text-muted">Published articles will appear here</p>
                   </div>
+                  {% endfor %}
                 </div>
               </div>
 
               <!-- Comments Tab -->
               <div class="tab-pane fade" id="comments" role="tabpanel">
-                <div class="comments-list">
+                <div class="list-group list-group-flush">
+                  {% for comment in recent_comments %}
+                  <div class="list-group-item">
+                    <p class="mb-1">{{ comment.content|truncatechars:200 }}</p>
+                    <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                  </div>
+                  {% empty %}
                   <div class="text-center py-5">
                     <i class="bi bi-chat display-1 text-muted"></i>
                     <h5 class="mt-3 text-muted">No comments yet</h5>
                     <p class="text-muted">User comments will appear here</p>
                   </div>
+                  {% endfor %}
                 </div>
               </div>
             </div>
@@ -292,20 +335,45 @@
 </div>
 {% endblock %} {% block extra_js %}
 <script>
-  function followUser() {
-    // Implement follow functionality
-    alert("Follow functionality not implemented yet");
-  }
-
-  function sendMessage() {
-    // Implement messaging functionality
-    alert("Messaging functionality not implemented yet");
-  }
-
-  // Load user activity data
+  // Progressive enhancement: submit the follow form via fetch and swap state in place.
   document.addEventListener("DOMContentLoaded", function () {
-    // This would load actual activity data via AJAX
-    console.log("Profile loaded for user:", "{{ profile_user.username }}");
+    const form = document.getElementById("follow-form");
+    if (!form) return;
+    const button = document.getElementById("follow-button");
+    const counter = document.getElementById("followers-count");
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      button.disabled = true;
+      try {
+        const response = await fetch(form.action, {
+          method: "POST",
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+          },
+          credentials: "same-origin",
+        });
+        const data = await response.json();
+        if (!data.success) {
+          button.disabled = false;
+          return;
+        }
+        const following = data.is_following;
+        form.action = following ? form.dataset.unfollowUrl : form.dataset.followUrl;
+        button.className = "btn " + (following ? "btn-outline-light" : "btn-primary");
+        button.innerHTML = following
+          ? '<i class="bi bi-person-check"></i> Following'
+          : '<i class="bi bi-person-plus"></i> Follow';
+        if (counter && typeof data.followers_count === "number") {
+          counter.textContent = data.followers_count;
+        }
+      } catch (err) {
+        form.submit();
+        return;
+      }
+      button.disabled = false;
+    });
   });
 </script>
 {% endblock %}

@@ -4,10 +4,9 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth import authenticate
-from django.core.validators import validate_email
 
 from .models import CustomUser, Profile
+from .utils import authenticate_by_identifier
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -66,18 +65,18 @@ class CustomUserCreationForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if email and CustomUser.objects.filter(email=email).exists():
+        if email and CustomUser.objects.filter(email__iexact=email).exists():
             raise ValidationError(_('A user with this email already exists.'))
         return email
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
-        if username and CustomUser.objects.filter(username=username).exists():
+        if username and CustomUser.objects.filter(username__iexact=username).exists():
             raise ValidationError(_('A user with this username already exists.'))
         
         # Check for prohibited usernames
         prohibited = ['admin', 'administrator', 'root', 'api', 'www', 'mail']
-        if username.lower() in prohibited:
+        if username and username.lower() in prohibited:
             raise ValidationError(_('This username is not allowed.'))
         
         return username
@@ -116,25 +115,13 @@ class CustomLoginForm(AuthenticationForm):
         password = self.cleaned_data.get('password')
 
         if username is not None and password:
-            # Try to authenticate with email first, then username
-            user = None
-            if '@' in username:
-                try:
-                    validate_email(username)
-                    user = authenticate(self.request, email=username, password=password)
-                except ValidationError:
-                    pass
-            
-            if not user:
-                user = authenticate(self.request, username=username, password=password)
-
-            if not user:
+            self.user_cache = authenticate_by_identifier(self.request, username, password)
+            if self.user_cache is None:
                 raise ValidationError(
                     _('Please enter a correct email/username and password.'),
                     code='invalid_login'
                 )
-            else:
-                self.confirm_login_allowed(user)
+            self.confirm_login_allowed(self.user_cache)
 
         return self.cleaned_data
 
@@ -207,13 +194,36 @@ class ProfileForm(forms.ModelForm):
             'marketing_emails': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+    # Fields with model defaults that a partial form submission may omit.
+    _DEFAULTED_FIELDS = ('theme', 'timezone', 'language')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in self._DEFAULTED_FIELDS:
+            self.fields[name].required = False
+
+    def _default_for(self, name):
+        value = self.cleaned_data.get(name)
+        if value in (None, ''):
+            return Profile._meta.get_field(name).get_default()
+        return value
+
+    def clean_theme(self):
+        return self._default_for('theme')
+
+    def clean_timezone(self):
+        return self._default_for('timezone')
+
+    def clean_language(self):
+        return self._default_for('language')
+
     def clean_avatar(self):
         avatar = self.cleaned_data.get('avatar')
         if avatar:
             if avatar.size > 5 * 1024 * 1024:  # 5MB limit
                 raise ValidationError(_('Avatar file size must be under 5MB.'))
             
-            if not avatar.content_type.startswith('image/'):
+            if not getattr(avatar, 'content_type', 'image/').startswith('image/'):
                 raise ValidationError(_('Avatar must be an image file.'))
         
         return avatar
@@ -224,7 +234,7 @@ class ProfileForm(forms.ModelForm):
             if cover_image.size > 10 * 1024 * 1024:  # 10MB limit
                 raise ValidationError(_('Cover image file size must be under 10MB.'))
             
-            if not cover_image.content_type.startswith('image/'):
+            if not getattr(cover_image, 'content_type', 'image/').startswith('image/'):
                 raise ValidationError(_('Cover image must be an image file.'))
         
         return cover_image
