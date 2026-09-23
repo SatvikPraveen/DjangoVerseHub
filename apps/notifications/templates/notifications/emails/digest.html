@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>{{ site_name }} digest</title></head>
+<body style="font-family: Arial, Helvetica, sans-serif; color: #222; background: #f6f7f9; margin: 0; padding: 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 24px;">
+    <tr><td>
+      <h1 style="font-size: 20px; margin: 0 0 12px;">Your {{ frequency }} digest</h1>
+      <p style="margin: 0 0 16px;">Hi {{ recipient.get_full_name|default:recipient.username }}, you have {{ count }} new notification{{ count|pluralize }} on {{ site_name }}.</p>
+      <ul style="padding-left: 18px; margin: 0 0 16px;">
+        {% for notification in notifications %}
+        <li style="margin-bottom: 10px;">
+          <a href="{{ site_url }}{{ notification.url }}" style="color: #0d6efd; text-decoration: none;">{{ notification.message }}</a>
+          <div style="color: #6c757d; font-size: 12px;">{{ notification.created_at|date:"M j, H:i" }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      <p style="margin: 0 0 16px;">You have {{ total_unread }} unread notification{{ total_unread|pluralize }} in total.</p>
+      <p style="margin: 0 0 24px;">
+        <a href="{{ site_url }}{% url 'notifications:list' %}" style="display: inline-block; background: #0d6efd; color: #fff; padding: 10px 16px; border-radius: 6px; text-decoration: none;">View notifications</a>
+      </p>
+      <p style="color: #6c757d; font-size: 12px; margin: 0;">
+        Too many emails? <a href="{{ site_url }}{% url 'notifications:preferences' %}" style="color: #6c757d;">Change your preferences</a>.
+      </p>
+    </td></tr>
+  </table>
+</body>
+</html>

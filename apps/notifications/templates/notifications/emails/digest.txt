@@ -1,0 +1,14 @@
+Hi {{ recipient.get_full_name|default:recipient.username }},
+
+Here is your {{ frequency }} digest from {{ site_name }}: {{ count }} new notification{{ count|pluralize }}.
+{% for notification in notifications %}
+- {{ notification.message }} ({{ notification.created_at|date:"M j, H:i" }})
+  {{ site_url }}{{ notification.url }}
+{% endfor %}
+You have {{ total_unread }} unread notification{{ total_unread|pluralize }} in total.
+See them all: {{ site_url }}{% url 'notifications:list' %}
+
+Change how often you get these emails: {{ site_url }}{% url 'notifications:preferences' %}
+
+---
+This is an automated message from {{ site_name }}.

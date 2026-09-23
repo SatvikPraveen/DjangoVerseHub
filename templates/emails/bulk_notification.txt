@@ -1,5 +1,5 @@
 {{ title }}
-{{ title|length|add:"0"|ljust:title|length }}
+============================================================
 
 Hi {{ recipient.get_full_name|default:recipient.username }},
 
