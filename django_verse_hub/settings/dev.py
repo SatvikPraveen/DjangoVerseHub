@@ -33,21 +33,23 @@ DATABASES["default"].update(
     {"OPTIONS": {"connect_timeout": 10, "options": "-c default_transaction_isolation=serializable"}}
 )
 
-# Cache configuration for development (dummy cache)
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-        "KEY_PREFIX": "djangoversehub_dev",
-        "TIMEOUT": 300,
+# Cache: Redis when REDIS_URL is set, otherwise local memory so the project runs without Redis
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "KEY_PREFIX": "djangoversehub_dev",
+            "TIMEOUT": 300,
+        }
     }
-}
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "djangoversehub-dev"}}
 
 # Celery configuration for development
-CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=False, cast=bool)
+# Without Redis, run tasks inline so signup emails, notifications etc. still work
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=not REDIS_URL, cast=bool)
+CELERY_TASK_EAGER_PROPAGATES = False
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/2")
 CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/3")
 
