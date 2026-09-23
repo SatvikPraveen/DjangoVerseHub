@@ -164,7 +164,7 @@ make run                      # http://localhost:8000
 
 `.env.example` points `REDIS_URL` at a local Redis. If you do not have Redis, set `REDIS_URL=` (empty): the dev settings then use a local-memory cache and an in-memory channel layer and execute Celery tasks inline (`CELERY_TASK_ALWAYS_EAGER` defaults to `True` when `REDIS_URL` is empty), so sign-up emails, notifications and moderation still work in a single process.
 
-`make run` starts Django's `runserver`, which serves HTTP only. To get WebSocket notifications locally, serve the project through daphne instead:
+`make run` starts Django's `runserver`, which in this project is Daphne's ASGI server (the `daphne` app is first in `INSTALLED_APPS` for `dev.py`), so WebSocket notifications work locally out of the box. Serving through daphne directly is equivalent:
 
 ```bash
 DJANGO_SETTINGS_MODULE=django_verse_hub.settings.dev \
@@ -261,7 +261,7 @@ Base path: `/api/v1/`. Interactive documentation: Swagger UI at `/api/v1/docs/`,
 | JWT | `POST /api/v1/auth/jwt/create/` with `{"email", "password"}` → `access` + `refresh`; `refresh/` rotates and blacklists the old refresh token; `verify/`, `blacklist/` | `Authorization: Bearer <access>` |
 | Session | log in through the website | cookie + `X-CSRFToken` |
 
-JWT is a project-wide default, but the resource viewsets (`users`, `profiles`, `articles`, `categories`, `tags`, `comments`) currently override `authentication_classes` to Token + Session, so Bearer tokens are accepted by the cross-cutting endpoints (`dashboard`, `search`, `auth/logout`, `notifications`, ...) and not by those six resources. Use a DRF token for them.
+JWT, DRF token and session authentication are accepted uniformly on every endpoint; anonymous requests to protected routes get 401 with the error envelope below.
 
 **Error envelope** (every non-2xx response, `request_id` matches the `X-Request-ID` response header):
 
@@ -305,7 +305,7 @@ curl -s -H 'Authorization: Token <key>' http://localhost:8000/api/v1/users/me/ex
 - `NotificationConsumer` (`apps/notifications/consumers.py`) adds each socket to the group `user_<id>`. Client messages: `{"action": "mark_read", "notification_id": n}`, `{"action": "mark_all_read"}`, `{"action": "get_unread_count"}`, `{"action": "ping"}`. Server messages: `notification`, `unread_count`, `notification_read`, `all_read`, `pong`, `error`.
 - Delivery: `notify()` in `apps/notifications/signals.py` creates notifications and calls `channel_layer.group_send` (via `async_to_sync`), so a like, comment, follow or published article reaches an open browser tab immediately. The channel layer is Redis when `REDIS_URL` is set and Channels' in-memory layer otherwise (fine for a single daphne process, not across processes).
 - Client: `static/js/notifications.js` connects automatically when the navbar bell is present, reconnects with exponential backoff, updates the badge/title/dropdown, shows toasts, and falls back to the JSON endpoints under `/notifications/api/` when the socket is closed.
-- Requires an ASGI server (daphne). With `runserver` alone the client keeps retrying harmlessly and the HTTP fallbacks still work.
+- Requires an ASGI server: daphne in production, or `runserver` in development (ASGI-enabled). If no socket is available the client keeps retrying harmlessly and the HTTP fallbacks still work.
 
 ## Background jobs
 
@@ -335,7 +335,7 @@ python manage.py cleanup_unused_media [--dry-run] [--older-than 30] [--stats-onl
 python manage.py send_bulk_notifications --type announcement --title ... --message ... [--recipients all|active|staff|group] [--dry-run]
 ```
 
-`generate_demo_data` creates interlinked users (password `demo-password-123`, emails under `demo.djangoversehub.local`), categories, tags, articles, follows, likes, bookmarks and comments; notifications are produced by the normal signal handlers. `--clear` removes previously generated demo data. `send_bulk_notifications` predates the current `Notification` model (it sets a `title` field and priority-style types that no longer exist) and fails when it tries to create rows; see Known limitations.
+`generate_demo_data` creates interlinked users (password `demo-password-123`, emails under `demo.djangoversehub.local`), categories, tags, articles, follows, likes, bookmarks and comments; notifications are produced by the normal signal handlers. `--clear` removes previously generated demo data. `send_bulk_notifications` sends system announcements to all, active, staff or group members (or from a CSV) with `--dry-run` support.
 
 ## Deployment
 
@@ -348,12 +348,10 @@ python manage.py send_bulk_notifications --type announcement --title ... --messa
 
 ## Known limitations
 
-- `prod.py` configures Django's built-in `RedisCache` backend with django-redis-only options (`CLIENT_CLASS`, `COMPRESSOR`, `CONNECTION_POOL_KWARGS`); Django forwards them to redis-py and the first cache access raises `TypeError: ... unexpected keyword argument 'CLIENT_CLASS'`. Until that is fixed, switch `BACKEND` to `django_redis.cache.RedisCache` (installed) or remove the `OPTIONS` block before deploying. `dev.py`, `test.py` and `ci.py` are unaffected.
-- `make run` uses `runserver` and does not serve WebSockets (`daphne` is not in `INSTALLED_APPS`); use daphne as shown above.
-- JWT Bearer tokens are not accepted by the six resource viewsets (see API overview).
-- `make typecheck` (mypy) is configured but does not pass yet.
-- `send_bulk_notifications` targets an older `Notification` schema and fails at runtime; `cleanup_unused_media` (the beat task in `apps/articles/tasks.py`, not the management command) is a placeholder.
-- `ADMIN_URL` is read by `prod.py` but not applied to the URLconf.
+- `make typecheck` (mypy with django-stubs) is configured but does not pass yet; CI does not run it.
+- The in-memory channel layer and cache used when `REDIS_URL` is empty only work within a single process; set `REDIS_URL` for anything multi-process.
+- Full-text search uses PostgreSQL's `SearchVector` when available and falls back to `icontains` on SQLite.
+- Social login providers are configured as `SocialApp` rows in the admin; no provider is preconfigured.
 
 ## Contributing
 

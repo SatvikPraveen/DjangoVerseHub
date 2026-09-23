@@ -50,7 +50,7 @@ Then:
 make migrate              # apply migrations (dev settings)
 make superuser            # create an admin account (email + username + password)
 make demo                 # optional, see "Demo data"
-make run                  # runserver on http://0.0.0.0:8000
+make run                  # ASGI runserver (HTTP + WebSockets) on http://0.0.0.0:8000
 ```
 
 Every Makefile target sets `DJANGO_SETTINGS_MODULE=django_verse_hub.settings.dev` for you and uses `.venv/bin/python`. If you prefer to call `manage.py` directly, activate the venv (`source .venv/bin/activate`); `manage.py` defaults to the dev settings as well.
@@ -108,7 +108,7 @@ docker compose --profile proxy up --build
 # http://localhost/  (HTTP -> web, /ws/ -> asgi)
 ```
 
-When you open http://localhost:8000 directly, the notification client tries `ws://localhost:8000/ws/notifications/`, which `runserver` cannot serve; the page still works and the client falls back to the HTTP endpoints when you act on notifications.
+When you open http://localhost:8000 directly, the notification client connects to `ws://localhost:8000/ws/notifications/`; `runserver` serves it because Daphne is installed as the development server. If the socket is unavailable the client falls back to the HTTP endpoints when you act on notifications.
 
 The production-style stack is described in the README (`docker compose -f docker-compose.prod.yml up -d --build`).
 
@@ -161,7 +161,7 @@ Tasks are routed by module (`CELERY_TASK_ROUTES`): `apps.notifications.tasks.*` 
 
 Without Redis (`REDIS_URL` empty) tasks run inline; the code that enqueues transactional email also catches broker errors, so a missing broker never breaks sign-up or commenting.
 
-**Channels / WebSockets**: the ASGI application is `django_verse_hub.asgi:application`. Django's `runserver` in this project is the plain WSGI development server (the `daphne` app is not in `INSTALLED_APPS`), so to test real-time notifications run daphne:
+**Channels / WebSockets**: the ASGI application is `django_verse_hub.asgi:application`. In development `runserver` already serves it through Daphne (`daphne` is first in `INSTALLED_APPS`); running daphne directly is equivalent:
 
 ```bash
 DJANGO_SETTINGS_MODULE=django_verse_hub.settings.dev \
@@ -226,7 +226,7 @@ The project targets django-allauth 0.61+ (`ACCOUNT_LOGIN_METHODS`, `ACCOUNT_SIGN
 PostgreSQL is not running or the `DB_*` values in `.env` do not match. In Docker the entrypoint retries the database for 60 seconds before giving up.
 
 **WebSocket keeps reconnecting, badge never updates**
-You are running `runserver` (HTTP only), the page origin is not in `ALLOWED_HOSTS`, or you are running several processes with the in-memory channel layer. Run daphne as described above (with `REDIS_URL` set for multi-process setups) or use the compose `proxy` profile. Anonymous users are disconnected on purpose.
+The page origin is not in `ALLOWED_HOSTS`, or you are running several processes with the in-memory channel layer. Set `REDIS_URL` for multi-process setups or use the compose `proxy` profile. Anonymous users are disconnected on purpose.
 
 **`/metrics/` returns 403**
 Send `Authorization: Bearer <METRICS_TOKEN>`; when `METRICS_TOKEN` is empty you must be logged in as staff in the browser.

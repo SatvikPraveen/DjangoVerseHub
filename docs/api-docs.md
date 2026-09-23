@@ -55,7 +55,7 @@ Send the token as `Authorization: Token <key>`.
 
 Lifetimes: access 30 minutes, refresh 14 days (`JWT_ACCESS_MINUTES`, `JWT_REFRESH_DAYS`). Header: `Authorization: Bearer <access>`. `last_login` is updated on token creation.
 
-Caveat: the viewsets for `users`, `profiles`, `articles`, `categories`, `tags` and `comments` set `authentication_classes = [TokenAuthentication, SessionAuthentication]` explicitly, so Bearer tokens are ignored there (unauthenticated requests get 401 or, for read-only routes, anonymous access). Bearer tokens work for `dashboard`, `search`, `trending`, `stats`, `auth/logout`, `notifications` and the `/notifications/api/*` views. Use a DRF token if you need one credential for everything.
+All three schemes work on every endpoint, including the resource viewsets.
 
 ### Session
 
