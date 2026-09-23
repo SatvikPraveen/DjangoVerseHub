@@ -1,3 +1,4 @@
+{% load core_tags %}
 <!-- File: DjangoVerseHub/apps/comments/templates/comments/comment_thread.html -->
 {% comment %}
   One comment plus its nested replies. Expects a node from build_comment_tree
@@ -26,7 +27,7 @@
         </small>
       </div>
 
-      <div class="comment-content mt-2">{{ comment.content|linebreaks }}</div>
+      <div class="comment-content mt-2">{{ comment.content|markdown:"comment" }}</div>
 
       <div class="comment-actions mt-2 d-flex align-items-center flex-wrap gap-2">
         {% if user.is_authenticated %}

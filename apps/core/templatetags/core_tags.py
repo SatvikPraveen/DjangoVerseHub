@@ -4,6 +4,8 @@ from django import template
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
+from apps.core.markdown import markdown_to_text, render_markdown
+
 register = template.Library()
 
 
@@ -67,3 +69,15 @@ def json_ld(data):
     import json
 
     return mark_safe(f'<script type="application/ld+json">{json.dumps(data)}</script>')  # noqa: S308
+
+
+@register.filter(name="markdown", is_safe=True)
+def markdown_filter(text, profile="article"):
+    """Render Markdown to sanitised HTML: {{ article.content|markdown }} or {{ c.content|markdown:"comment" }}."""
+    return mark_safe(render_markdown(text or "", profile=profile))
+
+
+@register.filter(name="markdown_text")
+def markdown_text_filter(text, limit=None):
+    """Plain text from Markdown, optionally truncated: {{ article.content|markdown_text:200 }}."""
+    return markdown_to_text(text or "", limit=int(limit) if limit else None)

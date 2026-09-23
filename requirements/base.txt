@@ -39,6 +39,10 @@ djangorestframework-simplejwt>=5.3.0
 # Structured logging
 python-json-logger>=2.0.0
 
+# Markdown rendering and HTML sanitising
+markdown>=3.5
+nh3>=0.2.15
+
 # Utilities
 python-slugify>=8.0.0
 django-extensions>=3.2.0

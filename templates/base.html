@@ -83,6 +83,8 @@
       href="{% static 'images/favicon-16x16.png' %}"
     />
     <link rel="manifest" href="{% static 'manifest.json' %}" />
+    <link rel="alternate" type="application/rss+xml" title="{{ SITE_NAME }} articles (RSS)" href="{% url 'articles:feed' %}" />
+    <link rel="alternate" type="application/atom+xml" title="{{ SITE_NAME }} articles (Atom)" href="{% url 'articles:feed_atom' %}" />
 
     <!-- Bootstrap CSS -->
     <link

@@ -1,6 +1,6 @@
 <!-- File: DjangoVerseHub/apps/articles/templates/articles/article_detail.html -->
-{% extends 'base.html' %} {% load static %} {% block title %}{{ article.title }}
-- DjangoVerseHub{% endblock %} {% block meta_description %}{{ article.meta_description|default:article.summary }}{% endblock %} {% block meta_keywords %}{{ article.meta_keywords }}{% endblock %} {% block content %}
+{% extends 'base.html' %} {% load static core_tags article_tags %} {% block title %}{{ article.title }}
+- DjangoVerseHub{% endblock %} {% block meta_description %}{{ article.meta_description|default:article.summary }}{% endblock %} {% block meta_keywords %}{{ article.meta_keywords }}{% endblock %} {% block extra_css %}{% article_json_ld article %}{% endblock %} {% block content %}
 <div class="container">
   <div class="row">
     <div class="col-lg-8">
@@ -57,7 +57,7 @@
           </div>
           {% endif %}
 
-          <div class="content">{{ article.content|linebreaks }}</div>
+          <div class="content">{{ article.content|markdown }}</div>
         </div>
 
         <footer class="article-footer mt-5">
@@ -173,7 +173,7 @@
                 <small class="text-muted"
                   >{{ comment.created_at|timesince }} ago</small
                 >
-                <p class="mt-2">{{ comment.content|linebreaks }}</p>
+                <div class="mt-2">{{ comment.content|markdown:"comment" }}</div>
               </div>
             </div>
           </div>

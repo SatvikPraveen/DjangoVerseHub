@@ -4,6 +4,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from . import views
+from .feeds import AuthorFeed, CategoryFeed, LatestArticlesAtomFeed, LatestArticlesFeed, TagFeed
 
 app_name = "articles"
 
@@ -14,6 +15,12 @@ router.register(r"categories", views.CategoryViewSet, basename="category")
 router.register(r"tags", views.TagViewSet, basename="tag")
 
 urlpatterns = [
+    # Feeds
+    path("feed/", LatestArticlesFeed(), name="feed"),
+    path("feed/atom/", LatestArticlesAtomFeed(), name="feed_atom"),
+    path("feed/category/<slug:slug>/", CategoryFeed(), name="feed_category"),
+    path("feed/tag/<slug:slug>/", TagFeed(), name="feed_tag"),
+    path("feed/author/<str:username>/", AuthorFeed(), name="feed_author"),
     # Web views
     path("", views.ArticleListView.as_view(), name="list"),
     path("create/", views.ArticleCreateView.as_view(), name="create"),

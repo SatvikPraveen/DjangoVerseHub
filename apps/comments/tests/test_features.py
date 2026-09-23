@@ -391,8 +391,9 @@ class RenderCommentsTagTests(CommentFixtureMixin, TestCase):
         self.comment.toggle_like(self.other_user)
         html = self.render(self.other_user)
         self.assertIn("[removed]", html)
+        # Markdown rendering sanitises user content: the script tag is removed outright.
         self.assertNotIn("<script>alert(1)</script>", html)
-        self.assertIn("&lt;script&gt;", html)
+        self.assertNotIn("alert(1)", html)
         self.assertIn(reverse("comments:reply", kwargs={"comment_id": r1.id}), html)
         self.assertIn("Comments (1)", html)
 
