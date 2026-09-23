@@ -16,14 +16,15 @@ from .base import *  # noqa: F401, F403
 # Database — fast in-memory SQLite
 # ---------------------------------------------------------------------------
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-        'OPTIONS': {
-            'timeout': 20,
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
+        "OPTIONS": {
+            "timeout": 20,
         },
     }
 }
+
 
 # ---------------------------------------------------------------------------
 # Disable migrations for faster setup
@@ -38,21 +39,21 @@ class DisableMigrations:
 
 # Set KEEP_MIGRATIONS=1 to run the real migration graph (used by `make check`,
 # makemigrations, and CI's migration drift check).
-if not config('KEEP_MIGRATIONS', default=False, cast=bool):
+if not config("KEEP_MIGRATIONS", default=False, cast=bool):
     MIGRATION_MODULES = DisableMigrations()
 
 # ---------------------------------------------------------------------------
 # Email — captured in memory, never actually sent
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # ---------------------------------------------------------------------------
 # Cache — local memory, no Redis required
 # ---------------------------------------------------------------------------
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'test-cache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
     }
 }
 
@@ -66,7 +67,7 @@ STATIC_ROOT = tempfile.mkdtemp()
 # Password hashing — fastest available for tests
 # ---------------------------------------------------------------------------
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+    "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
 # ---------------------------------------------------------------------------
@@ -74,24 +75,24 @@ PASSWORD_HASHERS = [
 # ---------------------------------------------------------------------------
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
-CELERY_BROKER_URL = 'memory://'
-CELERY_RESULT_BACKEND = 'cache+memory://'
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
 
 # ---------------------------------------------------------------------------
 # Channels — use in-memory channel layer
 # ---------------------------------------------------------------------------
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
     }
 }
 
 # ---------------------------------------------------------------------------
 # Security (relaxed — test environment only)
 # ---------------------------------------------------------------------------
-SECRET_KEY = 'test-secret-key-not-for-production-do-not-use'
+SECRET_KEY = "test-secret-key-not-for-production-do-not-use"
 DEBUG = False
-ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1"]
 
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
@@ -102,22 +103,22 @@ RATE_LIMIT_ENABLED = False
 # ---------------------------------------------------------------------------
 # Global throttles off; scoped throttles keep their rates so they can be tested explicitly.
 REST_FRAMEWORK = {
-    **globals().get('REST_FRAMEWORK', {}),
-    'DEFAULT_THROTTLE_CLASSES': [],
+    **globals().get("REST_FRAMEWORK", {}),
+    "DEFAULT_THROTTLE_CLASSES": [],
 }
 
 # ---------------------------------------------------------------------------
 # Logging — suppress all except critical errors
 # ---------------------------------------------------------------------------
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'null': {'class': 'logging.NullHandler'},
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "null": {"class": "logging.NullHandler"},
     },
-    'root': {
-        'handlers': ['null'],
-        'level': 'CRITICAL',
+    "root": {
+        "handlers": ["null"],
+        "level": "CRITICAL",
     },
 }
 
@@ -125,7 +126,7 @@ LOGGING = {
 # Misc
 # ---------------------------------------------------------------------------
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024  # 1 MB
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 USE_I18N = True
 USE_TZ = True
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"

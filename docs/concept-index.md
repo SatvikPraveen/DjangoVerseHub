@@ -166,10 +166,10 @@ templates/
 class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
-        fields = ['title', 'content', 'tags', 'category']
+        fields = ["title", "content", "tags", "category"]
         widgets = {
-            'content': RichTextWidget(),
-            'tags': TagWidget(),
+            "content": RichTextWidget(),
+            "tags": TagWidget(),
         }
 
     def clean_title(self):
@@ -216,12 +216,12 @@ class ArticleForm(forms.ModelForm):
 ```python
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'status', 'created_at']
-    list_filter = ['status', 'category', 'created_at']
-    search_fields = ['title', 'content']
-    prepopulated_fields = {'slug': ('title',)}
+    list_display = ["title", "author", "status", "created_at"]
+    list_filter = ["status", "category", "created_at"]
+    search_fields = ["title", "content"]
+    prepopulated_fields = {"slug": ("title",)}
 
-    actions = ['publish_articles', 'unpublish_articles']
+    actions = ["publish_articles", "unpublish_articles"]
 ```
 
 ## Static Files & Media

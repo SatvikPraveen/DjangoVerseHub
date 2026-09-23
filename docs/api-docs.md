@@ -823,17 +823,13 @@ pip install djangoversehub-sdk
 ```python
 from djangoversehub import Client
 
-client = Client(token='your-api-token')
+client = Client(token="your-api-token")
 
 # Get articles
-articles = client.articles.list(category='tutorials')
+articles = client.articles.list(category="tutorials")
 
 # Create article
-article = client.articles.create({
-    'title': 'My New Article',
-    'content': 'Article content...',
-    'status': 'published'
-})
+article = client.articles.create({"title": "My New Article", "content": "Article content...", "status": "published"})
 ```
 
 ### JavaScript SDK

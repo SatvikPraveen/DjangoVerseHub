@@ -3,9 +3,9 @@
 import logging
 import os
 
-from celery import shared_task
-from django.contrib.contenttypes.models import ContentType
 from PIL import Image
+
+from celery import shared_task
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def process_article_images(self, article_id):
     try:
         article = Article.objects.get(id=article_id)
     except Article.DoesNotExist:
-        logger.warning('process_article_images: article %s no longer exists', article_id)
+        logger.warning("process_article_images: article %s no longer exists", article_id)
         return
 
     if not article.featured_image:
@@ -28,16 +28,16 @@ def process_article_images(self, article_id):
         image_path = article.featured_image.path
         if os.path.exists(image_path):
             with Image.open(image_path) as img:
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
 
                 max_size = (1200, 800)
                 if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
                     img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                    img.save(image_path, 'JPEG', quality=85, optimize=True)
-                    logger.info('Processed featured image for article %s', article_id)
+                    img.save(image_path, "JPEG", quality=85, optimize=True)
+                    logger.info("Processed featured image for article %s", article_id)
     except Exception as exc:
-        logger.error('Failed to process images for article %s: %s', article_id, exc)
+        logger.error("Failed to process images for article %s: %s", article_id, exc)
         raise self.retry(countdown=60, exc=exc)
 
 
@@ -51,10 +51,11 @@ def cleanup_unused_media():
     from .models import Article
 
     used_images = set(
-        Article.objects.exclude(featured_image='').exclude(featured_image__isnull=True)
-        .values_list('featured_image', flat=True)
+        Article.objects.exclude(featured_image="")
+        .exclude(featured_image__isnull=True)
+        .values_list("featured_image", flat=True)
     )
-    logger.info('cleanup_unused_media: %d featured images in use', len(used_images))
+    logger.info("cleanup_unused_media: %d featured images in use", len(used_images))
     return 0
 
 
@@ -66,9 +67,9 @@ def update_trending_articles():
     try:
         ArticleCacheManager.cache_popular_articles()
         ArticleCacheManager.cache_featured_articles()
-        logger.info('Refreshed article caches')
+        logger.info("Refreshed article caches")
     except Exception as e:
-        logger.error('Failed to refresh article caches: %s', e)
+        logger.error("Failed to refresh article caches: %s", e)
 
 
 @shared_task(bind=True, max_retries=3)
@@ -84,10 +85,10 @@ def generate_article_preview(self, article_id):
     if not article.summary and article.content:
         summary = article.content[:200].strip()
         if len(article.content) > 200:
-            summary += '...'
+            summary += "..."
         # update_fields keeps this from creating a revision for a purely derived change
         Article.objects.filter(pk=article.pk).update(summary=summary)
-        logger.info('Generated summary for article %s', article_id)
+        logger.info("Generated summary for article %s", article_id)
 
 
 @shared_task
@@ -118,9 +119,9 @@ def notify_followers(author_id, article_id):
     notifications = notify(
         author.followers.filter(is_active=True),
         author,
-        'post',
+        "post",
         f'{author.get_full_name() or author.username} published a new article: "{article.title}"',
         target=article,
     )
-    logger.info('Notified %d followers about article %s', len(notifications), article_id)
+    logger.info("Notified %d followers about article %s", len(notifications), article_id)
     return len(notifications)

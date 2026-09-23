@@ -6,38 +6,37 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
-
 # ---------------------------------------------------------------------------
 # Notification types
 # ---------------------------------------------------------------------------
 NOTIFICATION_TYPES = [
-    ('like', 'Like'),
-    ('comment', 'Comment'),
-    ('follow', 'Follow'),
-    ('mention', 'Mention'),
-    ('post', 'New Post'),
-    ('system', 'System'),
+    ("like", "Like"),
+    ("comment", "Comment"),
+    ("follow", "Follow"),
+    ("mention", "Mention"),
+    ("post", "New Post"),
+    ("system", "System"),
 ]
 
 # Types a user can opt in/out of. 'system' notifications are always delivered.
-CONFIGURABLE_TYPES = ['like', 'comment', 'follow', 'mention', 'post']
+CONFIGURABLE_TYPES = ["like", "comment", "follow", "mention", "post"]
 
 # Presentation hints used by the navbar dropdown and the JS client.
 TYPE_ICONS = {
-    'like': 'heart-fill',
-    'comment': 'chat-fill',
-    'follow': 'person-plus-fill',
-    'mention': 'at',
-    'post': 'file-earmark-text-fill',
-    'system': 'gear-fill',
+    "like": "heart-fill",
+    "comment": "chat-fill",
+    "follow": "person-plus-fill",
+    "mention": "at",
+    "post": "file-earmark-text-fill",
+    "system": "gear-fill",
 }
 TYPE_COLORS = {
-    'like': 'danger',
-    'comment': 'primary',
-    'follow': 'success',
-    'mention': 'warning',
-    'post': 'info',
-    'system': 'secondary',
+    "like": "danger",
+    "comment": "primary",
+    "follow": "success",
+    "mention": "warning",
+    "post": "info",
+    "system": "secondary",
 }
 
 
@@ -59,7 +58,7 @@ class NotificationQuerySet(models.QuerySet):
 
     def with_related(self):
         """Everything a list page needs without per-row queries."""
-        return self.select_related('sender', 'sender__profile', 'content_type')
+        return self.select_related("sender", "sender__profile", "content_type")
 
     def mark_all_read(self):
         """Mark every unread notification in this queryset as read. Returns count."""
@@ -75,8 +74,9 @@ class NotificationManager(models.Manager.from_queryset(NotificationQuerySet)):
         """Mark all of `user`'s unread notifications as read. Returns count."""
         return self.get_queryset().for_user(user).mark_all_read()
 
-    def notify(self, recipients, sender, notification_type, message, target=None,
-               dedupe=True, respect_preferences=True):
+    def notify(
+        self, recipients, sender, notification_type, message, target=None, dedupe=True, respect_preferences=True
+    ):
         """
         Bulk-create one notification per recipient.
 
@@ -91,11 +91,11 @@ class NotificationManager(models.Manager.from_queryset(NotificationQuerySet)):
         """
         if recipients is None:
             return []
-        if hasattr(recipients, 'pk') and not hasattr(recipients, '__iter__'):
+        if hasattr(recipients, "pk") and not hasattr(recipients, "__iter__"):
             recipients = [recipients]
 
         recipients = list(recipients)
-        sender_id = getattr(sender, 'pk', None)
+        sender_id = getattr(sender, "pk", None)
 
         # Never notify yourself; drop duplicates in the recipient list.
         seen = set()
@@ -117,8 +117,8 @@ class NotificationManager(models.Manager.from_queryset(NotificationQuerySet)):
         if respect_preferences and notification_type in CONFIGURABLE_TYPES:
             blocked = set(
                 NotificationPreference.objects.filter(
-                    user__in=unique, **{f'in_app_{notification_type}': False}
-                ).values_list('user_id', flat=True)
+                    user__in=unique, **{f"in_app_{notification_type}": False}
+                ).values_list("user_id", flat=True)
             )
             unique = [u for u in unique if u.pk not in blocked]
             if not unique:
@@ -126,14 +126,16 @@ class NotificationManager(models.Manager.from_queryset(NotificationQuerySet)):
 
         if dedupe:
             existing = set(
-                self.get_queryset().filter(
+                self.get_queryset()
+                .filter(
                     recipient__in=unique,
                     sender_id=sender_id,
                     notification_type=notification_type,
                     content_type=content_type,
                     object_id=object_id,
                     is_read=False,
-                ).values_list('recipient_id', flat=True)
+                )
+                .values_list("recipient_id", flat=True)
             )
             unique = [u for u in unique if u.pk not in existing]
             if not unique:
@@ -159,12 +161,13 @@ class NotificationManager(models.Manager.from_queryset(NotificationQuerySet)):
 class Notification(models.Model):
     NOTIFICATION_TYPES = NOTIFICATION_TYPES
 
-    recipient = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications'
-    )
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
     sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name='sent_notifications', null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_notifications",
+        null=True,
+        blank=True,
     )
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
     message = models.TextField()
@@ -172,7 +175,7 @@ class Notification(models.Model):
     # Generic foreign key for related object (CharField supports both int and UUID PKs)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.UUIDField(null=True, blank=True)
-    content_object = GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey("content_type", "object_id")
 
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -181,27 +184,27 @@ class Notification(models.Model):
     objects = NotificationManager()
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['recipient', '-created_at']),
-            models.Index(fields=['recipient', 'is_read']),
-            models.Index(fields=['is_read', 'created_at']),
+            models.Index(fields=["recipient", "-created_at"]),
+            models.Index(fields=["recipient", "is_read"]),
+            models.Index(fields=["is_read", "created_at"]),
         ]
 
     def __str__(self):
-        return f'{self.notification_type} notification for {self.recipient.username}'
+        return f"{self.notification_type} notification for {self.recipient.username}"
 
     def mark_as_read(self):
         if not self.is_read:
             self.is_read = True
             self.read_at = timezone.now()
-            self.save(update_fields=['is_read', 'read_at'])
+            self.save(update_fields=["is_read", "read_at"])
 
     def mark_as_unread(self):
         if self.is_read:
             self.is_read = False
             self.read_at = None
-            self.save(update_fields=['is_read', 'read_at'])
+            self.save(update_fields=["is_read", "read_at"])
 
     # -- presentation helpers (used by templates and the serializer) ----------
     @property
@@ -211,11 +214,11 @@ class Notification(models.Model):
 
     @property
     def icon(self):
-        return TYPE_ICONS.get(self.notification_type, 'bell-fill')
+        return TYPE_ICONS.get(self.notification_type, "bell-fill")
 
     @property
     def color(self):
-        return TYPE_COLORS.get(self.notification_type, 'primary')
+        return TYPE_COLORS.get(self.notification_type, "primary")
 
     @property
     def target(self):
@@ -231,13 +234,13 @@ class Notification(models.Model):
     def url(self):
         """Where clicking the notification should take the user."""
         target = self.target
-        get_url = getattr(target, 'get_absolute_url', None)
+        get_url = getattr(target, "get_absolute_url", None)
         if callable(get_url):
             try:
                 return get_url()
             except Exception:
                 pass
-        return reverse('notifications:list')
+        return reverse("notifications:list")
 
 
 # ---------------------------------------------------------------------------
@@ -253,30 +256,30 @@ class NotificationPreference(models.Model):
     - `Profile.email_notifications` remains the master switch for any email.
     """
 
-    DIGEST_NONE = 'none'
-    DIGEST_DAILY = 'daily'
-    DIGEST_WEEKLY = 'weekly'
+    DIGEST_NONE = "none"
+    DIGEST_DAILY = "daily"
+    DIGEST_WEEKLY = "weekly"
     DIGEST_CHOICES = [
-        (DIGEST_NONE, 'Never (send each email immediately)'),
-        (DIGEST_DAILY, 'Daily digest'),
-        (DIGEST_WEEKLY, 'Weekly digest'),
+        (DIGEST_NONE, "Never (send each email immediately)"),
+        (DIGEST_DAILY, "Daily digest"),
+        (DIGEST_WEEKLY, "Weekly digest"),
     ]
 
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notification_preferences'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notification_preferences"
     )
 
-    in_app_like = models.BooleanField('Likes (in-app)', default=True)
-    in_app_comment = models.BooleanField('Comments and replies (in-app)', default=True)
-    in_app_follow = models.BooleanField('New followers (in-app)', default=True)
-    in_app_mention = models.BooleanField('Mentions (in-app)', default=True)
-    in_app_post = models.BooleanField('New posts from people you follow (in-app)', default=True)
+    in_app_like = models.BooleanField("Likes (in-app)", default=True)
+    in_app_comment = models.BooleanField("Comments and replies (in-app)", default=True)
+    in_app_follow = models.BooleanField("New followers (in-app)", default=True)
+    in_app_mention = models.BooleanField("Mentions (in-app)", default=True)
+    in_app_post = models.BooleanField("New posts from people you follow (in-app)", default=True)
 
-    email_like = models.BooleanField('Likes (email)', default=False)
-    email_comment = models.BooleanField('Comments and replies (email)', default=True)
-    email_follow = models.BooleanField('New followers (email)', default=True)
-    email_mention = models.BooleanField('Mentions (email)', default=True)
-    email_post = models.BooleanField('New posts from people you follow (email)', default=False)
+    email_like = models.BooleanField("Likes (email)", default=False)
+    email_comment = models.BooleanField("Comments and replies (email)", default=True)
+    email_follow = models.BooleanField("New followers (email)", default=True)
+    email_mention = models.BooleanField("Mentions (email)", default=True)
+    email_post = models.BooleanField("New posts from people you follow (email)", default=False)
 
     digest_frequency = models.CharField(max_length=10, choices=DIGEST_CHOICES, default=DIGEST_DAILY)
 
@@ -284,11 +287,11 @@ class NotificationPreference(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Notification preference'
-        verbose_name_plural = 'Notification preferences'
+        verbose_name = "Notification preference"
+        verbose_name_plural = "Notification preferences"
 
     def __str__(self):
-        return f'Notification preferences for {self.user.username}'
+        return f"Notification preferences for {self.user.username}"
 
     @classmethod
     def for_user(cls, user):
@@ -298,15 +301,15 @@ class NotificationPreference(models.Model):
     def allows_in_app(self, notification_type):
         if notification_type not in CONFIGURABLE_TYPES:
             return True
-        return getattr(self, f'in_app_{notification_type}', True)
+        return getattr(self, f"in_app_{notification_type}", True)
 
     def allows_email(self, notification_type):
-        profile = getattr(self.user, 'profile', None)
+        profile = getattr(self.user, "profile", None)
         if profile is not None and not profile.email_notifications:
             return False
         if notification_type not in CONFIGURABLE_TYPES:
             return True
-        return getattr(self, f'email_{notification_type}', False)
+        return getattr(self, f"email_{notification_type}", False)
 
     @property
     def wants_immediate_email(self):
@@ -314,4 +317,4 @@ class NotificationPreference(models.Model):
 
     def email_types(self):
         """Notification types this user wants by email (ignoring the master switch)."""
-        return [t for t in CONFIGURABLE_TYPES if getattr(self, f'email_{t}', False)] + ['system']
+        return [t for t in CONFIGURABLE_TYPES if getattr(self, f"email_{t}", False)] + ["system"]

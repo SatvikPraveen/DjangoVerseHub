@@ -6,9 +6,9 @@ All tests in the project automatically pick up this conftest, so no
 per-test-file DJANGO_SETTINGS_MODULE override is needed.
 """
 
-import django
 import pytest
-from django.conf import settings
+
+import django
 
 
 # ---------------------------------------------------------------------------
@@ -17,9 +17,10 @@ from django.conf import settings
 def pytest_configure(config):
     """Called before pytest collects tests — configure Django settings."""
     import os
+
     os.environ.setdefault(
-        'DJANGO_SETTINGS_MODULE',
-        'django_verse_hub.settings.test',
+        "DJANGO_SETTINGS_MODULE",
+        "django_verse_hub.settings.test",
     )
     django.setup()
 
@@ -28,10 +29,12 @@ def pytest_configure(config):
 # Shared fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def api_client():
     """DRF APIClient instance ready for use."""
     from rest_framework.test import APIClient
+
     return APIClient()
 
 
@@ -39,11 +42,12 @@ def api_client():
 def user(db):
     """A regular active user created with the custom user manager."""
     from django.contrib.auth import get_user_model
+
     User = get_user_model()
     return User.objects.create_user(
-        email='fixture@example.com',
-        password='testpass123',
-        username='fixtureuser',
+        email="fixture@example.com",
+        password="testpass123",
+        username="fixtureuser",
     )
 
 
@@ -51,11 +55,12 @@ def user(db):
 def staff_user(db):
     """A staff user."""
     from django.contrib.auth import get_user_model
+
     User = get_user_model()
     return User.objects.create_user(
-        email='staff@example.com',
-        password='testpass123',
-        username='staffuser',
+        email="staff@example.com",
+        password="testpass123",
+        username="staffuser",
         is_staff=True,
     )
 

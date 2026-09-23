@@ -10,15 +10,15 @@ human moderator by ``should_flag``.
 import re
 
 SPAM_PATTERNS = [
-    re.compile(r'https?://\S+', re.IGNORECASE),  # URLs
-    re.compile(r'\bwww\.\S+', re.IGNORECASE),
-    re.compile(r'\b(buy now|discount|cheap|prize|casino|lottery)\b', re.IGNORECASE),
-    re.compile(r'(.)\1{5,}'),  # the same character repeated 6+ times
+    re.compile(r"https?://\S+", re.IGNORECASE),  # URLs
+    re.compile(r"\bwww\.\S+", re.IGNORECASE),
+    re.compile(r"\b(buy now|discount|cheap|prize|casino|lottery)\b", re.IGNORECASE),
+    re.compile(r"(.)\1{5,}"),  # the same character repeated 6+ times
 ]
 
-INAPPROPRIATE_WORDS = ['scam', 'stupid', 'idiot']
+INAPPROPRIATE_WORDS = ["scam", "stupid", "idiot"]
 _INAPPROPRIATE_RE = re.compile(
-    r'\b(' + '|'.join(re.escape(w) for w in INAPPROPRIATE_WORDS) + r')\b',
+    r"\b(" + "|".join(re.escape(w) for w in INAPPROPRIATE_WORDS) + r")\b",
     re.IGNORECASE,
 )
 

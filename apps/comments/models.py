@@ -18,17 +18,18 @@ User = get_user_model()
 
 # Maximum nesting depth of a thread. Root comments have depth 0, so with
 # MAX_THREAD_DEPTH = 3 a thread is root -> reply -> reply -> reply.
-MAX_THREAD_DEPTH = getattr(settings, 'COMMENTS_MAX_THREAD_DEPTH', 3)
+MAX_THREAD_DEPTH = getattr(settings, "COMMENTS_MAX_THREAD_DEPTH", 3)
 
 
 def get_flag_threshold():
     """Distinct users that must flag a comment before it is marked flagged."""
-    return getattr(settings, 'COMMENTS_FLAG_THRESHOLD', 3)
+    return getattr(settings, "COMMENTS_FLAG_THRESHOLD", 3)
+
 
 # Authors may edit their own comment for this long after posting.
-EDIT_WINDOW = timedelta(minutes=getattr(settings, 'COMMENTS_EDIT_WINDOW_MINUTES', 15))
+EDIT_WINDOW = timedelta(minutes=getattr(settings, "COMMENTS_EDIT_WINDOW_MINUTES", 15))
 
-REMOVED_PLACEHOLDER = '[removed]'
+REMOVED_PLACEHOLDER = "[removed]"
 
 
 def target_accepts_comments(obj):
@@ -40,12 +41,10 @@ def target_accepts_comments(obj):
     """
     if obj is None:
         return False
-    if not getattr(obj, 'allow_comments', True):
+    if not getattr(obj, "allow_comments", True):
         return False
-    status = getattr(obj, 'status', None)
-    if status is not None and status != 'published':
-        return False
-    return True
+    status = getattr(obj, "status", None)
+    return not (status is not None and status != "published")
 
 
 def build_comment_tree(comments):
@@ -109,7 +108,7 @@ def annotate_total_replies(comments):
         is_active=True,
         content_type_id__in={ct for ct, _ in targets},
         object_id__in={oid for _, oid in targets},
-    ).values_list('id', 'parent_id')
+    ).values_list("id", "parent_id")
     children = defaultdict(list)
     for comment_id, parent_id in rows:
         children[parent_id].append(comment_id)
@@ -133,7 +132,7 @@ class CommentQuerySet(models.QuerySet):
         return self.filter(content_type=content_type, object_id=str(obj.pk))
 
     def with_author(self):
-        return self.select_related('author', 'author__profile')
+        return self.select_related("author", "author__profile")
 
 
 class CommentManager(models.Manager.from_queryset(CommentQuerySet)):
@@ -174,37 +173,34 @@ class Comment(models.Model):
 
     # Generic foreign key to allow comments on any model
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.UUIDField(db_index=True, help_text='Primary key of the target; all commentable models use UUID keys.')
-    content_object = GenericForeignKey('content_type', 'object_id')
+    object_id = models.UUIDField(
+        db_index=True, help_text="Primary key of the target; all commentable models use UUID keys."
+    )
+    content_object = GenericForeignKey("content_type", "object_id")
 
     # Comment details
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments',
-        verbose_name=_('author')
-    )
-    content = models.TextField(_('content'), max_length=1000)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments", verbose_name=_("author"))
+    content = models.TextField(_("content"), max_length=1000)
 
     # Threading support
     parent = models.ForeignKey(
-        'self',
+        "self",
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        related_name='replies',
-        verbose_name=_('parent comment')
+        related_name="replies",
+        verbose_name=_("parent comment"),
     )
     # Denormalised nesting level (0 = root). Maintained in save().
-    depth = models.PositiveSmallIntegerField(_('depth'), default=0, editable=False)
+    depth = models.PositiveSmallIntegerField(_("depth"), default=0, editable=False)
 
     # Status and moderation
-    is_active = models.BooleanField(_('active'), default=True)
-    is_flagged = models.BooleanField(_('flagged'), default=False)
-    is_edited = models.BooleanField(_('edited'), default=False)
+    is_active = models.BooleanField(_("active"), default=True)
+    is_flagged = models.BooleanField(_("flagged"), default=False)
+    is_edited = models.BooleanField(_("edited"), default=False)
 
     # Engagement
-    likes_count = models.PositiveIntegerField(_('likes count'), default=0)
+    likes_count = models.PositiveIntegerField(_("likes count"), default=0)
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -213,18 +209,18 @@ class Comment(models.Model):
     objects = CommentManager()
 
     class Meta:
-        verbose_name = _('Comment')
-        verbose_name_plural = _('Comments')
-        ordering = ['created_at']
-        db_table = 'comments_comment'
+        verbose_name = _("Comment")
+        verbose_name_plural = _("Comments")
+        ordering = ["created_at"]
+        db_table = "comments_comment"
         indexes = [
-            models.Index(fields=['content_type', 'object_id', 'is_active']),
-            models.Index(fields=['parent', 'created_at']),
-            models.Index(fields=['author', '-created_at']),
+            models.Index(fields=["content_type", "object_id", "is_active"]),
+            models.Index(fields=["parent", "created_at"]),
+            models.Index(fields=["author", "-created_at"]),
         ]
 
     def __str__(self):
-        return f'{self.author.get_full_name()}: {self.content[:50]}...'
+        return f"{self.author.get_full_name()}: {self.content[:50]}..."
 
     # ------------------------------------------------------------------
     # Validation / persistence
@@ -240,12 +236,11 @@ class Comment(models.Model):
         if self.parent_id is not None:
             parent = self.parent
             if parent.pk == self.pk:
-                raise ValidationError(_('A comment cannot be its own parent'))
-            if (parent.content_type_id != self.content_type_id
-                    or str(parent.object_id) != str(self.object_id)):
-                raise ValidationError(_('Parent comment must be on the same object'))
+                raise ValidationError(_("A comment cannot be its own parent"))
+            if parent.content_type_id != self.content_type_id or str(parent.object_id) != str(self.object_id):
+                raise ValidationError(_("Parent comment must be on the same object"))
             if self.compute_depth() > MAX_THREAD_DEPTH:
-                raise ValidationError(_('Comment thread too deep'))
+                raise ValidationError(_("Comment thread too deep"))
 
     def save(self, *args, **kwargs):
         self.depth = self.compute_depth()
@@ -254,9 +249,9 @@ class Comment(models.Model):
 
     def get_absolute_url(self):
         target = self.content_object
-        if target is not None and hasattr(target, 'get_absolute_url'):
+        if target is not None and hasattr(target, "get_absolute_url"):
             return f"{target.get_absolute_url()}#comment-{self.id}"
-        return reverse('comments:list')
+        return reverse("comments:list")
 
     # ------------------------------------------------------------------
     # Threading helpers
@@ -274,10 +269,10 @@ class Comment(models.Model):
     @property
     def reply_count(self):
         """Number of direct active replies (uses annotation when present)."""
-        annotated = getattr(self, 'active_reply_count', None)
+        annotated = getattr(self, "active_reply_count", None)
         if annotated is not None:
             return annotated
-        if hasattr(self, 'child_nodes'):
+        if hasattr(self, "child_nodes"):
             return len([c for c in self.child_nodes if not c.is_placeholder])
         return self.replies.filter(is_active=True).count()
 
@@ -289,14 +284,14 @@ class Comment(models.Model):
         Uses the value computed by ``build_comment_tree`` when available,
         otherwise fetches all comments on the object in a single query.
         """
-        cached = getattr(self, '_total_replies', None)
+        cached = getattr(self, "_total_replies", None)
         if cached is not None:
             return cached
         rows = Comment.objects.filter(
             content_type_id=self.content_type_id,
             object_id=self.object_id,
             is_active=True,
-        ).values_list('id', 'parent_id')
+        ).values_list("id", "parent_id")
         children = defaultdict(list)
         for comment_id, parent_id in rows:
             children[parent_id].append(comment_id)
@@ -316,26 +311,25 @@ class Comment(models.Model):
 
     def get_replies_tree(self):
         """Get nested replies as a tree structure (single query)."""
-        if not hasattr(self, 'child_nodes'):
-            comments = list(Comment.objects.filter(
-                content_type_id=self.content_type_id,
-                object_id=self.object_id,
-            ).with_author())
+        if not hasattr(self, "child_nodes"):
+            comments = list(
+                Comment.objects.filter(
+                    content_type_id=self.content_type_id,
+                    object_id=self.object_id,
+                ).with_author()
+            )
             # build_comment_tree attaches child_nodes onto the fetched instances
             build_comment_tree(comments)
             me = next((c for c in comments if c.id == self.id), None)
             self.child_nodes = me.child_nodes if me else []
-        return [
-            {'comment': reply, 'replies': reply.get_replies_tree()}
-            for reply in self.child_nodes
-        ]
+        return [{"comment": reply, "replies": reply.get_replies_tree()} for reply in self.child_nodes]
 
     # ------------------------------------------------------------------
     # Permissions
     # ------------------------------------------------------------------
     def can_edit(self, user):
         """Staff can always edit; authors only within the edit window."""
-        if not getattr(user, 'is_authenticated', False):
+        if not getattr(user, "is_authenticated", False):
             return False
         if user.is_staff or user.is_superuser:
             return True
@@ -345,7 +339,7 @@ class Comment(models.Model):
 
     def can_delete(self, user):
         """Authors and staff can delete."""
-        if not getattr(user, 'is_authenticated', False):
+        if not getattr(user, "is_authenticated", False):
             return False
         return user.pk == self.author_id or user.is_staff or user.is_superuser
 
@@ -355,27 +349,27 @@ class Comment(models.Model):
     def mark_as_edited(self):
         """Mark comment as edited"""
         self.is_edited = True
-        self.save(update_fields=['is_edited', 'updated_at'])
+        self.save(update_fields=["is_edited", "updated_at"])
 
     def flag(self):
         """Mark the comment as flagged for moderation."""
         if not self.is_flagged:
             self.is_flagged = True
-            self.save(update_fields=['is_flagged'])
+            self.save(update_fields=["is_flagged"])
 
-    def add_flag(self, user, reason='other', details=''):
+    def add_flag(self, user, reason="other", details=""):
         """
         Record a flag by ``user``. The comment becomes flagged once
         COMMENTS_FLAG_THRESHOLD distinct users have flagged it (staff flags
         count immediately). Returns (flag, created).
         """
         flag, created = CommentFlag.objects.get_or_create(
-            comment=self, user=user,
-            defaults={'reason': reason, 'details': details},
+            comment=self,
+            user=user,
+            defaults={"reason": reason, "details": details},
         )
-        if created and not self.is_flagged:
-            if user.is_staff or self.flags.count() >= get_flag_threshold():
-                self.flag()
+        if created and not self.is_flagged and (user.is_staff or self.flags.count() >= get_flag_threshold()):
+            self.flag()
         return flag, created
 
     def toggle_like(self, user):
@@ -389,72 +383,64 @@ class Comment(models.Model):
             like, created = CommentLike.objects.get_or_create(comment=self, user=user)
             if not created:
                 like.delete()
-        self.refresh_from_db(fields=['likes_count'])
+        self.refresh_from_db(fields=["likes_count"])
         return created, self.likes_count
 
     def soft_delete(self):
         """Soft delete comment"""
         self.is_active = False
-        self.content = '[Comment deleted]'
-        self.save(update_fields=['is_active', 'content', 'updated_at'])
+        self.content = "[Comment deleted]"
+        self.save(update_fields=["is_active", "content", "updated_at"])
 
     def restore(self):
         """Re-activate a hidden comment (moderation)."""
         self.is_active = True
         self.is_flagged = False
-        self.save(update_fields=['is_active', 'is_flagged', 'updated_at'])
+        self.save(update_fields=["is_active", "is_flagged", "updated_at"])
 
 
 class CommentLike(models.Model):
     """Like model for comments"""
 
-    comment = models.ForeignKey(
-        Comment,
-        on_delete=models.CASCADE,
-        related_name='likes'
-    )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comment_likes'
-    )
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="likes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment_likes")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = _('Comment Like')
-        verbose_name_plural = _('Comment Likes')
-        unique_together = ['comment', 'user']
-        db_table = 'comments_commentlike'
+        verbose_name = _("Comment Like")
+        verbose_name_plural = _("Comment Likes")
+        unique_together = ["comment", "user"]
+        db_table = "comments_commentlike"
 
     def __str__(self):
-        return f'{self.user.get_full_name()} likes {self.comment}'
+        return f"{self.user.get_full_name()} likes {self.comment}"
 
 
 class CommentFlag(models.Model):
     """A report filed by a user against a comment."""
 
     class Reason(models.TextChoices):
-        SPAM = 'spam', _('Spam')
-        OFFENSIVE = 'offensive', _('Offensive language')
-        HARASSMENT = 'harassment', _('Harassment')
-        OFF_TOPIC = 'off_topic', _('Off topic')
-        COPYRIGHT = 'copyright', _('Copyright violation')
-        OTHER = 'other', _('Other')
+        SPAM = "spam", _("Spam")
+        OFFENSIVE = "offensive", _("Offensive language")
+        HARASSMENT = "harassment", _("Harassment")
+        OFF_TOPIC = "off_topic", _("Off topic")
+        COPYRIGHT = "copyright", _("Copyright violation")
+        OTHER = "other", _("Other")
 
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='flags')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comment_flags')
-    reason = models.CharField(_('reason'), max_length=20, choices=Reason.choices, default=Reason.OTHER)
-    details = models.CharField(_('details'), max_length=500, blank=True)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="flags")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment_flags")
+    reason = models.CharField(_("reason"), max_length=20, choices=Reason.choices, default=Reason.OTHER)
+    details = models.CharField(_("details"), max_length=500, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = _('Comment Flag')
-        verbose_name_plural = _('Comment Flags')
-        db_table = 'comments_commentflag'
+        verbose_name = _("Comment Flag")
+        verbose_name_plural = _("Comment Flags")
+        db_table = "comments_commentflag"
         constraints = [
-            models.UniqueConstraint(fields=['comment', 'user'], name='unique_comment_flag_per_user'),
+            models.UniqueConstraint(fields=["comment", "user"], name="unique_comment_flag_per_user"),
         ]
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f'{self.user} flagged {self.comment_id} ({self.reason})'
+        return f"{self.user} flagged {self.comment_id} ({self.reason})"

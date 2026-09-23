@@ -2,53 +2,55 @@
 
 import os
 import uuid
+from io import BytesIO
 from typing import ClassVar
+
+from PIL import Image
+
 from django.contrib.auth.models import AbstractUser
+from django.core.files.base import ContentFile
+from django.core.validators import MaxLengthValidator, URLValidator
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
-from django.core.validators import URLValidator, MaxLengthValidator
 from django.utils import timezone
-from PIL import Image
-from io import BytesIO
-from django.core.files.base import ContentFile
+from django.utils.translation import gettext_lazy as _
 
 from .managers import CustomUserManager, ProfileManager
 
 
 class CustomUser(AbstractUser):
     """Custom User model with email as username field"""
-    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(_('email address'), unique=True)
+    email = models.EmailField(_("email address"), unique=True)
     username = models.CharField(max_length=150, unique=True)
-    first_name = models.CharField(_('first name'), max_length=30, blank=True)
-    last_name = models.CharField(_('last name'), max_length=30, blank=True)
-    
+    first_name = models.CharField(_("first name"), max_length=30, blank=True)
+    last_name = models.CharField(_("last name"), max_length=30, blank=True)
+
     # Additional fields
     email_verified = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=15, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     login_count = models.PositiveIntegerField(default=0)
-    
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
 
     objects: ClassVar[CustomUserManager] = CustomUserManager()  # type: ignore[assignment]
 
     class Meta:
-        db_table = 'users_customuser'
-        verbose_name = _('User')
-        verbose_name_plural = _('Users')
-        ordering = ['-date_joined']
+        db_table = "users_customuser"
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
+        ordering = ["-date_joined"]
 
     def __str__(self):
         return self.email
 
     def get_absolute_url(self):
-        return reverse('users:profile', kwargs={'pk': self.pk})
-    
+        return reverse("users:profile", kwargs={"pk": self.pk})
+
     @property
     def followers(self):
         """Users who follow this user."""
@@ -68,7 +70,7 @@ class CustomUser(AbstractUser):
         return self.following_set.count()
 
     def is_following(self, other):
-        if other is None or not getattr(other, 'pk', None):
+        if other is None or not getattr(other, "pk", None):
             return False
         return self.following_set.filter(following=other).exists()
 
@@ -83,109 +85,109 @@ class CustomUser(AbstractUser):
 
     def get_full_name(self):
         """Return the first_name plus the last_name, with a space in between"""
-        full_name = f'{self.first_name} {self.last_name}'
+        full_name = f"{self.first_name} {self.last_name}"
         return full_name.strip()
 
     def get_short_name(self):
         """Return the short name for the user"""
         return self.first_name or self.username
-    
+
     @property
     def is_verified(self):
         """Check if user has verified email"""
         return self.email_verified
-    
+
     def update_login_stats(self, ip_address=None):
         """Update login statistics"""
         self.login_count += 1
         self.last_login_ip = ip_address
         self.last_login = timezone.now()
-        self.save(update_fields=['login_count', 'last_login_ip', 'last_login'])
+        self.save(update_fields=["login_count", "last_login_ip", "last_login"])
 
 
 class Profile(models.Model):
     """User profile model with additional information"""
-    
+
     GENDER_CHOICES = [
-        ('M', 'Male'),
-        ('F', 'Female'),
-        ('O', 'Other'),
-        ('N', 'Prefer not to say'),
+        ("M", "Male"),
+        ("F", "Female"),
+        ("O", "Other"),
+        ("N", "Prefer not to say"),
     ]
-    
+
     THEME_CHOICES = [
-        ('light', 'Light'),
-        ('dark', 'Dark'),
-        ('auto', 'Auto'),
+        ("light", "Light"),
+        ("dark", "Dark"),
+        ("auto", "Auto"),
     ]
-    
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="profile")
     full_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=500, blank=True, validators=[MaxLengthValidator(500)])
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    cover_image = models.ImageField(upload_to='covers/', null=True, blank=True)
-    
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+    cover_image = models.ImageField(upload_to="covers/", null=True, blank=True)
+
     # Personal information
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     location = models.CharField(max_length=100, blank=True)
     website = models.URLField(blank=True, validators=[URLValidator()])
-    
+
     # Social links
     twitter = models.URLField(blank=True)
     linkedin = models.URLField(blank=True)
     github = models.URLField(blank=True)
-    
+
     # Preferences
-    theme = models.CharField(max_length=10, choices=THEME_CHOICES, default='light')
-    timezone = models.CharField(max_length=50, default='UTC')
-    language = models.CharField(max_length=10, default='en')
-    
+    theme = models.CharField(max_length=10, choices=THEME_CHOICES, default="light")
+    timezone = models.CharField(max_length=50, default="UTC")
+    language = models.CharField(max_length=10, default="en")
+
     # Privacy settings
     is_public = models.BooleanField(default=True)
     show_email = models.BooleanField(default=False)
     show_real_name = models.BooleanField(default=True)
-    
+
     # Notification preferences
     email_notifications = models.BooleanField(default=True)
     push_notifications = models.BooleanField(default=True)
     marketing_emails = models.BooleanField(default=False)
-    
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     objects = ProfileManager()
 
     class Meta:
-        db_table = 'users_profile'
-        verbose_name = _('Profile')
-        verbose_name_plural = _('Profiles')
-        ordering = ['-created_at']
+        db_table = "users_profile"
+        verbose_name = _("Profile")
+        verbose_name_plural = _("Profiles")
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.user.username}'s profile"
 
     def get_absolute_url(self):
-        return reverse('users:profile', kwargs={'pk': self.user.pk})
-    
+        return reverse("users:profile", kwargs={"pk": self.user.pk})
+
     @property
     def display_name(self):
         """Get the display name for the user"""
         if self.full_name and self.show_real_name:
             return self.full_name
         return self.user.username
-    
+
     @property
     def avatar_url(self):
         """Get avatar URL or default"""
-        if self.avatar and hasattr(self.avatar, 'url'):
+        if self.avatar and hasattr(self.avatar, "url"):
             return self.avatar.url
-        return '/static/images/default-avatar.png'
+        return "/static/images/default-avatar.png"
 
     def get_avatar_url(self):
         """Return avatar URL as a callable method (used by serializers and templates)"""
         return self.avatar_url
-    
+
     def save(self, *args, **kwargs):
         """Resize newly uploaded images before persisting the row.
 
@@ -194,16 +196,12 @@ class Profile(models.Model):
         """
         previous = {}
         if self.pk:
-            previous = (
-                Profile.objects.filter(pk=self.pk)
-                .values('avatar', 'cover_image')
-                .first()
-            ) or {}
+            previous = (Profile.objects.filter(pk=self.pk).values("avatar", "cover_image").first()) or {}
 
-        if self.avatar and self.avatar.name != previous.get('avatar'):
+        if self.avatar and self.avatar.name != previous.get("avatar"):
             self._resize_image(self.avatar, (300, 300))
 
-        if self.cover_image and self.cover_image.name != previous.get('cover_image'):
+        if self.cover_image and self.cover_image.name != previous.get("cover_image"):
             self._resize_image(self.cover_image, (1200, 400))
 
         super().save(*args, **kwargs)
@@ -212,19 +210,19 @@ class Profile(models.Model):
     def _resize_image(image_field, size):
         """Resize an (uncommitted) image field in place, converting to JPEG."""
         try:
-            image_field.open('rb')
+            image_field.open("rb")
             img = Image.open(image_field.file)
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
+            if img.mode != "RGB":
+                img = img.convert("RGB")
 
             img.thumbnail(size, Image.Resampling.LANCZOS)
 
             output = BytesIO()
-            img.save(output, format='JPEG', quality=85, optimize=True)
+            img.save(output, format="JPEG", quality=85, optimize=True)
 
             base, _ext = os.path.splitext(os.path.basename(image_field.name))
             # save=False: the model row is written by the caller.
-            image_field.save(f'{base}.jpg', ContentFile(output.getvalue()), save=False)
+            image_field.save(f"{base}.jpg", ContentFile(output.getvalue()), save=False)
         except Exception:
             # If image processing fails, keep the original upload untouched.
             pass
@@ -236,35 +234,35 @@ class Follow(models.Model):
     follower = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name='following_set',
-        help_text=_('The user who follows.'),
+        related_name="following_set",
+        help_text=_("The user who follows."),
     )
     following = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name='followers_set',
-        help_text=_('The user being followed.'),
+        related_name="followers_set",
+        help_text=_("The user being followed."),
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'users_follow'
-        verbose_name = _('Follow')
-        verbose_name_plural = _('Follows')
-        ordering = ['-created_at']
+        db_table = "users_follow"
+        verbose_name = _("Follow")
+        verbose_name_plural = _("Follows")
+        ordering = ["-created_at"]
         constraints = [
-            models.UniqueConstraint(fields=['follower', 'following'], name='unique_follow'),
-            models.CheckConstraint(check=~models.Q(follower=models.F('following')), name='no_self_follow'),
+            models.UniqueConstraint(fields=["follower", "following"], name="unique_follow"),
+            models.CheckConstraint(check=~models.Q(follower=models.F("following")), name="no_self_follow"),
         ]
         indexes = [
-            models.Index(fields=['following', '-created_at']),
+            models.Index(fields=["following", "-created_at"]),
         ]
 
     def __str__(self):
-        return f'{self.follower} -> {self.following}'
+        return f"{self.follower} -> {self.following}"
 
     def clean(self):
         from django.core.exceptions import ValidationError
 
         if self.follower_id == self.following_id:
-            raise ValidationError(_('You cannot follow yourself.'))
+            raise ValidationError(_("You cannot follow yourself."))

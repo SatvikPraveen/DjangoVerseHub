@@ -160,7 +160,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "django_verse_hub/settings/*" = ["F401", "F403", "F405"]
 "**/tests/*" = ["B", "SIM"]
-"tests/*" = ["B", "SIM"]
+"tests/*" = ["B", "SIM", "E402"]
+"tests/test_settings.py" = ["F403", "F405"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["apps", "django_verse_hub"]

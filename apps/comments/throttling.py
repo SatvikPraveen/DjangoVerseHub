@@ -16,7 +16,8 @@ class CommentCreateThrottle(UserRateThrottle):
     raising ImproperlyConfigured on every request. The rate is read from
     ``api_settings`` at request time so ``override_settings`` works in tests.
     """
-    scope = 'comments'
+
+    scope = "comments"
 
     def get_rate(self):
         rates = api_settings.DEFAULT_THROTTLE_RATES or {}

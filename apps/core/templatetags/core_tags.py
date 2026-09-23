@@ -15,22 +15,22 @@ def update_query(context, **kwargs):
 
         <a href="?{% update_query page=2 %}">   ->  ?q=django&page=2
     """
-    request = context.get('request')
+    request = context.get("request")
     params = request.GET.copy() if request is not None else {}
     for key, value in kwargs.items():
         if value is None:
             params.pop(key, None)
         else:
             params[key] = value
-    return params.urlencode() if hasattr(params, 'urlencode') else ''
+    return params.urlencode() if hasattr(params, "urlencode") else ""
 
 
 @register.filter
 def initials(user):
     """Two-letter initials for avatar placeholders."""
     if user is None:
-        return '?'
-    name = (getattr(user, 'get_full_name', lambda: '')() or getattr(user, 'username', '') or '?').strip()
+        return "?"
+    name = (getattr(user, "get_full_name", lambda: "")() or getattr(user, "username", "") or "?").strip()
     parts = name.split()
     if len(parts) >= 2:
         return (parts[0][0] + parts[-1][0]).upper()
@@ -38,8 +38,8 @@ def initials(user):
 
 
 @register.simple_tag
-def active_if(current, expected, css_class='active'):
-    return css_class if current == expected else ''
+def active_if(current, expected, css_class="active"):
+    return css_class if current == expected else ""
 
 
 @register.filter
@@ -49,15 +49,15 @@ def humanize_count(value):
         value = int(value)
     except (TypeError, ValueError):
         return value
-    for threshold, suffix in ((1_000_000, 'M'), (1_000, 'K')):
+    for threshold, suffix in ((1_000_000, "M"), (1_000, "K")):
         if value >= threshold:
-            text = f'{value / threshold:.1f}'.rstrip('0').rstrip('.')
-            return f'{text}{suffix}'
+            text = f"{value / threshold:.1f}".rstrip("0").rstrip(".")
+            return f"{text}{suffix}"
     return str(value)
 
 
 @register.simple_tag
-def badge(text, kind='secondary'):
+def badge(text, kind="secondary"):
     return format_html('<span class="badge bg-{}">{}</span>', kind, text)
 
 

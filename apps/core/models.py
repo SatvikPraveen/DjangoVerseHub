@@ -26,24 +26,24 @@ class TimeStampedModel(models.Model):
 class NewsletterSubscriber(TimeStampedModel):
     """Double opt-in newsletter subscription."""
 
-    email = models.EmailField(_('email address'), unique=True)
+    email = models.EmailField(_("email address"), unique=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='newsletter_subscriptions',
+        related_name="newsletter_subscriptions",
     )
-    is_confirmed = models.BooleanField(_('confirmed'), default=False)
+    is_confirmed = models.BooleanField(_("confirmed"), default=False)
     confirmation_token = models.CharField(max_length=64, unique=True, editable=False)
     confirmed_at = models.DateTimeField(null=True, blank=True)
     unsubscribed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'core_newsletter_subscriber'
-        verbose_name = _('newsletter subscriber')
-        verbose_name_plural = _('newsletter subscribers')
-        ordering = ['-created_at']
+        db_table = "core_newsletter_subscriber"
+        verbose_name = _("newsletter subscriber")
+        verbose_name_plural = _("newsletter subscribers")
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.email
@@ -61,27 +61,27 @@ class NewsletterSubscriber(TimeStampedModel):
         self.is_confirmed = True
         self.confirmed_at = timezone.now()
         self.unsubscribed_at = None
-        self.save(update_fields=['is_confirmed', 'confirmed_at', 'unsubscribed_at', 'updated_at'])
+        self.save(update_fields=["is_confirmed", "confirmed_at", "unsubscribed_at", "updated_at"])
 
     def unsubscribe(self):
         self.unsubscribed_at = timezone.now()
-        self.save(update_fields=['unsubscribed_at', 'updated_at'])
+        self.save(update_fields=["unsubscribed_at", "updated_at"])
 
 
 class ContactMessage(TimeStampedModel):
     """Messages submitted through the contact and feedback forms."""
 
     class Kind(models.TextChoices):
-        CONTACT = 'contact', _('Contact')
-        FEEDBACK = 'feedback', _('Feedback')
-        BUG = 'bug', _('Bug report')
-        ABUSE = 'abuse', _('Abuse report')
+        CONTACT = "contact", _("Contact")
+        FEEDBACK = "feedback", _("Feedback")
+        BUG = "bug", _("Bug report")
+        ABUSE = "abuse", _("Abuse report")
 
     class Status(models.TextChoices):
-        NEW = 'new', _('New')
-        IN_PROGRESS = 'in_progress', _('In progress')
-        RESOLVED = 'resolved', _('Resolved')
-        SPAM = 'spam', _('Spam')
+        NEW = "new", _("New")
+        IN_PROGRESS = "in_progress", _("In progress")
+        RESOLVED = "resolved", _("Resolved")
+        SPAM = "spam", _("Spam")
 
     kind = models.CharField(max_length=20, choices=Kind.choices, default=Kind.CONTACT)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, db_index=True)
@@ -94,25 +94,25 @@ class ContactMessage(TimeStampedModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='contact_messages',
+        related_name="contact_messages",
     )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.CharField(max_length=300, blank=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'core_contact_message'
-        verbose_name = _('contact message')
-        verbose_name_plural = _('contact messages')
-        ordering = ['-created_at']
+        db_table = "core_contact_message"
+        verbose_name = _("contact message")
+        verbose_name_plural = _("contact messages")
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f'[{self.get_kind_display()}] {self.subject}'
+        return f"[{self.get_kind_display()}] {self.subject}"
 
     def mark_resolved(self):
         self.status = self.Status.RESOLVED
         self.resolved_at = timezone.now()
-        self.save(update_fields=['status', 'resolved_at', 'updated_at'])
+        self.save(update_fields=["status", "resolved_at", "updated_at"])
 
 
 class SiteSetting(TimeStampedModel):
@@ -126,17 +126,17 @@ class SiteSetting(TimeStampedModel):
     description = models.CharField(max_length=255, blank=True)
     is_public = models.BooleanField(
         default=False,
-        help_text=_('Public settings are exposed to templates and the API.'),
+        help_text=_("Public settings are exposed to templates and the API."),
     )
 
     class Meta:
-        db_table = 'core_site_setting'
-        ordering = ['key']
+        db_table = "core_site_setting"
+        ordering = ["key"]
 
     def __str__(self):
         return self.key
 
-    CACHE_KEY = 'core:site_settings:public'
+    CACHE_KEY = "core:site_settings:public"
 
     @classmethod
     def public_settings(cls):
@@ -145,7 +145,7 @@ class SiteSetting(TimeStampedModel):
 
         data = cache.get(cls.CACHE_KEY)
         if data is None:
-            data = dict(cls.objects.filter(is_public=True).values_list('key', 'value'))
+            data = dict(cls.objects.filter(is_public=True).values_list("key", "value"))
             cache.set(cls.CACHE_KEY, data, 300)
         return data
 

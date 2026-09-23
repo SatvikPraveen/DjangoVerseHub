@@ -29,7 +29,7 @@ def comment_post_save(sender, instance, created, **kwargs):
         recipients.append((str(instance.parent.author_id), True))
 
     target = instance.content_object
-    target_author_id = getattr(target, 'author_id', None)
+    target_author_id = getattr(target, "author_id", None)
     if target_author_id and target_author_id not in seen:
         seen.add(target_author_id)
         recipients.append((str(target_author_id), False))
@@ -52,19 +52,15 @@ def comment_like_post_save(sender, instance, created, **kwargs):
     if not created:
         return
 
-    Comment.objects.filter(pk=instance.comment_id).update(likes_count=F('likes_count') + 1)
+    Comment.objects.filter(pk=instance.comment_id).update(likes_count=F("likes_count") + 1)
 
     comment = instance.comment
     if comment.author_id != instance.user_id:
         comment_id, liker_id = str(comment.id), str(instance.user_id)
-        transaction.on_commit(
-            lambda: send_comment_like_notification.delay(comment_id=comment_id, liker_id=liker_id)
-        )
+        transaction.on_commit(lambda: send_comment_like_notification.delay(comment_id=comment_id, liker_id=liker_id))
 
 
 @receiver(post_delete, sender=CommentLike)
 def comment_like_post_delete(sender, instance, **kwargs):
     """Decrement the like counter atomically, never below zero."""
-    Comment.objects.filter(
-        pk=instance.comment_id, likes_count__gt=0
-    ).update(likes_count=F('likes_count') - 1)
+    Comment.objects.filter(pk=instance.comment_id, likes_count__gt=0).update(likes_count=F("likes_count") - 1)

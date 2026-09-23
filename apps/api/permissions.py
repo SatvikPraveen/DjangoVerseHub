@@ -32,7 +32,7 @@ class IsAuthorOrReadOnly(BasePermission):
             return True
 
         # Write permissions are only allowed to the author
-        return hasattr(obj, 'author') and obj.author == request.user
+        return hasattr(obj, "author") and obj.author == request.user
 
 
 class IsStaffOrReadOnly(BasePermission):
@@ -43,7 +43,7 @@ class IsStaffOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         return request.user.is_authenticated and request.user.is_staff
 
 
@@ -53,11 +53,7 @@ class IsVerifiedUser(BasePermission):
     """
 
     def has_permission(self, request, view):
-        return (
-            request.user.is_authenticated and 
-            hasattr(request.user, 'is_verified') and 
-            request.user.is_verified
-        )
+        return request.user.is_authenticated and hasattr(request.user, "is_verified") and request.user.is_verified
 
 
 class IsOwnerOrStaff(BasePermission):
@@ -69,7 +65,7 @@ class IsOwnerOrStaff(BasePermission):
         # Staff users can access any object
         if request.user.is_staff:
             return True
-        
+
         # Owners can access their own objects
         return obj.author == request.user
 
@@ -82,12 +78,9 @@ class CanCreateArticle(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        
+
         # Check if user is verified
-        if hasattr(request.user, 'is_verified') and not request.user.is_verified:
-            return False
-        
-        return True
+        return not (hasattr(request.user, "is_verified") and not request.user.is_verified)
 
 
 class CanCreateComment(BasePermission):
@@ -96,11 +89,7 @@ class CanCreateComment(BasePermission):
     """
 
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        
-        # Optionally check if user is verified for commenting
-        return True
+        return bool(request.user and request.user.is_authenticated)
 
 
 class IsProfileOwner(BasePermission):
@@ -112,7 +101,7 @@ class IsProfileOwner(BasePermission):
         # Read permissions for anyone
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Write permissions only for profile owner
         return obj.user == request.user
 
@@ -123,10 +112,7 @@ class CanModerateContent(BasePermission):
     """
 
     def has_permission(self, request, view):
-        return (
-            request.user.is_authenticated and 
-            (request.user.is_staff or request.user.is_superuser)
-        )
+        return request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
 
 
 class APIKeyPermission(BasePermission):
@@ -135,14 +121,15 @@ class APIKeyPermission(BasePermission):
     """
 
     def has_permission(self, request, view):
-        api_key = request.META.get('HTTP_X_API_KEY')
+        api_key = request.META.get("HTTP_X_API_KEY")
         if not api_key:
             return False
-        
+
         # Here you would validate the API key
         # For now, just check if it exists
         from django.conf import settings
-        valid_keys = getattr(settings, 'API_KEYS', [])
+
+        valid_keys = getattr(settings, "API_KEYS", [])
         return api_key in valid_keys
 
 
@@ -152,27 +139,27 @@ class RateLimitPermission(BasePermission):
     """
 
     def has_permission(self, request, view):
-        from django.core.cache import cache
         from django.conf import settings
-        
-        if not hasattr(settings, 'API_RATE_LIMIT'):
+        from django.core.cache import cache
+
+        if not hasattr(settings, "API_RATE_LIMIT"):
             return True
-        
+
         # Get user identifier
         if request.user.is_authenticated:
             identifier = f"user:{request.user.id}"
         else:
             identifier = f"ip:{request.META.get('REMOTE_ADDR')}"
-        
+
         # Check rate limit
         cache_key = f"rate_limit:{identifier}"
         current_count = cache.get(cache_key, 0)
-        
-        rate_limit = settings.API_RATE_LIMIT.get('requests_per_hour', 1000)
-        
+
+        rate_limit = settings.API_RATE_LIMIT.get("requests_per_hour", 1000)
+
         if current_count >= rate_limit:
             return False
-        
+
         # Increment counter
         cache.set(cache_key, current_count + 1, 3600)  # 1 hour
         return True

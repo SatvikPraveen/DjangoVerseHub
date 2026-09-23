@@ -17,22 +17,18 @@ User = get_user_model()
 
 class NotificationConsumerTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser', email='test@test.com', password='testpass123'
-        )
-        self.other = User.objects.create_user(
-            username='other', email='other@test.com', password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", email="test@test.com", password="testpass123")
+        self.other = User.objects.create_user(username="other", email="other@test.com", password="testpass123")
         self.application = AuthMiddlewareStack(
             URLRouter(  # type: ignore[arg-type]
-                [re_path(r'ws/notifications/$', NotificationConsumer.as_asgi())]  # type: ignore[arg-type]
+                [re_path(r"ws/notifications/$", NotificationConsumer.as_asgi())]  # type: ignore[arg-type]
             )
         )
 
     # ---------------------------------------------------------------- helpers
     async def connect_as(self, user):
-        communicator = WebsocketCommunicator(self.application, 'ws/notifications/')
-        communicator.scope['user'] = user
+        communicator = WebsocketCommunicator(self.application, "ws/notifications/")
+        communicator.scope["user"] = user
         connected, _ = await communicator.connect()
         return communicator, connected
 
@@ -41,10 +37,11 @@ class NotificationConsumerTest(TestCase):
         def create():
             return Notification.objects.create(
                 recipient=recipient or self.user,
-                notification_type=kwargs.pop('notification_type', 'system'),
-                message=kwargs.pop('message', 'Test notification'),
+                notification_type=kwargs.pop("notification_type", "system"),
+                message=kwargs.pop("message", "Test notification"),
                 **kwargs,
             )
+
         return await create()
 
     # ------------------------------------------------------------------ tests
@@ -62,12 +59,12 @@ class NotificationConsumerTest(TestCase):
         communicator, connected = await self.connect_as(self.user)
         self.assertTrue(connected)
 
-        await communicator.send_json_to({'action': 'mark_read', 'notification_id': notification.id})
+        await communicator.send_json_to({"action": "mark_read", "notification_id": notification.id})
 
         ack = await communicator.receive_json_from()
-        self.assertEqual(ack, {'type': 'notification_read', 'notification_id': notification.id, 'success': True})
+        self.assertEqual(ack, {"type": "notification_read", "notification_id": notification.id, "success": True})
         count = await communicator.receive_json_from()
-        self.assertEqual(count, {'type': 'unread_count', 'count': 0})
+        self.assertEqual(count, {"type": "unread_count", "count": 0})
 
         await notification.arefresh_from_db()
         self.assertTrue(notification.is_read)
@@ -79,9 +76,9 @@ class NotificationConsumerTest(TestCase):
         communicator, connected = await self.connect_as(self.user)
         self.assertTrue(connected)
 
-        await communicator.send_json_to({'action': 'mark_read', 'notification_id': notification.id})
+        await communicator.send_json_to({"action": "mark_read", "notification_id": notification.id})
         ack = await communicator.receive_json_from()
-        self.assertFalse(ack['success'])
+        self.assertFalse(ack["success"])
 
         await notification.arefresh_from_db()
         self.assertFalse(notification.is_read)
@@ -89,10 +86,10 @@ class NotificationConsumerTest(TestCase):
 
     async def test_mark_read_with_garbage_id(self):
         communicator, connected = await self.connect_as(self.user)
-        await communicator.send_json_to({'action': 'mark_read', 'notification_id': 'not-an-id'})
+        await communicator.send_json_to({"action": "mark_read", "notification_id": "not-an-id"})
         ack = await communicator.receive_json_from()
-        self.assertEqual(ack['type'], 'notification_read')
-        self.assertFalse(ack['success'])
+        self.assertEqual(ack["type"], "notification_read")
+        self.assertFalse(ack["success"])
         await communicator.disconnect()
 
     async def test_mark_all_notifications_read(self):
@@ -102,11 +99,11 @@ class NotificationConsumerTest(TestCase):
         communicator, connected = await self.connect_as(self.user)
         self.assertTrue(connected)
 
-        await communicator.send_json_to({'action': 'mark_all_read'})
+        await communicator.send_json_to({"action": "mark_all_read"})
         ack = await communicator.receive_json_from()
-        self.assertEqual(ack, {'type': 'all_read', 'count': 2})
+        self.assertEqual(ack, {"type": "all_read", "count": 2})
         count = await communicator.receive_json_from()
-        self.assertEqual(count, {'type': 'unread_count', 'count': 0})
+        self.assertEqual(count, {"type": "unread_count", "count": 0})
 
         await notification1.arefresh_from_db()
         await notification2.arefresh_from_db()
@@ -120,62 +117,62 @@ class NotificationConsumerTest(TestCase):
         await self.acreate_notification()
         await self.acreate_notification()
         communicator, _ = await self.connect_as(self.user)
-        await communicator.send_json_to({'action': 'get_unread_count'})
-        self.assertEqual(await communicator.receive_json_from(), {'type': 'unread_count', 'count': 2})
+        await communicator.send_json_to({"action": "get_unread_count"})
+        self.assertEqual(await communicator.receive_json_from(), {"type": "unread_count", "count": 2})
         await communicator.disconnect()
 
     async def test_ping_pong(self):
         communicator, _ = await self.connect_as(self.user)
-        await communicator.send_json_to({'action': 'ping'})
-        self.assertEqual(await communicator.receive_json_from(), {'type': 'pong'})
+        await communicator.send_json_to({"action": "ping"})
+        self.assertEqual(await communicator.receive_json_from(), {"type": "pong"})
         await communicator.disconnect()
 
     async def test_invalid_json_message(self):
         communicator, connected = await self.connect_as(self.user)
         self.assertTrue(connected)
 
-        await communicator.send_to(text_data='invalid json')
-        await communicator.send_json_to(['not', 'a', 'dict'])
-        await communicator.send_json_to({'action': 'unknown'})
+        await communicator.send_to(text_data="invalid json")
+        await communicator.send_json_to(["not", "a", "dict"])
+        await communicator.send_json_to({"action": "unknown"})
 
         # Still alive and silent; a ping proves the socket is still processing.
         self.assertTrue(await communicator.receive_nothing())
-        await communicator.send_json_to({'action': 'ping'})
-        self.assertEqual(await communicator.receive_json_from(), {'type': 'pong'})
+        await communicator.send_json_to({"action": "ping"})
+        self.assertEqual(await communicator.receive_json_from(), {"type": "pong"})
         await communicator.disconnect()
 
     def test_group_naming(self):
-        self.assertEqual(user_group_name(self.user.pk), f'user_{self.user.pk}')
+        self.assertEqual(user_group_name(self.user.pk), f"user_{self.user.pk}")
 
     async def test_notification_broadcast(self):
         channel_layer = get_channel_layer()
         if not channel_layer:
-            self.skipTest('Channel layer not configured')
+            self.skipTest("Channel layer not configured")
 
         communicator, connected = await self.connect_as(self.user)
         self.assertTrue(connected)
 
         await channel_layer.group_send(
             user_group_name(self.user.pk),
-            {'type': 'notification_message', 'notification': {'id': 1, 'message': 'Test broadcast notification'}},
+            {"type": "notification_message", "notification": {"id": 1, "message": "Test broadcast notification"}},
         )
         response = await communicator.receive_json_from()
-        self.assertEqual(response['type'], 'notification')
-        self.assertEqual(response['notification']['message'], 'Test broadcast notification')
+        self.assertEqual(response["type"], "notification")
+        self.assertEqual(response["notification"]["message"], "Test broadcast notification")
 
-        await channel_layer.group_send(user_group_name(self.user.pk), {'type': 'unread_count_update', 'count': 7})
-        self.assertEqual(await communicator.receive_json_from(), {'type': 'unread_count', 'count': 7})
+        await channel_layer.group_send(user_group_name(self.user.pk), {"type": "unread_count_update", "count": 7})
+        self.assertEqual(await communicator.receive_json_from(), {"type": "unread_count", "count": 7})
         await communicator.disconnect()
 
     async def test_broadcast_is_per_user(self):
         channel_layer = get_channel_layer()
         if not channel_layer:
-            self.skipTest('Channel layer not configured')
+            self.skipTest("Channel layer not configured")
 
         communicator, _ = await self.connect_as(self.user)
         await channel_layer.group_send(
             user_group_name(self.other.pk),
-            {'type': 'notification_message', 'notification': {'id': 2, 'message': 'Not for you'}},
+            {"type": "notification_message", "notification": {"id": 2, "message": "Not for you"}},
         )
         self.assertTrue(await communicator.receive_nothing())
         await communicator.disconnect()

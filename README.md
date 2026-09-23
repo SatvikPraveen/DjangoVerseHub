@@ -188,7 +188,7 @@ coverage html  # Creates htmlcov/index.html
 
 ```python
 # Token Authentication
-headers = {'Authorization': 'Token your-api-token-here'}
+headers = {"Authorization": "Token your-api-token-here"}
 
 # Session Authentication (for web)
 # Automatically handled by Django sessions

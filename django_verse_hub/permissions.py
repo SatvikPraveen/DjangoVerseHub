@@ -28,7 +28,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        return hasattr(obj, 'author') and obj.author == request.user
+        return hasattr(obj, "author") and obj.author == request.user
 
 
 class IsStaffOrReadOnly(permissions.BasePermission):

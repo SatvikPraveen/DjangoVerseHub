@@ -20,10 +20,10 @@ from ..models import Comment, CommentLike, build_comment_tree, target_accepts_co
 register = template.Library()
 
 
-@register.inclusion_tag('comments/comment_tree.html', takes_context=True)
+@register.inclusion_tag("comments/comment_tree.html", takes_context=True)
 def render_comments(context, obj):
-    request = context.get('request')
-    user = getattr(request, 'user', None)
+    request = context.get("request")
+    user = getattr(request, "user", None)
     # Include hidden comments: those with replies render as "[removed]".
     comments = list(Comment.objects.get_queryset().for_object(obj).with_author())
     roots = build_comment_tree(comments)
@@ -31,18 +31,18 @@ def render_comments(context, obj):
     liked_ids = set()
     if user is not None and user.is_authenticated:
         liked_ids = set(
-            CommentLike.objects.filter(
-                user=user, comment_id__in=[c.id for c in comments]
-            ).values_list('comment_id', flat=True)
+            CommentLike.objects.filter(user=user, comment_id__in=[c.id for c in comments]).values_list(
+                "comment_id", flat=True
+            )
         )
 
     return {
-        'request': request,
-        'user': user,
-        'content_object': obj,
-        'content_type_id': ContentType.objects.get_for_model(obj).id,
-        'comment_nodes': roots,
-        'comment_total': sum(1 for c in comments if c.is_active),
-        'liked_ids': liked_ids,
-        'comments_open': target_accepts_comments(obj),
+        "request": request,
+        "user": user,
+        "content_object": obj,
+        "content_type_id": ContentType.objects.get_for_model(obj).id,
+        "comment_nodes": roots,
+        "comment_total": sum(1 for c in comments if c.is_active),
+        "liked_ids": liked_ids,
+        "comments_open": target_accepts_comments(obj),
     }

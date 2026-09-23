@@ -18,6 +18,7 @@ Server -> client messages (JSON):
     {"type": "pong"}
     {"type": "error", "message": "..."}
 """
+
 import json
 
 from channels.db import database_sync_to_async
@@ -28,14 +29,14 @@ from .models import Notification
 
 def user_group_name(user_id):
     """Channel-layer group that carries one user's notifications."""
-    return f'user_{user_id}'
+    return f"user_{user_id}"
 
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope.get('user')  # type: ignore[assignment]
+        self.user = self.scope.get("user")  # type: ignore[assignment]
 
-        if self.user is None or getattr(self.user, 'is_anonymous', True):
+        if self.user is None or getattr(self.user, "is_anonymous", True):
             await self.close()
             return
 
@@ -44,7 +45,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        group_name = getattr(self, 'group_name', None)
+        group_name = getattr(self, "group_name", None)
         if group_name:
             await self.channel_layer.group_discard(group_name, self.channel_name)
 
@@ -59,42 +60,44 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         if not isinstance(payload, dict):
             return
 
-        action = payload.get('action') or payload.get('type')
+        action = payload.get("action") or payload.get("type")
 
-        if action == 'mark_read':
-            notification_id = payload.get('notification_id')
+        if action == "mark_read":
+            notification_id = payload.get("notification_id")
             success = await self.mark_notification_read(notification_id)
-            await self.send_json({
-                'type': 'notification_read',
-                'notification_id': notification_id,
-                'success': success,
-            })
+            await self.send_json(
+                {
+                    "type": "notification_read",
+                    "notification_id": notification_id,
+                    "success": success,
+                }
+            )
             await self.send_unread_count()
 
-        elif action == 'mark_all_read':
+        elif action == "mark_all_read":
             count = await self.mark_all_notifications_read()
-            await self.send_json({'type': 'all_read', 'count': count})
+            await self.send_json({"type": "all_read", "count": count})
             await self.send_unread_count()
 
-        elif action == 'get_unread_count':
+        elif action == "get_unread_count":
             await self.send_unread_count()
 
-        elif action == 'ping':
-            await self.send_json({'type': 'pong'})
+        elif action == "ping":
+            await self.send_json({"type": "pong"})
 
     # ----------------------------------------------------------------- outbound
     async def send_json(self, data):
         await self.send(text_data=json.dumps(data))
 
     async def send_unread_count(self):
-        await self.send_json({'type': 'unread_count', 'count': await self.get_unread_count()})
+        await self.send_json({"type": "unread_count", "count": await self.get_unread_count()})
 
     # Group event handlers (names match the "type" used in group_send)
     async def notification_message(self, event):
-        await self.send_json({'type': 'notification', 'notification': event['notification']})
+        await self.send_json({"type": "notification", "notification": event["notification"]})
 
     async def unread_count_update(self, event):
-        await self.send_json({'type': 'unread_count', 'count': event['count']})
+        await self.send_json({"type": "unread_count", "count": event["count"]})
 
     # ---------------------------------------------------------------- database
     @database_sync_to_async

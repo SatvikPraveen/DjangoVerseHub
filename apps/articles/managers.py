@@ -9,15 +9,15 @@ class ArticleQuerySet(models.QuerySet):
 
     def published(self):
         """Return only published articles"""
-        return self.filter(status='published', published_at__lte=timezone.now())
+        return self.filter(status="published", published_at__lte=timezone.now())
 
     def draft(self):
         """Return only draft articles"""
-        return self.filter(status='draft')
+        return self.filter(status="draft")
 
     def archived(self):
         """Return only archived articles"""
-        return self.filter(status='archived')
+        return self.filter(status="archived")
 
     def featured(self):
         """Return only featured articles"""
@@ -40,36 +40,34 @@ class ArticleQuerySet(models.QuerySet):
         if user is not None and user.is_authenticated:
             if user.is_staff:
                 return self
-            return self.filter(models.Q(status='published') | models.Q(author=user))
-        return self.filter(status='published')
+            return self.filter(models.Q(status="published") | models.Q(author=user))
+        return self.filter(status="published")
 
     def search(self, query):
         """Search articles by title and content"""
         return self.filter(
-            models.Q(title__icontains=query)
-            | models.Q(content__icontains=query)
-            | models.Q(summary__icontains=query)
+            models.Q(title__icontains=query) | models.Q(content__icontains=query) | models.Q(summary__icontains=query)
         )
 
     def popular(self):
         """Return articles ordered by popularity (views + likes)"""
-        return self.annotate(popularity=models.F('views_count') + models.F('likes_count')).order_by('-popularity')
+        return self.annotate(popularity=models.F("views_count") + models.F("likes_count")).order_by("-popularity")
 
     def trending(self, days=7):
         """Return trending articles from the last N days"""
         cutoff_date = timezone.now() - timezone.timedelta(days=days)
         return (
             self.filter(created_at__gte=cutoff_date)
-            .annotate(trend_score=models.F('views_count') + models.F('likes_count') * 2)
-            .order_by('-trend_score', '-created_at')
+            .annotate(trend_score=models.F("views_count") + models.F("likes_count") * 2)
+            .order_by("-trend_score", "-created_at")
         )
 
     def with_related(self):
         """Eager-load everything the list templates/serializers touch."""
         from .models import Tag  # local import to avoid a circular import
 
-        return self.select_related('author', 'author__profile', 'category').prefetch_related(
-            models.Prefetch('tags', queryset=Tag.objects.with_article_count())
+        return self.select_related("author", "author__profile", "category").prefetch_related(
+            models.Prefetch("tags", queryset=Tag.objects.with_article_count())
         )
 
     def with_user_flags(self, user):
@@ -82,13 +80,13 @@ class ArticleQuerySet(models.QuerySet):
                 is_bookmarked=models.Value(False, output_field=models.BooleanField()),
             )
         return self.annotate(
-            is_liked=models.Exists(ArticleLike.objects.filter(article=models.OuterRef('pk'), user=user)),
-            is_bookmarked=models.Exists(Bookmark.objects.filter(article=models.OuterRef('pk'), user=user)),
+            is_liked=models.Exists(ArticleLike.objects.filter(article=models.OuterRef("pk"), user=user)),
+            is_bookmarked=models.Exists(Bookmark.objects.filter(article=models.OuterRef("pk"), user=user)),
         )
 
     def recent(self, limit=10):
         """Return recent articles"""
-        return self.order_by('-created_at')[:limit]
+        return self.order_by("-created_at")[:limit]
 
 
 class ArticleManager(models.Manager.from_queryset(ArticleQuerySet)):
@@ -111,13 +109,11 @@ class CategoryQuerySet(models.QuerySet):
 
     def with_article_count(self):
         """Annotate with published article count (read through Category.article_count)."""
-        return self.annotate(
-            article_count=models.Count('articles', filter=models.Q(articles__status='published'))
-        )
+        return self.annotate(article_count=models.Count("articles", filter=models.Q(articles__status="published")))
 
     def popular(self):
         """Return categories ordered by article count"""
-        return self.with_article_count().order_by('-article_count', 'name')
+        return self.with_article_count().order_by("-article_count", "name")
 
 
 class CategoryManager(models.Manager.from_queryset(CategoryQuerySet)):
@@ -129,13 +125,11 @@ class TagQuerySet(models.QuerySet):
 
     def with_article_count(self):
         """Annotate with published article count (read through Tag.article_count)."""
-        return self.annotate(
-            article_count=models.Count('articles', filter=models.Q(articles__status='published'))
-        )
+        return self.annotate(article_count=models.Count("articles", filter=models.Q(articles__status="published")))
 
     def popular(self, limit=20):
         """Return popular tags"""
-        return self.with_article_count().order_by('-article_count', 'name')[:limit]
+        return self.with_article_count().order_by("-article_count", "name")[:limit]
 
     def used(self):
         """Return only tags that have articles"""

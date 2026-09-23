@@ -25,7 +25,7 @@ def article_post_save(sender, instance, created, **kwargs):
 
     # Follower fan-out on publish is handled by apps.notifications.signals
     # (deduped, preference-aware, pushed over WebSocket). Nothing to do here.
-    if getattr(instance, '_just_published', False):
+    if getattr(instance, "_just_published", False):
         instance._just_published = False
 
 
@@ -41,9 +41,9 @@ def article_post_delete(sender, instance, **kwargs):
 @receiver(m2m_changed, sender=Article.tags.through)
 def article_tags_changed(sender, instance, action, pk_set, **kwargs):
     """Handle article tags changes"""
-    if action in ('post_add', 'post_remove', 'post_clear'):
+    if action in ("post_add", "post_remove", "post_clear"):
         _invalidate_article(instance)
-        cache.delete_many(['popular_tags:20', 'popular_tags_search:20'])
+        cache.delete_many(["popular_tags:20", "popular_tags_search:20"])
 
 
 # NOTE: the 'somebody liked your article' notification is created by
@@ -53,10 +53,10 @@ def article_tags_changed(sender, instance, action, pk_set, **kwargs):
 @receiver(post_save, sender=Category)
 def category_post_save(sender, instance, created, **kwargs):
     """Handle category post-save operations"""
-    cache.delete_many(['categories:active', 'popular_categories:10'])
+    cache.delete_many(["categories:active", "popular_categories:10"])
 
 
 @receiver(post_save, sender=Tag)
 def tag_post_save(sender, instance, created, **kwargs):
     """Handle tag post-save operations"""
-    cache.delete_many(['popular_tags:20', 'popular_tags_search:20'])
+    cache.delete_many(["popular_tags:20", "popular_tags_search:20"])
