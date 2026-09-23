@@ -684,7 +684,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
     <!-- Custom JavaScript -->
+    <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/notifications.js' %}" defer></script>
+    {% endif %}
 
     <!-- Theme Toggle Script -->
     <script>
