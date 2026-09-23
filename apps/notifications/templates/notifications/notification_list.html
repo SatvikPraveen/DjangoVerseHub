@@ -1,6 +1,5 @@
 <!-- File: DjangoVerseHub/apps/notifications/templates/notifications/notification_list.html -->
-{% extends 'base.html' %} {% load static %} {% block title %}Notifications{%
-endblock %} {% block content %}
+{% extends 'base.html' %} {% load static %} {% block title %}Notifications{% endblock %} {% block content %}
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-6">
@@ -43,8 +42,7 @@ endblock %} {% block content %}
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between">
                 <p class="text-sm font-medium text-gray-900">
-                  {% if notification.sender %}{{ notification.sender.username
-                  }}{% else %}System{% endif %}
+                  {% if notification.sender %}{{ notification.sender.username }}{% else %}System{% endif %}
                 </p>
                 <div class="flex items-center space-x-2">
                   {% if not notification.is_read %}

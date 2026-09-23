@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django_verse_hub.middleware.RequestLoggingMiddleware',
     'django_verse_hub.middleware.RateLimitMiddleware',
     'django_verse_hub.middleware.SecurityHeadersMiddleware',

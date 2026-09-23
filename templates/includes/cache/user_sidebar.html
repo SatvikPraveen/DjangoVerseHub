@@ -1,7 +1,6 @@
 <!-- File: DjangoVerseHub/templates/includes/cache/user_sidebar.html -->
 
-{% load static cache %} {% cache 300 user_sidebar user.id
-user.profile.updated_at %}
+{% load static cache %} {% cache 300 user_sidebar user.id user.profile.updated_at %}
 <div class="user-sidebar">
   {% if user.is_authenticated %}
   <!-- User Profile Card -->

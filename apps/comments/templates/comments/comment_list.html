@@ -41,12 +41,7 @@ DjangoVerseHub{% endblock %} {% block content %}
                   type="checkbox"
                   name="is_flagged"
                   id="is_flagged"
-                  {%
-                  if
-                  request.GET.is_flagged
-                  %}checked{%
-                  endif
-                  %}
+                  {% if request.GET.is_flagged %}checked{% endif %}
                 />
                 <label class="form-check-label" for="is_flagged">
                   Show flagged only
@@ -103,13 +98,11 @@ DjangoVerseHub{% endblock %} {% block content %}
                   </td>
                   <td>
                     <div class="comment-content">
-                      {{ comment.content|truncatewords:15 }} {% if
-                      comment.is_edited %}
+                      {{ comment.content|truncatewords:15 }} {% if comment.is_edited %}
                       <span class="badge bg-info ms-2">Edited</span>
                       {% endif %} {% if comment.parent %}
                       <br /><small class="text-muted"
-                        >Reply to: {{ comment.parent.content|truncatewords:5
-                        }}</small
+                        >Reply to: {{ comment.parent.content|truncatewords:5 }}</small
                       >
                       {% endif %}
                     </div>
@@ -191,8 +184,7 @@ DjangoVerseHub{% endblock %} {% block content %}
 
               <li class="page-item active">
                 <span class="page-link"
-                  >{{ page_obj.number }} of {{ page_obj.paginator.num_pages
-                  }}</span
+                  >{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span
                 >
               </li>
 

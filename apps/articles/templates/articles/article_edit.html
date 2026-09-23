@@ -1,6 +1,5 @@
 <!-- File: DjangoVerseHub/apps/articles/templates/articles/article_edit.html -->
-{% extends 'base.html' %} {% load static %} {% block title %}Edit: {{
-article.title }} - DjangoVerseHub{% endblock %} {% block content %}
+{% extends 'base.html' %} {% load static %} {% block title %}Edit: {{ article.title }} - DjangoVerseHub{% endblock %} {% block content %}
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-lg-8">
@@ -178,12 +177,10 @@ article.title }} - DjangoVerseHub{% endblock %} {% block content %}
             <hr />
             <div class="row">
               <div class="col-md-6">
-                <strong>Created:</strong> {{ article.created_at|date:"M d, Y
-                H:i" }}
+                <strong>Created:</strong> {{ article.created_at|date:"M d, Y H:i" }}
               </div>
               <div class="col-md-6">
-                <strong>Last Updated:</strong> {{ article.updated_at|date:"M d,
-                Y H:i" }}
+                <strong>Last Updated:</strong> {{ article.updated_at|date:"M d, Y H:i" }}
               </div>
             </div>
           </div>

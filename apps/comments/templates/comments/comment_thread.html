@@ -118,8 +118,7 @@
       <!-- Nested Replies -->
       {% if comment.replies.all %}
       <div class="comment-replies mt-3">
-        {% for reply in comment.replies.all %} {% if reply.is_active %} {%
-        include 'comments/comment_thread.html' with comment=reply %} {% endif %}
+        {% for reply in comment.replies.all %} {% if reply.is_active %} {% include 'comments/comment_thread.html' with comment=reply %} {% endif %}
         {% endfor %}
       </div>
       {% endif %}

@@ -1,8 +1,6 @@
 <!-- File: DjangoVerseHub/apps/articles/templates/articles/article_detail.html -->
 {% extends 'base.html' %} {% load static %} {% block title %}{{ article.title }}
-- DjangoVerseHub{% endblock %} {% block meta_description %}{{
-article.meta_description|default:article.summary }}{% endblock %} {% block
-meta_keywords %}{{ article.meta_keywords }}{% endblock %} {% block content %}
+- DjangoVerseHub{% endblock %} {% block meta_description %}{{ article.meta_description|default:article.summary }}{% endblock %} {% block meta_keywords %}{{ article.meta_keywords }}{% endblock %} {% block content %}
 <div class="container">
   <div class="row">
     <div class="col-lg-8">
@@ -20,8 +18,7 @@ meta_keywords %}{{ article.meta_keywords }}{% endblock %} {% block content %}
               <div>
                 <strong>{{ article.author.get_full_name }}</strong><br />
                 <small class="text-muted">
-                  Published {{ article.published_at|date:"M d, Y" }} • {{
-                  article.reading_time }} min read • {{ article.views_count }}
+                  Published {{ article.published_at|date:"M d, Y" }} • {{ article.reading_time }} min read • {{ article.views_count }}
                   views
                 </small>
               </div>

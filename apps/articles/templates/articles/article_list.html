@@ -52,9 +52,7 @@ DjangoVerseHub{% endblock %} {% block content %}
 
               <div class="article-meta mt-auto">
                 <small class="text-muted">
-                  By {{ article.author.get_full_name }} • {{
-                  article.created_at|date:"M d, Y" }} • {{ article.reading_time
-                  }} min read
+                  By {{ article.author.get_full_name }} • {{ article.created_at|date:"M d, Y" }} • {{ article.reading_time }} min read
                 </small>
                 <div class="mt-2">
                   {% if article.category %}

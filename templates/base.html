@@ -24,11 +24,11 @@
     <!-- Open Graph Meta Tags -->
     <meta
       property="og:title"
-      content="{% block og_title %}{% block title %}DjangoVerseHub{% endblock %}{% endblock %}"
+      content="{% block og_title %}DjangoVerseHub{% endblock %}"
     />
     <meta
       property="og:description"
-      content="{% block og_description %}{% block description %}Join the Django community{% endblock %}{% endblock %}"
+      content="{% block og_description %}Join the Django community{% endblock %}"
     />
     <meta
       property="og:type"
@@ -48,15 +48,15 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="{% block twitter_title %}{% block title %}DjangoVerseHub{% endblock %}{% endblock %}"
+      content="{% block twitter_title %}DjangoVerseHub{% endblock %}"
     />
     <meta
       name="twitter:description"
-      content="{% block twitter_description %}{% block description %}Join the Django community{% endblock %}{% endblock %}"
+      content="{% block twitter_description %}Join the Django community{% endblock %}"
     />
     <meta
       name="twitter:image"
-      content="{% block twitter_image %}{% block og_image %}{% static 'images/djangoversehub-og.png' %}{% endblock %}{% endblock %}"
+      content="{% block twitter_image %}{% static 'images/djangoversehub-og.png' %}{% endblock %}"
     />
 
     <!-- Favicon -->
@@ -328,15 +328,13 @@
                 <span
                   class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 >
-                  {{ unread_notifications_count|slice:":99" }}{% if
-                  unread_notifications_count > 99 %}+{% endif %}
+                  {{ unread_notifications_count|slice:":99" }}{% if unread_notifications_count > 99 %}+{% endif %}
                 </span>
                 {% endif %}
               </a>
               <div class="dropdown-menu dropdown-menu-end" style="width: 320px">
                 <h6 class="dropdown-header">Notifications</h6>
-                {% if recent_notifications %} {% for notification in
-                recent_notifications|slice:":5" %}
+                {% if recent_notifications %} {% for notification in recent_notifications|slice:":5" %}
                 <a
                   href="{{ notification.url }}"
                   class="dropdown-item {% if not notification.read %}bg-light{% endif %}"

@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from channels.testing import WebsocketCommunicator
 from channels.routing import URLRouter
-from channels.middleware import AuthMiddlewareStack
+from channels.auth import AuthMiddlewareStack
 from django.urls import re_path
 from apps.notifications.consumers import NotificationConsumer
 from apps.notifications.models import Notification

@@ -280,8 +280,7 @@
         >
           <div class="mb-2 mb-md-0">
             <small class="text-light-emphasis">
-              <i class="bi bi-server me-1"></i>Server: {{ request.get_host }} {%
-              if debug %}
+              <i class="bi bi-server me-1"></i>Server: {{ request.get_host }} {% if debug %}
               <span class="badge bg-warning text-dark ms-2">DEBUG MODE</span>
               {% endif %}
             </small>

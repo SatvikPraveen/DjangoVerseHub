@@ -1,8 +1,6 @@
 <!-- File: DjangoVerseHub/apps/users/templates/users/profile.html -->
 
-{% extends 'base.html' %} {% load static %} {% block title %}{{
-profile_user.profile.display_name }} - Profile{% endblock %} {% block extra_css
-%}
+{% extends 'base.html' %} {% load static %} {% block title %}{{ profile_user.profile.display_name }} - Profile{% endblock %} {% block extra_css %}
 <link href="{% static 'css/profile.css' %}" rel="stylesheet" />
 {% endblock %} {% block content %}
 <div class="profile-container">
@@ -159,8 +157,7 @@ profile_user.profile.display_name }} - Profile{% endblock %} {% block extra_css
           </div>
 
           <!-- Social Links -->
-          {% if profile_user.profile.twitter or profile_user.profile.linkedin or
-          profile_user.profile.github %}
+          {% if profile_user.profile.twitter or profile_user.profile.linkedin or profile_user.profile.github %}
           <div class="card mb-4">
             <div class="card-body">
               <h5 class="card-title">Social Links</h5>

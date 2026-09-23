@@ -336,12 +336,10 @@
                     </p>
                     <p>
                       <strong>User:</strong>
-                      {% if user.is_authenticated %} {{ user.username }} (ID: {{
-                      user.id }}) {% else %} Anonymous {% endif %}
+                      {% if user.is_authenticated %} {{ user.username }} (ID: {{ user.id }}) {% else %} Anonymous {% endif %}
                     </p>
                     <p>
-                      <strong>Requested URL:</strong> {{ request.get_full_path
-                      }}
+                      <strong>Requested URL:</strong> {{ request.get_full_path }}
                     </p>
                     <p>
                       <strong>Referrer:</strong>
