@@ -18,5 +18,5 @@ celery-types>=0.26.0
 types-requests>=2.31.0
 
 # Documentation
-Sphinx>=7.1.0
+Sphinx>=8.1.3
 sphinx-rtd-theme>=3.1.0
