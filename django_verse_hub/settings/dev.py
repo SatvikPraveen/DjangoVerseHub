@@ -9,6 +9,8 @@ DEBUG = True
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
 # Development apps
+# daphne first so `runserver` serves ASGI (WebSockets) in development
+INSTALLED_APPS = ["daphne", *INSTALLED_APPS]
 INSTALLED_APPS += [
     "debug_toolbar",
     "django_extensions",

@@ -175,6 +175,9 @@ LOGIN_URL = "/users/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
+# Admin path (prod may set an unguessable value)
+ADMIN_URL = config("ADMIN_URL", default="admin/")
+
 # Application metadata
 APP_VERSION = config("APP_VERSION", default="1.1.0")
 SLOW_REQUEST_THRESHOLD_MS = config("SLOW_REQUEST_THRESHOLD_MS", default=1000, cast=int)

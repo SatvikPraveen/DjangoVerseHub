@@ -42,21 +42,16 @@ def process_article_images(self, article_id):
 
 
 @shared_task
-def cleanup_unused_media():
-    """Clean up unused media files.
+def cleanup_unused_media(older_than_days=7):
+    """Delete orphaned media files by running the cleanup_unused_media management command."""
+    from io import StringIO
 
-    Placeholder: listing/deleting orphaned files depends on the storage backend and is
-    intentionally not implemented here.
-    """
-    from .models import Article
+    from django.core.management import call_command
 
-    used_images = set(
-        Article.objects.exclude(featured_image="")
-        .exclude(featured_image__isnull=True)
-        .values_list("featured_image", flat=True)
-    )
-    logger.info("cleanup_unused_media: %d featured images in use", len(used_images))
-    return 0
+    out = StringIO()
+    call_command("cleanup_unused_media", older_than=older_than_days, stdout=out)
+    logger.info("cleanup_unused_media: %s", out.getvalue().strip().splitlines()[-1:] or "done")
+    return out.getvalue()
 
 
 @shared_task

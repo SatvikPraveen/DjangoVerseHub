@@ -118,6 +118,18 @@ class Command(BaseCommand):
             except Group.DoesNotExist:
                 raise CommandError(f'Group "{options["group_name"]}" does not exist')
 
+    @staticmethod
+    def compose_message(title, message):
+        """The model has a single message field; keep the title as a bold lead-in."""
+        title = (title or "").strip()
+        return f"{title}: {message}" if title else message
+
+    @staticmethod
+    def model_type(command_type):
+        """Map the command's announcement types onto Notification.NOTIFICATION_TYPES."""
+        valid = {value for value, _ in Notification.NOTIFICATION_TYPES}
+        return command_type if command_type in valid else "system"
+
     def create_notifications_batch(self, options, recipients):
         """Create notifications in batches."""
         total_created = 0
@@ -130,10 +142,9 @@ class Command(BaseCommand):
             for recipient in batch:
                 notification = Notification(
                     recipient=recipient,
-                    title=options["title"],
-                    message=options["message"],
-                    notification_type=options["notification_type"],
-                    created_at=timezone.now(),
+                    sender=None,
+                    message=self.compose_message(options["title"], options["message"]),
+                    notification_type=self.model_type(options["notification_type"]),
                 )
                 notifications.append(notification)
 
@@ -233,9 +244,9 @@ class Command(BaseCommand):
         for data in notifications_data:
             notification = Notification(
                 recipient=data["recipient"],
-                title=data["title"],
-                message=data["message"],
-                notification_type=data["notification_type"],
+                sender=None,
+                message=self.compose_message(data["title"], data["message"]),
+                notification_type=self.model_type(data["notification_type"]),
             )
             notifications.append(notification)
 

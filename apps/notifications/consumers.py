@@ -24,6 +24,8 @@ import json
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from django_verse_hub import metrics
+
 from .models import Notification
 
 
@@ -42,12 +44,14 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
         self.group_name = user_group_name(self.user.pk)
         await self.channel_layer.group_add(self.group_name, self.channel_name)
+        metrics.websocket_connections.inc()
         await self.accept()
 
     async def disconnect(self, close_code):
         group_name = getattr(self, "group_name", None)
         if group_name:
             await self.channel_layer.group_discard(group_name, self.channel_name)
+            metrics.websocket_connections.dec()
 
     # ------------------------------------------------------------------ inbound
     async def receive(self, text_data=None, bytes_data=None):

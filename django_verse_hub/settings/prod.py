@@ -26,7 +26,7 @@ DATABASES["default"].update(
 # Cache configuration
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "BACKEND": "django_redis.cache.RedisCache",  # django-redis: supports CLIENT_CLASS/COMPRESSOR options
         "LOCATION": config("REDIS_URL"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -94,7 +94,6 @@ CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default="", cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
 
 # Admin security
-ADMIN_URL = config("ADMIN_URL", default="admin/")
 
 # Sentry configuration
 SENTRY_DSN = config("SENTRY_DSN", default="", cast=str)

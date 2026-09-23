@@ -9,7 +9,7 @@ from django_verse_hub import health, metrics
 
 urlpatterns = [
     # Admin
-    path("admin/", admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
     # Health checks (liveness for the process, readiness for dependencies)
     path("health/", health.readiness, name="health_check"),
     path("health/live/", health.liveness, name="health_live"),

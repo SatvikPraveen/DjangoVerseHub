@@ -2,8 +2,7 @@
 """
 Celery tasks for the notifications app.
 
-Referenced by the beat schedule in django_verse_hub/celery.py and
-django_verse_hub/settings/celery.py:
+Referenced by the beat schedule in django_verse_hub/celery.py:
     apps.notifications.tasks.send_daily_digest
     apps.notifications.tasks.cleanup_old_notifications
 """
