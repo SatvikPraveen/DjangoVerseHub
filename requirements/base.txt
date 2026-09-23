@@ -24,7 +24,8 @@ channels-redis>=4.1.0
 daphne>=4.0.0
 
 # Authentication
-django-allauth>=0.61.0
+django-allauth[socialaccount]>=0.61.0
+requests>=2.31.0
 
 # Configuration
 python-decouple>=3.8
