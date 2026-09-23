@@ -15,7 +15,7 @@ mypy>=1.4.0
 django-stubs>=4.2.0
 djangorestframework-stubs>=3.18.0
 celery-types>=0.26.0
-types-requests>=2.31.0
+types-requests>=2.33.0.20260906
 
 # Documentation
 Sphinx>=7.1.0
