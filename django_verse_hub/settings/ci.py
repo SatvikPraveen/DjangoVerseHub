@@ -24,10 +24,12 @@ DATABASES = {
 # Run real migrations in CI so migration drift is caught.
 MIGRATION_MODULES = {}
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/9"),
-        "KEY_PREFIX": "djangoversehub_ci",
+# Use Redis when CI provides one, otherwise stay on the in-memory cache from test.py.
+if config("REDIS_URL", default=""):
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": config("REDIS_URL"),
+            "KEY_PREFIX": "djangoversehub_ci",
+        }
     }
-}

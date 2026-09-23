@@ -6,7 +6,7 @@ from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import re_path
 
 from apps.notifications.consumers import NotificationConsumer, user_group_name
@@ -15,7 +15,9 @@ from apps.notifications.models import Notification
 User = get_user_model()
 
 
-class NotificationConsumerTest(TestCase):
+class NotificationConsumerTest(TransactionTestCase):
+    """TransactionTestCase: consumers touch the DB from worker threads, which need committed rows."""
+
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", email="test@test.com", password="testpass123")
         self.other = User.objects.create_user(username="other", email="other@test.com", password="testpass123")
