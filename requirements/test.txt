@@ -18,4 +18,4 @@ coverage>=7.2.0
 
 # Test Utilities
 freezegun>=1.5.5
-responses>=0.23.0
+responses>=0.26.3
