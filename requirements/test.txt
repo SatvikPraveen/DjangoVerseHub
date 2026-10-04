@@ -11,7 +11,7 @@ pytest-asyncio>=1.4.0
 
 # Test Data Generation
 factory-boy>=3.3.0
-faker>=19.0.0
+faker>=40.39.0
 
 # Coverage
 coverage>=7.2.0
