@@ -1,12 +1,12 @@
 # DjangoVerseHub
 
 [![CI](https://github.com/SatvikPraveen/DjangoVerseHub/actions/workflows/ci.yml/badge.svg)](https://github.com/SatvikPraveen/DjangoVerseHub/actions/workflows/ci.yml)
-[![Django](https://img.shields.io/badge/Django-4.2-brightgreen.svg)](https://www.djangoproject.com/)
+[![Django](https://img.shields.io/badge/Django-5.2-brightgreen.svg)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/SatvikPraveen/DjangoVerseHub?style=social)](https://github.com/SatvikPraveen/DjangoVerseHub)
 
-DjangoVerseHub is a content-and-community platform written as a learning codebase for Django 4.2: Markdown articles with revision history and feeds, threaded comments with moderation, a follow graph, in-app and real-time notifications, and a versioned REST API. It runs on the full production toolchain (PostgreSQL, Redis, Celery worker and beat, Channels over ASGI, nginx, Prometheus metrics) and ships with a 680-test suite, a CI pipeline and multi-stage Docker images. If you want to see how a particular Django, DRF, Channels or Celery idea is used here, start with [docs/concept-index.md](docs/concept-index.md).
+DjangoVerseHub is a content-and-community platform written as a learning codebase for Django 5.2: Markdown articles with revision history and feeds, threaded comments with moderation, a follow graph, in-app and real-time notifications, and a versioned REST API. It runs on the full production toolchain (PostgreSQL, Redis, Celery worker and beat, Channels over ASGI, nginx, Prometheus metrics) and ships with a 680-test suite, a CI pipeline and multi-stage Docker images. If you want to see how a particular Django, DRF, Channels or Celery idea is used here, start with [docs/concept-index.md](docs/concept-index.md).
 
 ## Features
 

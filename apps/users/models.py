@@ -252,7 +252,7 @@ class Follow(models.Model):
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(fields=["follower", "following"], name="unique_follow"),
-            models.CheckConstraint(check=~models.Q(follower=models.F("following")), name="no_self_follow"),
+            models.CheckConstraint(condition=~models.Q(follower=models.F("following")), name="no_self_follow"),
         ]
         indexes = [
             models.Index(fields=["following", "-created_at"]),
