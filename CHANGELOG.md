@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+- Upgraded to Django 5.2 LTS (`>=5.2.17,<6.0`); Django 4.2 is out of
+  support. Raised the minimum versions of Django-dependent packages to the
+  first releases that support Django 5.2 and lifted the
+  django-debug-toolbar `<7` cap.
+- `CheckConstraint(check=...)` renamed to `condition=` (deprecated in 5.1).
+
+### Security
+- Django 5.2.17 fixes the open Dependabot advisories against Django 4.2.
+
 ## [1.1.0] - 2026-09-23
 
 The project previously existed as a generated scaffold that did not start
