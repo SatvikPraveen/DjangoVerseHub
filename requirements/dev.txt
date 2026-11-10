@@ -3,7 +3,7 @@
 -r test.txt
 
 # Development Tools
-django-debug-toolbar>=5.1.0
+django-debug-toolbar>=5.2.0
 werkzeug>=3.1.9
 
 # Code Quality
